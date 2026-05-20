@@ -164,7 +164,7 @@ function process(rows){
   const hoje=new Date().toLocaleDateString('pt-BR');
   const now=new Date();
   const st={};
-  for(let n=1;n<=47;n++)st[String(n).padStart(2,'0')]={s:'livre',paraInicio:null,mot:''};
+  for(let n=1;n<=47;n++)st[String(n).padStart(2,'0')]={s:'livre',paraInicio:null,mot:'',paciente:false};
   const historico=[];
 
   rows.forEach(r=>{
@@ -183,9 +183,10 @@ function process(rows){
         const fim=parseDt(ts);
         if(ini&&fim){const dur=(fim-ini)/60000;historico.push({num,ini:st[num].paraInicio,fim:ts,dur});}
       }
-      st[num].s='livre';st[num].paraInicio=null;
-    } else if(ev==='Check In Paciente'){st[num].s='ocupada';}
-    else if(ev==='Check Out Paciente'){st[num].s='livre';st[num].paraInicio=null;}
+      st[num].s=st[num].paciente?'ocupada':'livre';
+      st[num].paraInicio=null;
+    } else if(ev==='Check In Paciente'){st[num].s='ocupada';st[num].paciente=true;}
+    else if(ev==='Check Out Paciente'){st[num].s='livre';st[num].paraInicio=null;st[num].paciente=false;}
   });
 
   const fila=[];
