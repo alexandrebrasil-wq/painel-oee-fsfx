@@ -199,7 +199,7 @@ function build(){
       const c=document.createElement('div');
       c.className='card livre f'+fl.idx;c.id='c'+num;
       c.innerHTML='<div class="cn">P'+num+'</div>'
-        +'<div class="ci">🪑</div>'
+        +'<div class="ci"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity:.45;display:inline-block;vertical-align:middle"><rect x="5" y="2" width="14" height="9" rx="2"/><path d="M3 11h18v3H3z"/><path d="M7 14v6M17 14v6M7 19h10"/></svg></div>'
         +'<div class="cb">'
         +'<div class="cs">Disponível</div>'
         +'<div class="cd">'+fl.tipo+'</div>'
@@ -214,9 +214,9 @@ function build(){
 function getFluxo(n){return FLUXOS.find(f=>f.poltronas.includes(n))||FLUXOS[0];}
 
 const ABREV={
-  'Aguardando Manipulação (Farmácia)':'🧪 Farm.',
-  'Aguardando Liberação Médica':      '🩺 Lib. Médica',
-  'Aguardando liberação do convênio': '📋 Lib. Convênio',
+  'Aguardando Manipulação (Farmácia)':'[Farm.]',
+  'Aguardando Liberação Médica':      '[Med.]',
+  'Aguardando liberação do convênio': '[Conv.]',
 };
 function abrevMot(mot){return ABREV[mot]||mot||'Parada';}
 
@@ -225,7 +225,7 @@ function process(rows){
   const st={};
   for(let n=1;n<=47;n++){
     const fl=getFluxo(n);
-    st[String(n).padStart(2,'0')]={s:'livre',d:fl.tipo,ts:null,t:'',fi:fl.idx};
+    st[String(n).padStart(2,'0')]={s:'livre',d:fl.tipo,ts:null,t:'',fi:fl.idx,paciente:false};
   }
   rows.forEach(r=>{
     const[ts,pol,ev,mot,tipo]=r;
@@ -235,10 +235,14 @@ function process(rows){
     if(ts.split(' ')[0]!==hoje)return;
     const fi=st[num].fi;
     const fl=FLUXOS[fi];
-    if(ev==='Check In Paciente'){st[num]={s:'ocupada',d:tipo||fl.tipo,ts,t:tipo||'',fi};}
-    else if(ev==='Check Out Paciente'){st[num]={s:'livre',d:fl.tipo,ts,t:'',fi};}
-    else if(ev==='Início da Parada'){st[num]={s:'parada',d:abrevMot(mot),ts,t:st[num].t,fi};}
-    else if(ev==='Fim da parada'){const t=st[num].t;st[num]={s:t?'ocupada':'livre',d:t||fl.tipo,ts,t,fi};}
+    if(ev==='Check In Paciente'){st[num]={s:'ocupada',d:tipo||fl.tipo,ts,t:tipo||'',fi,paciente:true};}
+    else if(ev==='Check Out Paciente'){st[num]={s:'livre',d:fl.tipo,ts,t:'',fi,paciente:false};}
+    else if(ev==='Início da Parada'){st[num]={s:'parada',d:abrevMot(mot),ts,t:st[num].t,fi,paciente:st[num].paciente};}
+    else if(ev==='Fim da parada'){
+      const pac=st[num].paciente;
+      const t=st[num].t;
+      st[num]={s:pac?'ocupada':'livre',d:pac?(t||fl.tipo):fl.tipo,ts,t:pac?t:'',fi,paciente:pac};
+    }
   });
   return st;
 }
@@ -261,7 +265,7 @@ function render(st,fonte){
     const t=s.ts?el(s.ts):'';
     c.className='card '+s.s+(s.s==='livre'?' f'+s.fi:'');
     c.innerHTML='<div class="cn">P'+num+'</div>'
-      +'<div class="ci">🪑</div>'
+      +'<div class="ci"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="opacity:.45;display:inline-block;vertical-align:middle"><rect x="5" y="2" width="14" height="9" rx="2"/><path d="M3 11h18v3H3z"/><path d="M7 14v6M17 14v6M7 19h10"/></svg></div>'
       +'<div class="cb">'
       +'<div class="cs'+(s.s==='parada'?' blink':'')+'">'+lbl[s.s]+'</div>'
       +'<div class="cd">'+s.d+'</div>'
