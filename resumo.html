@@ -454,37 +454,53 @@ function renderAll(resDias,dias){
   html+='<div class="sec-hdr" style="margin-top:4px"><span style="color:#8b949e">Evolucao diaria</span><hr></div>';
   html+='<div class="charts-row">';
 
-  // OEE + Disponibilidade por dia
+  // OEE + Disponibilidade por dia - barras duplas
   html+='<div class="panel"><div class="phdr" style="color:#a78bfa">OEE e Disponibilidade por dia'
-    +'<span style="font-weight:400;font-size:10px;text-transform:none;color:#8b949e">barras=OEE · linha=Disponib.</span></div><div class="pbody">';
-  var maxOEE=1;
-  html+='<div class="chart-area" id="chart-oee">';
+    +'<span style="font-weight:400;font-size:10px;text-transform:none;color:#8b949e">'
+    +'<span style="display:inline-block;width:10px;height:10px;background:#a78bfa;border-radius:2px;margin-right:3px"></span>OEE &nbsp;'
+    +'<span style="display:inline-block;width:10px;height:10px;background:#3fb950;border-radius:2px;margin-right:3px"></span>Disponib.'
+    +'</span></div><div class="pbody">';
+  html+='<div style="display:flex;align-items:flex-end;gap:6px;height:110px;padding-top:4px;position:relative;">';
   var metaPxOEE=Math.round(META_OEE*100);
   resDias.forEach(function(x){
     var r=x.res,d=x.dia.slice(0,5);
-    var hOEE=Math.round(r.oee*100);
-    var cor=oeeColor(r.oee,META_OEE);
-    html+='<div class="bar-col">'
-      +'<div class="bar-val" style="color:'+cor+'">'+hOEE+'%</div>'
-      +'<div class="bar-bg" style="height:'+Math.max(hOEE,1)+'%;background:'+cor+'" data-tip="OEE '+hOEE+'% | Disp '+Math.round(r.disp*100)+'%"></div>'
-      +'<div class="bar-lbl">'+d+'</div></div>';
+    var hOEE=Math.max(Math.round(r.oee*100),1);
+    var hDisp=Math.max(Math.round(r.disp*100),1);
+    var corOEE=oeeColor(r.oee,META_OEE);
+    var corDisp=oeeColor(r.disp,META_DISP);
+    html+='<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:0;">'
+      +'<div style="font-size:8px;font-weight:600;color:'+corOEE+'">'+Math.round(r.oee*100)+'%</div>'
+      +'<div style="display:flex;align-items:flex-end;gap:1px;width:100%;height:80px;">'
+      +'<div title="OEE '+Math.round(r.oee*100)+'%" style="flex:1;height:'+hOEE+'%;background:'+corOEE+';border-radius:2px 2px 0 0;min-height:2px;"></div>'
+      +'<div title="Disp. '+Math.round(r.disp*100)+'%" style="flex:1;height:'+hDisp+'%;background:'+corDisp+';border-radius:2px 2px 0 0;min-height:2px;opacity:.7"></div>'
+      +'</div>'
+      +'<div style="font-size:8px;color:#8b949e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;">'+d+'</div>'
+      +'</div>';
   });
   html+='<div class="meta-line" style="bottom:'+metaPxOEE+'%"></div>';
   html+='</div></div></div>';
 
   // Atendimentos + Ocupação por dia
   html+='<div class="panel"><div class="phdr" style="color:#60a5fa">Atendimentos e Ocupacao por dia'
-    +'<span style="font-weight:400;font-size:10px;text-transform:none;color:#8b949e">barras=atend. · cor=ocupacao</span></div><div class="pbody">';
+    +'<span style="font-weight:400;font-size:10px;text-transform:none;color:#8b949e">'
+    +'<span style="display:inline-block;width:10px;height:10px;background:#60a5fa;border-radius:2px;margin-right:3px"></span>Atendimentos &nbsp;'
+    +'<span style="display:inline-block;width:10px;height:10px;background:#f59e0b;border-radius:2px;margin-right:3px"></span>Ocupacao %'
+    +'</span></div><div class="pbody">';
   var maxPac=Math.max.apply(null,resDias.map(function(x){return x.res.totPac;}))||1;
-  html+='<div class="chart-area">';
+  html+='<div style="display:flex;align-items:flex-end;gap:6px;height:110px;padding-top:4px;position:relative;">';
   resDias.forEach(function(x){
     var r=x.res,d=x.dia.slice(0,5);
-    var h=Math.round(r.totPac/maxPac*100);
-    var cor=oeeColor(r.ocup,META_OCUP);
-    html+='<div class="bar-col">'
-      +'<div class="bar-val" style="color:'+cor+'">'+r.totPac+'</div>'
-      +'<div class="bar-bg" style="height:'+Math.max(h,1)+'%;background:'+cor+'" data-tip="'+r.totPac+' pac. | Ocup. '+Math.round(r.ocup*100)+'%"></div>'
-      +'<div class="bar-lbl">'+d+'</div></div>';
+    var hPac=Math.max(Math.round(r.totPac/maxPac*100),1);
+    var hOcup=Math.max(Math.round(r.ocup*100),1);
+    var corOcup=oeeColor(r.ocup,META_OCUP);
+    html+='<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:0;">'
+      +'<div style="font-size:8px;font-weight:600;color:#60a5fa">'+r.totPac+'</div>'
+      +'<div style="display:flex;align-items:flex-end;gap:1px;width:100%;height:80px;">'
+      +'<div title="'+r.totPac+' atend." style="flex:1;height:'+hPac+'%;background:#60a5fa;border-radius:2px 2px 0 0;min-height:2px;"></div>'
+      +'<div title="Ocup. '+Math.round(r.ocup*100)+'%" style="flex:1;height:'+hOcup+'%;background:'+corOcup+';border-radius:2px 2px 0 0;min-height:2px;opacity:.8"></div>'
+      +'</div>'
+      +'<div style="font-size:8px;color:#8b949e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;">'+d+'</div>'
+      +'</div>';
   });
   html+='</div></div></div>';
   html+='</div>'; // charts-row
