@@ -413,18 +413,21 @@ function renderAll(resDias,dias){
     {lbl:'OEE',val:oeeM,meta:META_OEE,desc:'Atendimento / Disponivel'},
     {lbl:'Disponibilidade',val:dispM,meta:META_DISP,desc:'(Disponivel - Paradas) / Disponivel'},
     {lbl:'Ocupacao',val:ocupM,meta:META_OCUP,desc:'(Atendimento + Paradas) / Disponivel'},
-    {lbl:'Pacientes atendidos',val:Math.min(1,totPac/(nPolFiltradas()*dn||1)),meta:0.7,desc:'Sessoes / Poltronas x dias',qtd:totPac},
+    {lbl:'Pacientes / dia (media)',val:Math.min(1,(totPac/dn)/(nPolFiltradas()||1)),meta:0.7,desc:'Media de atendimentos por dia',qtd:Math.round(totPac/dn)},
   ];
   gauges.forEach(function(g){
     var cor=oeeColor(g.val,g.meta);
     var valDisplay=g.qtd!==undefined?g.qtd:pct(g.val);
     var valColor=g.qtd!==undefined?'#60a5fa':cor;
+    var subLabel=g.qtd!==undefined?'media de '+g.qtd+' pac/dia no periodo':'Meta: '+pct(g.meta)+' · '+g.desc;
+    var deltaHtml=g.qtd!==undefined?'<div class="gauge-delta deq">'+dn+' dias analisados</div>'
+      :'<div class="gauge-delta '+(g.val>=g.meta?'dup':'ddn')+'">'+(g.val>=g.meta?'▲ Acima':'▼ Abaixo')+' da meta</div>';
     html+='<div class="gauge-card">'
       +'<div class="gauge-title">'+g.lbl+'</div>'
       +gauge(g.val,g.meta,g.qtd!==undefined?'#60a5fa':cor,g.lbl)
       +'<div class="gauge-val" style="color:'+valColor+'">'+valDisplay+'</div>'
-      +'<div class="gauge-meta">Meta: '+pct(g.meta)+' · '+g.desc+'</div>'
-      +'<div class="gauge-delta '+(g.val>=g.meta?'dup':'ddn')+'">'+(g.val>=g.meta?'▲ Acima':'▼ Abaixo')+' da meta</div>'
+      +'<div class="gauge-meta">'+subLabel+'</div>'
+      +deltaHtml
       +'</div>';
   });
   html+='</div>';
