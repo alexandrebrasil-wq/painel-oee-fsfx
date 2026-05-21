@@ -172,8 +172,14 @@ var FLUXOS=[
   {idx:3,nome:'Convenio',cor:'#888',poltronas:[34,35,36,37,38,39,40,41,42,43]},
   {idx:4,nome:'Leito',cor:'#888',poltronas:[44,45,46,47]},
 ];
-var IDEAL={'Rapida':30,'Curta':120,'Media':240,'Longa':300,'Longuissima':420,
-  'Rápida':30,'Média':240,'Longuísima':420};
+var IDEAL={
+  'Rapida':15,'Rápida':15,
+  'Curta':60,
+  'Media':126,'Média':126,
+  'Longa':271,
+  'Longuissima':444,'Longuísima':444,
+  'N/A':126
+};
 var allRows=[];
 var fluxoAtivo=-1;
 var lastRes=null,lastDias=null;
@@ -237,7 +243,13 @@ function analisarDia(rows,diaStr){
     var h=dt.getHours();if(h<TURNO_INI||h>=TURNO_FIM)return;
     if(ev==='Check In Paciente'){st[num].paciente=true;st[num].ciTs=ts;st[num].tipo=tipo||'';}
     else if(ev==='Check Out Paciente'){
-      if(st[num].ciTs){var ini=parseDt(st[num].ciTs);if(ini&&dt>ini){var dur=(dt-ini)/60000;if(dur>0&&dur<780)st[num].sessoes.push({dur:dur,tipo:st[num].tipo});}}
+      if(st[num].ciTs){
+        var ini=parseDt(st[num].ciTs);
+        if(ini&&dt>ini){
+          var dur=(dt-ini)/60000;
+          if(dur>0&&dur<780)st[num].sessoes.push({dur:dur,tipo:st[num].tipo,estimado:false});
+        }
+      }
       st[num].paciente=false;st[num].ciTs=null;
     }
     else if(ev==='Início da Parada'||ev==='Inicio da Parada'){st[num].paradas.push({ini:ts,fim:null,mot:mot||'',dur:0});}
@@ -296,6 +308,36 @@ function analisarDia(rows,diaStr){
   var efic=oee;
   var picoIdx=ocupH.indexOf(Math.max.apply(null,ocupH));
   var picoVal=Math.max.apply(null,ocupH);
+
+  // Adicionar sessoes estimadas para Check Ins sem Check Out
+  Object.entries(st).forEach(function(e){
+    var s=e[1];
+    if(s.paciente&&s.ciTs){
+      var t=s.tipo||'N/A';
+      var ideal=IDEAL[t]||126;
+      s.sessoes.push({dur:ideal,tipo:t,estimado:true});
+    }
+  });
+
+  // Recalcular totais incluindo estimativas
+  totPac=0;tempoAtend=0;
+  var porTipoFinal={};
+  Object.entries(st).forEach(function(e){
+    var s=e[1];
+    s.sessoes.forEach(function(sess){
+      totPac++;tempoAtend+=sess.dur;
+      var t=sess.tipo||'N/A';
+      if(!porTipoFinal[t])porTipoFinal[t]={n:0,tot:0,estimados:0};
+      porTipoFinal[t].n++;porTipoFinal[t].tot+=sess.dur;
+      if(sess.estimado)porTipoFinal[t].estimados++;
+    });
+  });
+  porTipo=porTipoFinal;
+
+  var tempoTotal2=nPol*TURNO_MIN;
+  oee=tempoTotal2>0?Math.min(1,tempoAtend/tempoTotal2):0;
+  var tempoOcupado2=tempoAtend+totParado;
+  ocup=tempoTotal2>0?Math.min(1,tempoOcupado2/tempoTotal2):0;
 
   return{totPac:totPac,totParado:totParado,nPar:nPar,tempoAtend:tempoAtend,
     disp:disp,efic:efic,ocup:ocup,perf:perf,oee:oee,
@@ -371,14 +413,16 @@ function renderAll(resDias,dias){
     {lbl:'OEE',val:oeeM,meta:META_OEE,desc:'Atendimento / Disponivel'},
     {lbl:'Disponibilidade',val:dispM,meta:META_DISP,desc:'(Disponivel - Paradas) / Disponivel'},
     {lbl:'Ocupacao',val:ocupM,meta:META_OCUP,desc:'(Atendimento + Paradas) / Disponivel'},
-    {lbl:'Pacientes atendidos',val:Math.min(1,totPac/(nPolFiltradas()*dn||1)),meta:0.7,desc:'Sessoes / Poltronas x dias'},
+    {lbl:'Pacientes atendidos',val:Math.min(1,totPac/(nPolFiltradas()*dn||1)),meta:0.7,desc:'Sessoes / Poltronas x dias',qtd:totPac},
   ];
   gauges.forEach(function(g){
     var cor=oeeColor(g.val,g.meta);
+    var valDisplay=g.qtd!==undefined?g.qtd:pct(g.val);
+    var valColor=g.qtd!==undefined?'#60a5fa':cor;
     html+='<div class="gauge-card">'
       +'<div class="gauge-title">'+g.lbl+'</div>'
-      +gauge(g.val,g.meta,cor,g.lbl)
-      +'<div class="gauge-val" style="color:'+cor+'">'+pct(g.val)+'</div>'
+      +gauge(g.val,g.meta,g.qtd!==undefined?'#60a5fa':cor,g.lbl)
+      +'<div class="gauge-val" style="color:'+valColor+'">'+valDisplay+'</div>'
       +'<div class="gauge-meta">Meta: '+pct(g.meta)+' · '+g.desc+'</div>'
       +'<div class="gauge-delta '+(g.val>=g.meta?'dup':'ddn')+'">'+(g.val>=g.meta?'▲ Acima':'▼ Abaixo')+' da meta</div>'
       +'</div>';
