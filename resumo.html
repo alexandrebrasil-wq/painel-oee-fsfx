@@ -121,7 +121,7 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:20p
     </svg>
     <div>
       <div class="htitle">Painel Gerencial - Centro de Infusao QT</div>
-      <div class="hsub">Turno 07:00-19:00 · 47 poltronas · Metas: OEE 70% · Disponib. 80% · Efic. 80%</div>
+      <div class="hsub">Turno 07:00-19:00 · 47 poltronas · OEE = Tempo Atendimento / Tempo Disponível · Meta OEE: 70%</div>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
@@ -129,7 +129,6 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:20p
   </div>
 </header>
 <nav class="nav">
-  <a href="index.html">Painel QT</a>
   <a href="farmacia.html">Farmacia</a>
   <a href="resumo.html" class="active">Painel Gerencial</a>
 </nav>
@@ -285,16 +284,16 @@ function analisarDia(rows,diaStr){
   });
 
   var tempoTotal=nPol*TURNO_MIN;
+  // OEE = Tempo total de atendimento (Check In->Out) / Tempo total disponivel
+  var oee=tempoTotal>0?Math.min(1,tempoAtend/tempoTotal):0;
+  // Disponibilidade = (Tempo disponivel - Tempo em paradas) / Tempo disponivel
   var disp=Math.max(0,Math.min(1,(tempoTotal-totParado)/tempoTotal));
-  var efic=tempoTotal>0?Math.min(1,tempoAtend/tempoTotal):0;
-  var ocup=totPac>0?Math.min(1,totPac/nPol):0;
-  var perfN=0,perfD=0;
-  Object.entries(porTipo).forEach(function(e){
-    var t=e[0],v=e[1];var ideal=IDEAL[t]||240;var med=v.tot/v.n;
-    perfN+=Math.min(ideal/Math.max(med,1),1)*v.n;perfD+=v.n;
-  });
-  var perf=perfD>0?perfN/perfD:0;
-  var oee=disp*perf;
+  // Ocupacao = (Tempo atendimento + Tempo em paradas com paciente) / Tempo disponivel
+  // Aproximacao: tempo ocupado = tempo atendimento + tempo parado (parada ocorre com paciente na poltrona)
+  var tempoOcupado=tempoAtend+totParado;
+  var ocup=tempoTotal>0?Math.min(1,tempoOcupado/tempoTotal):0;
+  var perf=oee;
+  var efic=oee;
   var picoIdx=ocupH.indexOf(Math.max.apply(null,ocupH));
   var picoVal=Math.max.apply(null,ocupH);
 
@@ -348,20 +347,19 @@ function renderAll(resDias,dias){
   }
 
   // Consolidado
-  var totPac=0,totParado=0,nPar=0,tempoAtend=0,oeeSum=0,dispSum=0,eficSum=0,dn=0;
+  var totPac=0,totParado=0,nPar=0,tempoAtend=0,oeeSum=0,dispSum=0,eficSum=0,ocupSum=0,dn=0;
   var porMotTot={},porTipoTot={};
   diasComDados.forEach(function(x){
     var r=x.res;
     totPac+=r.totPac;totParado+=r.totParado;nPar+=r.nPar;tempoAtend+=r.tempoAtend;
-    oeeSum+=r.oee;dispSum+=r.disp;eficSum+=r.efic;dn++;
+    oeeSum+=r.oee;dispSum+=r.disp;eficSum+=r.efic;ocupSum+=r.ocup;dn++;
     Object.entries(r.porMot).forEach(function(e){var k=e[0],v=e[1];if(!porMotTot[k])porMotTot[k]={n:0,tot:0};porMotTot[k].n+=v.n;porMotTot[k].tot+=v.tot;});
     Object.entries(r.porTipo).forEach(function(e){var t=e[0],v=e[1];if(!porTipoTot[t])porTipoTot[t]={n:0,tot:0};porTipoTot[t].n+=v.n;porTipoTot[t].tot+=v.tot;});
   });
   var oeeM=dn?oeeSum/dn:0;
   var dispM=dn?dispSum/dn:0;
   var eficM=dn?eficSum/dn:0;
-  var nPol=nPolFiltradas();
-  var ocupM=dn?Math.min(1,totPac/nPol/dn):0;
+  var ocupM=dn?ocupSum/dn:0;
 
   var c=document.getElementById('content');
   var html='';
@@ -370,10 +368,10 @@ function renderAll(resDias,dias){
   html+='<div class="sec-hdr"><span style="color:#8b949e">Consolidado do periodo</span><hr></div>';
   html+='<div class="gauges-row">';
   var gauges=[
-    {lbl:'OEE Medio',val:oeeM,meta:META_OEE},
-    {lbl:'Disponibilidade',val:dispM,meta:META_DISP},
-    {lbl:'Eficiencia',val:eficM,meta:META_EFIC},
-    {lbl:'Ocupacao Media',val:ocupM,meta:META_OCUP},
+    {lbl:'OEE',val:oeeM,meta:META_OEE,desc:'Atendimento / Disponivel'},
+    {lbl:'Disponibilidade',val:dispM,meta:META_DISP,desc:'(Disponivel - Paradas) / Disponivel'},
+    {lbl:'Ocupacao',val:ocupM,meta:META_OCUP,desc:'(Atendimento + Paradas) / Disponivel'},
+    {lbl:'Pacientes atendidos',val:Math.min(1,totPac/(nPolFiltradas()*dn||1)),meta:0.7,desc:'Sessoes / Poltronas x dias'},
   ];
   gauges.forEach(function(g){
     var cor=oeeColor(g.val,g.meta);
@@ -381,7 +379,7 @@ function renderAll(resDias,dias){
       +'<div class="gauge-title">'+g.lbl+'</div>'
       +gauge(g.val,g.meta,cor,g.lbl)
       +'<div class="gauge-val" style="color:'+cor+'">'+pct(g.val)+'</div>'
-      +'<div class="gauge-meta">Meta: '+pct(g.meta)+'</div>'
+      +'<div class="gauge-meta">Meta: '+pct(g.meta)+' · '+g.desc+'</div>'
       +'<div class="gauge-delta '+(g.val>=g.meta?'dup':'ddn')+'">'+(g.val>=g.meta?'▲ Acima':'▼ Abaixo')+' da meta</div>'
       +'</div>';
   });
