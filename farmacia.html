@@ -222,6 +222,8 @@ function process(rows){
     if(!st[num])return;
     var dia=ts.split(' ')[0];
     var isHoje=(dia===hoje);
+    var dt=parseDt(ts);
+    var h=dt?dt.getHours():-1;
     var isFarm=(mot&&(mot.indexOf('Manipul')>=0||mot.indexOf('conv')>=0||mot.indexOf('Conv')>=0||mot.indexOf('intercorr')>=0||mot.indexOf('devolu')>=0||mot.indexOf('Devolu')>=0));
 
     if(ev==='Check In Paciente'){
