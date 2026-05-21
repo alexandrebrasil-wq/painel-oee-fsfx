@@ -249,7 +249,7 @@ function process(rows){
       st[num].paciente=false;st[num].ciTs=null;st[num].numAtend='';
       // limpar paradas concluidas
     } else if(ev==='Início da Parada'||ev==='Inicio da Parada'){
-      st[num].paradas.push({ini:ts,fim:null,mot:mot||'',isFarm:isFarm,dur:0,numAtend:st[num].numAtend});
+      if(isHoje)st[num].paradas.push({ini:ts,fim:null,mot:mot||'',isFarm:isFarm,dur:0,numAtend:st[num].numAtend});
     } else if(ev==='Fim da parada'){
       for(var i=st[num].paradas.length-1;i>=0;i--){
         if(!st[num].paradas[i].fim){
@@ -413,7 +413,7 @@ function render(data,fonte){
 }
 
 function fetchRows(){
-  return fetch('https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/export?format=csv&gid='+GID,{cache:'no-store'})
+  return fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSap2eZ_RANJMRkRQg34TPyHmUO-KHrxO8hMazvmfampJkKpFBGtG3VKB76q3EdRwcDMJqOL30TQ1ZA/pub?gid=1304195408&single=true&output=csv',{cache:'no-store'})
     .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
     .then(function(txt){
       var rows=txt.trim().split('\n').slice(1).map(function(l){
