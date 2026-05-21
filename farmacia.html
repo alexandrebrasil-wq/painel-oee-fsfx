@@ -222,7 +222,7 @@ function process(rows){
     if(!st[num])return;
     var dia=ts.split(' ')[0];
     var isHoje=(dia===hoje);
-    var isFarm=(mot&&mot.indexOf('Manipul')>=0);
+    var isFarm=(mot&&(mot.indexOf('Manipul')>=0||mot.indexOf('conv')>=0||mot.indexOf('Conv')>=0||mot.indexOf('intercorr')>=0||mot.indexOf('devolu')>=0||mot.indexOf('Devolu')>=0));
 
     if(ev==='Check In Paciente'){
       st[num].paciente=true;
@@ -272,9 +272,12 @@ function process(rows){
       var ini=parseDt(pardAberta.ini);
       if(ini){
         var dur=(now-ini)/60000;
-        var fl=getFluxo(parseInt(num));
-        fila.push({num:num,dur:dur,ini:pardAberta.ini,fi:fl.idx,fnome:fl.nome,
-          numAtend:pardAberta.numAtend||s.numAtend||''});
+        // Ignorar paradas com mais de 720min (1 turno) - são de dias anteriores
+        if(dur>0&&dur<=720){
+          var fl=getFluxo(parseInt(num));
+          fila.push({num:num,dur:dur,ini:pardAberta.ini,fi:fl.idx,fnome:fl.nome,
+            numAtend:pardAberta.numAtend||s.numAtend||''});
+        }
       }
     }
   });
