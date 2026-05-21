@@ -469,12 +469,20 @@ function renderAll(resDias,dias){
     var corOEE=oeeColor(r.oee,META_OEE);
     var corDisp=oeeColor(r.disp,META_DISP);
     html+='<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:0;">'
-      +'<div style="font-size:8px;font-weight:600;color:'+corOEE+'">'+Math.round(r.oee*100)+'%</div>'
-      +'<div style="display:flex;align-items:flex-end;gap:1px;width:100%;height:80px;">'
-      +'<div title="OEE '+Math.round(r.oee*100)+'%" style="flex:1;height:'+hOEE+'%;background:'+corOEE+';border-radius:2px 2px 0 0;min-height:2px;"></div>'
-      +'<div title="Disp. '+Math.round(r.disp*100)+'%" style="flex:1;height:'+hDisp+'%;background:'+corDisp+';border-radius:2px 2px 0 0;min-height:2px;opacity:.7"></div>'
+      +'<div style="display:flex;gap:2px;justify-content:center;width:100%;">'
+      +'<span style="font-size:8px;font-weight:600;color:'+corOEE+'">'+Math.round(r.oee*100)+'%</span>'
+      +'<span style="font-size:8px;color:#555">|</span>'
+      +'<span style="font-size:8px;font-weight:600;color:'+corDisp+'">'+Math.round(r.disp*100)+'%</span>'
       +'</div>'
-      +'<div style="font-size:8px;color:#8b949e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;">'+d+'</div>'
+      +'<div style="display:flex;align-items:flex-end;gap:2px;width:100%;height:80px;position:relative;">'
+      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;">'
+      +'<div title="OEE '+Math.round(r.oee*100)+'%" style="width:100%;height:'+hOEE+'%;background:'+corOEE+';border-radius:2px 2px 0 0;min-height:2px;"></div>'
+      +'</div>'
+      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;">'
+      +'<div title="Disp. '+Math.round(r.disp*100)+'%" style="width:100%;height:'+hDisp+'%;background:'+corDisp+';border-radius:2px 2px 0 0;min-height:2px;opacity:.8"></div>'
+      +'</div>'
+      +'</div>'
+      +'<div style="font-size:8px;color:#8b949e;text-align:center;">'+d+'</div>'
       +'</div>';
   });
   html+='<div class="meta-line" style="bottom:'+metaPxOEE+'%"></div>';
@@ -494,12 +502,20 @@ function renderAll(resDias,dias){
     var hOcup=Math.max(Math.round(r.ocup*100),1);
     var corOcup=oeeColor(r.ocup,META_OCUP);
     html+='<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:0;">'
-      +'<div style="font-size:8px;font-weight:600;color:#60a5fa">'+r.totPac+'</div>'
-      +'<div style="display:flex;align-items:flex-end;gap:1px;width:100%;height:80px;">'
-      +'<div title="'+r.totPac+' atend." style="flex:1;height:'+hPac+'%;background:#60a5fa;border-radius:2px 2px 0 0;min-height:2px;"></div>'
-      +'<div title="Ocup. '+Math.round(r.ocup*100)+'%" style="flex:1;height:'+hOcup+'%;background:'+corOcup+';border-radius:2px 2px 0 0;min-height:2px;opacity:.8"></div>'
+      +'<div style="display:flex;gap:2px;justify-content:center;width:100%;">'
+      +'<span style="font-size:8px;font-weight:600;color:#60a5fa">'+r.totPac+'pac</span>'
+      +'<span style="font-size:8px;color:#555">|</span>'
+      +'<span style="font-size:8px;font-weight:600;color:'+corOcup+'">'+Math.round(r.ocup*100)+'%</span>'
       +'</div>'
-      +'<div style="font-size:8px;color:#8b949e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;">'+d+'</div>'
+      +'<div style="display:flex;align-items:flex-end;gap:2px;width:100%;height:80px;">'
+      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;">'
+      +'<div title="'+r.totPac+' atend." style="width:100%;height:'+hPac+'%;background:#60a5fa;border-radius:2px 2px 0 0;min-height:2px;"></div>'
+      +'</div>'
+      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;">'
+      +'<div title="Ocup. '+Math.round(r.ocup*100)+'%" style="width:100%;height:'+hOcup+'%;background:'+corOcup+';border-radius:2px 2px 0 0;min-height:2px;opacity:.85"></div>'
+      +'</div>'
+      +'</div>'
+      +'<div style="font-size:8px;color:#8b949e;text-align:center;">'+d+'</div>'
       +'</div>';
   });
   html+='</div></div></div>';
