@@ -121,7 +121,7 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:20p
     </svg>
     <div>
       <div class="htitle">Painel Gerencial - Centro de Infusao QT</div>
-      <div class="hsub">Turno 07:00-19:00 · 47 poltronas · OEE = Tempo Atendimento / Tempo Disponível · Meta OEE: 70%</div>
+      <div class="hsub" id="hsub">Turno 07:00-19:00 · 47 poltronas · OEE = Tempo Atendimento / Tempo Disponível · Meta OEE: 70%</div>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
@@ -208,6 +208,8 @@ function toDatePT(str){var p=str.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function diasEntre(d1,d2){
   var ini=new Date(d1),fim=new Date(d2),dias=[];
   for(var d=new Date(ini);d<=fim;d.setDate(d.getDate()+1)){
+    var dow=d.getDay(); // 0=Dom, 6=Sab
+    if(dow===0||dow===6)continue; // ignorar finais de semana
     var dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0'),aa=d.getFullYear();
     dias.push(dd+'/'+mm+'/'+aa);
   }
@@ -261,17 +263,19 @@ function analisarDia(rows,diaStr){
   });
 
   var totPac=0,totParado=0,nPar=0,tempoAtend=0;
-  var porTipo={},porMot={};
+  var porTipo={},porMot={},porFluxo={};
   var ocupH=Array(TURNO_FIM-TURNO_INI).fill(0);
   var nPol=nPolFiltradas();
+  FLUXOS.forEach(function(fl){porFluxo[fl.idx]={n:0,pols:new Set()};});
 
   Object.entries(st).forEach(function(e){
-    var s=e[1];
+    var num=e[0],s=e[1];
     s.sessoes.forEach(function(sess){
       totPac++;tempoAtend+=sess.dur;
       var t=sess.tipo||'N/A';
       if(!porTipo[t])porTipo[t]={n:0,tot:0};
       porTipo[t].n++;porTipo[t].tot+=sess.dur;
+      porFluxo[s.fi].n++;porFluxo[s.fi].pols.add(num);
     });
     s.paradas.forEach(function(p){
       if(!p.fim||p.dur<=0)return;
@@ -342,7 +346,7 @@ function analisarDia(rows,diaStr){
   return{totPac:totPac,totParado:totParado,nPar:nPar,tempoAtend:tempoAtend,
     disp:disp,efic:efic,ocup:ocup,perf:perf,oee:oee,
     porTipo:porTipo,porMot:porMot,ocupH:ocupH,picoIdx:picoIdx,picoVal:picoVal,
-    temDados:totPac>0||nPar>0};
+    porFluxo:porFluxo,temDados:totPac>0||nPar>0};
 }
 
 // VELOCIMETRO SVG
@@ -374,6 +378,9 @@ function gauge(val,meta,cor,label){
 }
 
 function setFluxo(fi,btn){
+  var nomes={'-1':'47 poltronas (Geral)','0':'14 poltronas (Longa/Longuissima)','1':'10 poltronas (Media)','2':'9 poltronas (Curta/Rapida)','3':'10 poltronas (Convenio)','4':'4 poltronas (Leito)'};
+  var sub=document.getElementById('hsub');
+  if(sub)sub.textContent='Turno 07:00-19:00 · '+nomes[String(fi)]+' · OEE = Tempo Atendimento / Tempo Disponivel · Meta OEE: 70%';
   fluxoAtivo=fi;
   document.querySelectorAll('.ftab').forEach(function(b){b.classList.remove('active');});
   btn.classList.add('active');
