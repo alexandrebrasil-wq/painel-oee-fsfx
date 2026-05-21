@@ -268,8 +268,17 @@ function analisarDia(rows,diaStr){
   var nPol=nPolFiltradas();
   FLUXOS.forEach(function(fl){porFluxo[fl.idx]={n:0,pols:new Set()};});
 
+  var tempoOcioso=0;
   Object.entries(st).forEach(function(e){
     var num=e[0],s=e[1];
+    // Calcular tempo ocupado pela poltrona (atendimento + paradas)
+    var tAtendPol=s.sessoes.reduce(function(a,sess){return a+sess.dur;},0);
+    var tParadaPol=s.paradas.filter(function(p){return p.fim&&p.dur>0;}).reduce(function(a,p){return a+p.dur;},0);
+    var tOciosoPol=Math.max(0,TURNO_MIN-tAtendPol-tParadaPol);
+    // Só conta ociosidade se a poltrona teve algum movimento no dia
+    if(s.sessoes.length>0||s.paradas.filter(function(p){return p.fim;}).length>0){
+      tempoOcioso+=tOciosoPol;
+    }
     s.sessoes.forEach(function(sess){
       totPac++;tempoAtend+=sess.dur;
       var t=sess.tipo||'N/A';
@@ -302,10 +311,10 @@ function analisarDia(rows,diaStr){
   var tempoTotal=nPol*TURNO_MIN;
   // OEE = Tempo total de atendimento (Check In->Out) / Tempo total disponivel
   var oee=tempoTotal>0?Math.min(1,tempoAtend/tempoTotal):0;
-  // Disponibilidade = (Tempo disponivel - Tempo em paradas) / Tempo disponivel
-  var disp=Math.max(0,Math.min(1,(tempoTotal-totParado)/tempoTotal));
-  // Ocupacao = (Tempo atendimento + Tempo em paradas com paciente) / Tempo disponivel
-  // Aproximacao: tempo ocupado = tempo atendimento + tempo parado (parada ocorre com paciente na poltrona)
+  // Disponibilidade = (Tempo disponivel - Paradas registradas - Ociosidade) / Tempo disponivel
+  var totalPerdas=totParado+tempoOcioso;
+  var disp=Math.max(0,Math.min(1,(tempoTotal-totalPerdas)/tempoTotal));
+  // Ocupacao = (Tempo atendimento + Tempo em paradas) / Tempo disponivel
   var tempoOcupado=tempoAtend+totParado;
   var ocup=tempoTotal>0?Math.min(1,tempoOcupado/tempoTotal):0;
   var perf=oee;
@@ -342,6 +351,8 @@ function analisarDia(rows,diaStr){
   oee=tempoTotal2>0?Math.min(1,tempoAtend/tempoTotal2):0;
   var tempoOcupado2=tempoAtend+totParado;
   ocup=tempoTotal2>0?Math.min(1,tempoOcupado2/tempoTotal2):0;
+  var totalPerdas2=totParado+tempoOcioso;
+  disp=Math.max(0,Math.min(1,(tempoTotal2-totalPerdas2)/tempoTotal2));
 
   return{totPac:totPac,totParado:totParado,nPar:nPar,tempoAtend:tempoAtend,
     disp:disp,efic:efic,ocup:ocup,perf:perf,oee:oee,
@@ -418,7 +429,7 @@ function renderAll(resDias,dias){
   html+='<div class="gauges-row">';
   var gauges=[
     {lbl:'OEE',val:oeeM,meta:META_OEE,desc:'Atendimento / Disponivel'},
-    {lbl:'Disponibilidade',val:dispM,meta:META_DISP,desc:'(Disponivel - Paradas) / Disponivel'},
+    {lbl:'Disponibilidade',val:dispM,meta:META_DISP,desc:'(Disponivel - Paradas - Ociosidade) / Disponivel'},
     {lbl:'Ocupacao',val:ocupM,meta:META_OCUP,desc:'(Atendimento + Paradas) / Disponivel'},
     {lbl:'Pacientes / dia (media)',val:Math.min(1,(totPac/dn)/(nPolFiltradas()||1)),meta:0.7,desc:'Media de atendimentos por dia',qtd:Math.round(totPac/dn)},
   ];
