@@ -225,6 +225,14 @@ function process(rows){
     var isFarm=(mot&&(mot.indexOf('Manipul')>=0||mot.indexOf('conv')>=0||mot.indexOf('Conv')>=0||mot.indexOf('intercorr')>=0||mot.indexOf('devolu')>=0||mot.indexOf('Devolu')>=0));
 
     if(ev==='Check In Paciente'){
+      // Fechar qualquer parada aberta anteriormente nessa poltrona
+      for(var i=st[num].paradas.length-1;i>=0;i--){
+        if(!st[num].paradas[i].fim){
+          st[num].paradas[i].fim=ts;
+          var pci=parseDt(st[num].paradas[i].ini),pcf=parseDt(ts);
+          if(pci&&pcf)st[num].paradas[i].dur=(pcf-pci)/60000;
+        }
+      }
       st[num].paciente=true;
       st[num].ciTs=ts;
       st[num].numAtend=numAtend||'';
@@ -249,7 +257,9 @@ function process(rows){
       st[num].paciente=false;st[num].ciTs=null;st[num].numAtend='';
       // limpar paradas concluidas
     } else if(ev==='Início da Parada'||ev==='Inicio da Parada'){
-      if(isHoje)st[num].paradas.push({ini:ts,fim:null,mot:mot||'',isFarm:isFarm,dur:0,numAtend:numAtend||st[num].numAtend||''});
+      // Registrar parada apenas se iniciada hoje E dentro do turno
+      if(isHoje&&h>=TURNO_INI&&h<TURNO_FIM)
+        st[num].paradas.push({ini:ts,fim:null,mot:mot||'',isFarm:isFarm,dur:0,numAtend:numAtend||st[num].numAtend||''});
     } else if(ev==='Fim da parada'){
       for(var i=st[num].paradas.length-1;i>=0;i--){
         if(!st[num].paradas[i].fim){
@@ -272,8 +282,8 @@ function process(rows){
       var ini=parseDt(pardAberta.ini);
       if(ini){
         var dur=(now-ini)/60000;
-        // Ignorar paradas com mais de 720min (1 turno) - são de dias anteriores
-        if(dur>0&&dur<=720){
+        // Ignorar paradas com mais de 240min (4h) - sao de dias anteriores ou sem fechamento
+        if(dur>0&&dur<=240){
           var fl=getFluxo(parseInt(num));
           fila.push({num:num,dur:dur,ini:pardAberta.ini,fi:fl.idx,fnome:fl.nome,
             numAtend:pardAberta.numAtend||s.numAtend||''});
