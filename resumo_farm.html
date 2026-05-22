@@ -274,22 +274,24 @@ function analisar(){
   html+='<div class="sec-hdr"><span style="color:#f85149">Consolidado do periodo</span><hr></div>';
   html+='<div class="gauges-row">';
   var gauges=[
-    {lbl:'% Atend. com espera',val:pctM,meta:0.30,inv:true,desc:'Paradas / Atendimentos'},
-    {lbl:'Tempo medio espera',val:Math.min(1,tMedM/120),meta:0.25,inv:true,desc:fmtMin(tMedM)+' (meta <30min)',raw:fmtMin(tMedM)},
-    {lbl:'Paradas / dia (media)',val:Math.min(1,parDia/20),meta:0.5,inv:true,desc:Math.round(parDia)+' ocorr/dia',raw:Math.round(parDia)+''},
-    {lbl:'Tempo acum. / dia',val:Math.min(1,tMedDia/600),meta:0.33,inv:true,desc:fmtMin(tMedDia)+' acum/dia',raw:fmtMin(tMedDia)},
-    {lbl:'Atendimentos / dia',val:Math.min(1,(totA/dn)/47),meta:0.7,desc:'Media '+Math.round(totA/dn)+' pac/dia',raw:Math.round(totA/dn)+''},
+    {lbl:'% Atend. com espera',val:pctM,meta:0.30,inv:true,desc:'Paradas / Atendimentos',metaLbl:'Meta: 30%'},
+    {lbl:'Tempo medio espera',val:Math.min(1,tMedM/120),meta:0.25,inv:true,desc:'Tempo medio de espera na fila',raw:fmtMin(tMedM),metaLbl:'Meta: < 30min'},
+    {lbl:'Paradas / dia (media)',val:Math.min(1,parDia/60),meta:0.33,inv:true,desc:'Media de paradas por dia',raw:Math.round(parDia)+'',metaLbl:'Meta: < 20 paradas/dia'},
+    {lbl:'Tempo acum. / dia',val:Math.min(1,tMedDia/600),meta:0.33,inv:true,desc:'Tempo total de espera acumulado',raw:fmtMin(tMedDia),metaLbl:'Meta: < 3h30min/dia'},
+    {lbl:'Atendimentos / dia',val:Math.min(1,(totA/dn)/47),meta:0.7,desc:'Media de atendimentos por dia',raw:Math.round(totA/dn)+'',metaLbl:'Media do periodo'},
   ];
   gauges.forEach(function(g){
     var isInv=g.inv===true;
     var isOk=isInv?(g.val<=g.meta):(g.val>=g.meta);
     var c2=isInv?(g.val<=g.meta?'#3fb950':g.val<=g.meta*1.5?'#f59e0b':'#f85149'):(g.val>=g.meta?'#3fb950':g.val>=g.meta*0.8?'#f59e0b':'#f85149');
     var display=g.raw!==undefined?g.raw:pct(g.val);
+    var metaDisplay=g.metaLbl||('Meta: '+pct(g.meta));
     html+='<div class="gauge-card">'
       +'<div class="gauge-title">'+g.lbl+'</div>'
       +gauge(g.val,g.meta,c2)
       +'<div class="gauge-val" style="color:'+c2+'">'+display+'</div>'
-      +'<div class="gauge-meta">'+g.desc+'</div>'
+      +'<div class="gauge-meta">'+metaDisplay+'</div>'
+      +'<div class="gauge-meta" style="font-size:8px;color:#555">'+g.desc+'</div>'
       +'<div class="gauge-delta '+(isOk?'dup':'ddn')+'">'+(isOk?(isInv?'▲ Abaixo da meta (bom)':'▲ Acima da meta'):(isInv?'▼ Acima da meta (ruim)':'▼ Abaixo da meta'))+'</div>'
       +'</div>';
   });
