@@ -197,12 +197,24 @@ function fmtMin(m){
   if(m<60)return Math.round(m)+'min';
   return Math.floor(m/60)+'h'+String(Math.round(m%60)).padStart(2,'0')+'min';
 }
-function toDatePT(str){var p=str.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function toDatePT(str){
+  // Evitar problema de fuso horario usando UTC
+  var p=str.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+function dateInputToLocal(str){
+  // Criar data local sem ajuste de fuso
+  var p=str.split('-');
+  return new Date(+p[0],+p[1]-1,+p[2]);
+}
 function diasEntre(d1,d2){
-  var ini=new Date(d1),fim=new Date(d2),dias=[];
+  var p1=d1.split('-'),p2=d2.split('-');
+  var ini=new Date(+p1[0],+p1[1]-1,+p1[2]);
+  var fim=new Date(+p2[0],+p2[1]-1,+p2[2]);
+  var dias=[];
   for(var d=new Date(ini);d<=fim;d.setDate(d.getDate()+1)){
-    var dow=d.getDay(); // 0=Dom, 6=Sab
-    if(dow===0||dow===6)continue; // ignorar finais de semana
+    var dow=d.getDay();
+    if(dow===0||dow===6)continue;
     var dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0'),aa=d.getFullYear();
     dias.push(dd+'/'+mm+'/'+aa);
   }
@@ -618,9 +630,24 @@ function analisar(){
   renderAll(resDias,dias);
 }
 
-function setOntem(){var d=new Date();d.setDate(d.getDate()-1);var s=d.toISOString().split('T')[0];document.getElementById('dp1').value=s;document.getElementById('dp2').value=s;}
-function setUlt7(){var d2=new Date();d2.setDate(d2.getDate()-1);var d1=new Date();d1.setDate(d1.getDate()-7);document.getElementById('dp1').value=d1.toISOString().split('T')[0];document.getElementById('dp2').value=d2.toISOString().split('T')[0];}
-function setMes(){var n=new Date();var ini=new Date(n.getFullYear(),n.getMonth(),1);document.getElementById('dp1').value=ini.toISOString().split('T')[0];document.getElementById('dp2').value=n.toISOString().split('T')[0];}
+function setOntem(){
+  var d=new Date();d.setDate(d.getDate()-1);
+  var dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0'),aa=d.getFullYear();
+  var s=aa+'-'+mm+'-'+dd;
+  document.getElementById('dp1').value=s;document.getElementById('dp2').value=s;
+}
+function setUlt7(){
+  var d2=new Date();d2.setDate(d2.getDate()-1);
+  var d1=new Date();d1.setDate(d1.getDate()-7);
+  function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  document.getElementById('dp1').value=fmt(d1);document.getElementById('dp2').value=fmt(d2);
+}
+function setMes(){
+  var n=new Date();
+  var ini=new Date(n.getFullYear(),n.getMonth(),1);
+  function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  document.getElementById('dp1').value=fmt(ini);document.getElementById('dp2').value=fmt(n);
+}
 
 function fetchRows(){
   return fetch(PUB_URL,{cache:'no-store'})
@@ -642,7 +669,7 @@ function fetchRows(){
 }
 
 fetchRows().then(function(){
-  setUlt7();
+  setOntem();
   analisar();
 });
 </script>
