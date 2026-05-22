@@ -248,7 +248,17 @@ function analisarDia(rows,diaStr){
     if(!st[num])return;
     var dt=parseDt(ts);if(!dt)return;
     var h=dt.getHours();if(h<TURNO_INI||h>=TURNO_FIM)return;
-    if(ev==='Check In Paciente'){st[num].paciente=true;st[num].ciTs=ts;st[num].tipo=tipo||'';}
+    if(ev==='Check In Paciente'){
+      // Se havia Check In sem Check Out, fechar sessão anterior automaticamente
+      if(st[num].ciTs){
+        var iniAnt=parseDt(st[num].ciTs);
+        if(iniAnt&&dt>iniAnt){
+          var durAnt=(dt-iniAnt)/60000;
+          if(durAnt>0&&durAnt<780)st[num].sessoes.push({dur:durAnt,tipo:st[num].tipo,estimado:true});
+        }
+      }
+      st[num].paciente=true;st[num].ciTs=ts;st[num].tipo=tipo||'';
+    }
     else if(ev==='Check Out Paciente'){
       if(st[num].ciTs){
         var ini=parseDt(st[num].ciTs);
