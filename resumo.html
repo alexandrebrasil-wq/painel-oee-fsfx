@@ -446,10 +446,10 @@ function renderAll(resDias,dias){
   html+='<div class="sec-hdr"><span style="color:#8b949e">Consolidado do periodo</span><hr></div>';
   html+='<div class="gauges-row">';
   var gauges=[
-    {lbl:'OEE',val:oeeM,meta:META_OEE,desc:'Atendimento / Disponivel'},
-    {lbl:'Disponibilidade',val:dispM,meta:META_DISP,desc:'(Disponivel - Paradas) / Disponivel'},
-    {lbl:'Ocupacao',val:ocupM,meta:META_OCUP,desc:'(Atendimento + Paradas) / Disponivel'},
-    {lbl:'Ociosidade',val:ocioM,meta:0.20,desc:'Sem paciente e sem parada / Disponivel',inv:true},
+    {lbl:'OEE',val:oeeM,meta:META_OEE,desc:'Tempo de atendimento / Tempo disponivel'},
+    {lbl:'Disponibilidade',val:dispM,meta:META_DISP,desc:'(Tempo disponivel - Tempo em paradas) / Tempo disponivel'},
+    {lbl:'Ocupacao',val:ocupM,meta:META_OCUP,desc:'(Tempo atendimento + Tempo paradas) / Tempo disponivel'},
+    {lbl:'Ociosidade',val:ocioM,meta:0.20,desc:'Tempo sem paciente e sem parada / Tempo disponivel',inv:true},
     {lbl:'Pacientes / dia (media)',val:Math.min(1,(totPac/dn)/(nPolFiltradas()||1)),meta:0.7,desc:'Media de atendimentos por dia',qtd:Math.round(totPac/dn)},
   ];
   gauges.forEach(function(g){
@@ -585,24 +585,44 @@ function renderAll(resDias,dias){
   html+='</div></div>';
 
   // Tabela por fluxo
+  // Calcular totais por fluxo agregando todos os dias
+  var porFluxoTotal={};
+  FLUXOS.forEach(function(fl){porFluxoTotal[fl.idx]={pac:0,paradas:0,parTempo:0};});
+  diasComDados.forEach(function(x){
+    var r=x.res;
+    FLUXOS.forEach(function(fl){
+      if(r.porFluxo&&r.porFluxo[fl.idx]){
+        porFluxoTotal[fl.idx].pac+=r.porFluxo[fl.idx].n||0;
+      }
+    });
+    // Contar paradas por fluxo via rows
+  });
+  // Contar paradas por fluxo diretamente dos dados
+  allRows.forEach(function(r){
+    var ts=r[0],pol=r[1],ev=r[2],mot=r[3];
+    if(ev!=='Início da Parada'&&ev!=='Inicio da Parada')return;
+    if(!pol)return;
+    var n=parseInt(pol.replace('Poltrona','').trim());
+    var fl=FLUXOS.find(function(f){return f.poltronas.includes(n);});
+    if(!fl)return;
+    var dia=ts.split(' ')[0];
+    if(!diasComDados.find(function(x){return x.dia===dia;}))return;
+    porFluxoTotal[fl.idx].paradas++;
+  });
+
   html+='<div class="panel"><div class="phdr" style="color:#a78bfa">Resultado por Fluxo</div><div class="pbody">';
-  html+='<table class="t"><thead><tr><th>Fluxo</th><th>Pac.</th><th>OEE med.</th><th>Disp.</th><th>Paradas</th></tr></thead><tbody>';
+  html+='<table class="t"><thead><tr><th>Fluxo</th><th>Pac.</th><th>Paradas</th><th>Par/Atend</th><th>OEE</th></tr></thead><tbody>';
   FLUXOS.forEach(function(fl){
     if(fluxoAtivo!==-1&&fluxoAtivo!==fl.idx)return;
-    var totP=0,oeeS=0,dispS=0,parS=0,dd=0;
-    diasComDados.forEach(function(x){
-      var r=x.res;
-      if(r.porFluxo&&r.porFluxo[fl.idx]){totP+=r.porFluxo[fl.idx].n||0;}
-      // re-calcular por fluxo nao disponivel no agregado — usar aproximacao
-    });
-    // Usar totais gerais se filtro ativo
+    var v=porFluxoTotal[fl.idx];
+    var ratio=v.pac>0?v.paradas/v.pac:0;
+    var ratioClass=ratio>0.5?'crit':ratio>0.3?'warn':'ok';
     var oeePrint=fluxoAtivo===fl.idx?pct(oeeM):'-';
-    var dispPrint=fluxoAtivo===fl.idx?pct(dispM):'-';
     html+='<tr><td><span class="bf f'+fl.idx+'">'+fl.nome+'</span></td>'
-      +'<td style="font-weight:600;color:#fff">'+totP+'</td>'
-      +'<td class="'+(oeeM>=META_OEE?'ok':oeeM>=META_OEE*0.85?'warn':'crit')+'">'+oeePrint+'</td>'
-      +'<td class="'+(dispM>=META_DISP?'ok':dispM>=META_DISP*0.85?'warn':'crit')+'">'+dispPrint+'</td>'
-      +'<td style="color:#f85149">'+nPar+'</td></tr>';
+      +'<td style="font-weight:600;color:#fff">'+v.pac+'</td>'
+      +'<td style="color:#f85149">'+v.paradas+'</td>'
+      +'<td class="'+ratioClass+'">'+Math.round(ratio*100)+'%</td>'
+      +'<td class="'+(oeeM>=META_OEE?'ok':oeeM>=META_OEE*0.85?'warn':'crit')+'">'+oeePrint+'</td></tr>';
   });
   html+='</tbody></table>';
   html+='</div></div>';
