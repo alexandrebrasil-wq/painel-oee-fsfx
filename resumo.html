@@ -459,15 +459,15 @@ function renderAll(resDias,dias){
     var cor2=isInv?(g.val<=g.meta?'#3fb950':g.val<=g.meta*1.5?'#f59e0b':'#f85149'):cor;
     var valDisplay=g.qtd!==undefined?g.qtd:pct(g.val);
     var valColor=g.qtd!==undefined?'#60a5fa':isInv?cor2:cor;
-    var subLabel=g.qtd!==undefined?'media de '+g.qtd+' pac/dia no periodo':'Meta: '+pct(g.meta)+' · '+g.desc;
+    var metaLabel=g.qtd!==undefined?'media de '+g.qtd+' pac/dia no periodo':'Meta: '+pct(g.meta)+' · '+g.desc;
     var deltaHtml=g.qtd!==undefined?'<div class="gauge-delta deq">'+dn+' dias analisados</div>'
-      :'<div class="gauge-delta '+(isOk?'dup':'ddn')+'">'+(isOk?'▲ Abaixo':'▼ Acima')+' da meta</div>';
-    if(isInv)deltaHtml='<div class="gauge-delta '+(isOk?'dup':'ddn')+'">'+(isOk?'▲ Abaixo da meta (bom)':'▼ Acima da meta')+'</div>';
+      :'<div class="gauge-delta '+(isOk?'dup':'ddn')+'">'+(isOk?'▲ Acima da meta':'▼ Abaixo da meta')+'</div>';
+    if(isInv)deltaHtml='<div class="gauge-delta '+(isOk?'dup':'ddn')+'">'+(isOk?'▲ Abaixo da meta (bom)':'▼ Acima da meta (ruim)')+'</div>';
     html+='<div class="gauge-card">'
       +'<div class="gauge-title">'+g.lbl+'</div>'
       +gauge(g.val,g.meta,g.qtd!==undefined?'#60a5fa':isInv?cor2:cor,g.lbl)
       +'<div class="gauge-val" style="color:'+valColor+'">'+valDisplay+'</div>'
-      +'<div class="gauge-meta">'+subLabel+'</div>'
+      +'<div class="gauge-meta">'+metaLabel+'</div>'
       +deltaHtml
       +'</div>';
   });
