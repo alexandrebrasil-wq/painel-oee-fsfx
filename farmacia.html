@@ -230,6 +230,14 @@ function process(rows){
       st[num].ciTs=ts;
       st[num].numAtend=numAtend||'';
     } else if(ev==='Check Out Paciente'){
+      // Fechar qualquer parada aberta automaticamente
+      for(var i=st[num].paradas.length-1;i>=0;i--){
+        if(!st[num].paradas[i].fim){
+          st[num].paradas[i].fim=ts;
+          var pci=parseDt(st[num].paradas[i].ini),pcf=parseDt(ts);
+          if(pci&&pcf&&pcf>pci)st[num].paradas[i].dur=(pcf-pci)/60000;
+        }
+      }
       if(isHoje&&st[num].ciTs){
         var ini=parseDt(st[num].ciTs),fim=parseDt(ts);
         if(ini&&fim&&fim>ini){
@@ -237,7 +245,7 @@ function process(rows){
           if(dur>0&&dur<780){
             // Calcular tempo de espera farm nessa sessao
             var espFarm=st[num].paradas
-              .filter(function(p){return p.fim&&p.isFarm;})
+              .filter(function(p){return p.fim&&p.isFarm&&p.dur>0&&p.dur<=240;})
               .reduce(function(a,p){return a+p.dur;},0);
             st[num].sessoes.push({
               ts:st[num].ciTs,fim:ts,dur:dur,
@@ -307,7 +315,7 @@ function process(rows){
     s.sessoes.forEach(function(sess){if(sess.espFarm>0)rankMap[num]=(rankMap[num]||0)+sess.espFarm;});
     // De paradas em aberto
     var pAberta=s.paradas.filter(function(p){return !p.fim&&p.isFarm;}).pop();
-    if(pAberta){var ini=parseDt(pAberta.ini);if(ini)rankMap[num]=(rankMap[num]||0)+(now-ini)/60000;}
+    if(pAberta){var ini=parseDt(pAberta.ini);if(ini){var dur=(now-ini)/60000;if(dur>0&&dur<=240)rankMap[num]=(rankMap[num]||0)+dur;}}
   });
   var ranking=Object.keys(rankMap).map(function(num){
     var fl=getFluxo(parseInt(num));
