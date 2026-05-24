@@ -42,7 +42,7 @@ header{background:#0d1419;border-bottom:2px solid #1b2e6b;padding:0 24px;height:
 .content{flex:1;padding:12px 20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
 
 /* VELOCIMETROS */
-.gauges-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.gauges-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
 .gauge-card{background:#111820;border:1px solid #21262d;border-radius:12px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:6px;}
 .gauge-title{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#8b949e;text-align:center;}
 .gauge-svg{width:160px;height:90px;}
@@ -421,12 +421,12 @@ function renderAll(resDias,dias){
   }
 
   // Consolidado
-  var totPac=0,totParado=0,nPar=0,tempoAtend=0,oeeSum=0,dispSum=0,eficSum=0,ocupSum=0,ocioSum=0,dn=0;
+  var totPac=0,totParado=0,nPar=0,tempoAtend=0,oeeSum=0,dispSum=0,eficSum=0,ocupSum=0,dn=0;
   var porMotTot={},porTipoTot={};
   diasComDados.forEach(function(x){
     var r=x.res;
     totPac+=r.totPac;totParado+=r.totParado;nPar+=r.nPar;tempoAtend+=r.tempoAtend;
-    oeeSum+=r.oee;dispSum+=r.disp;eficSum+=r.efic;ocupSum+=r.ocup;ocioSum+=(r.ocio||0);dn++;
+    oeeSum+=r.oee;dispSum+=r.disp;eficSum+=r.efic;ocupSum+=r.ocup;dn++;
     Object.entries(r.porMot).forEach(function(e){var k=e[0],v=e[1];if(!porMotTot[k])porMotTot[k]={n:0,tot:0};porMotTot[k].n+=v.n;porMotTot[k].tot+=v.tot;});
     Object.entries(r.porTipo).forEach(function(e){var t=e[0],v=e[1];if(!porTipoTot[t])porTipoTot[t]={n:0,tot:0};porTipoTot[t].n+=v.n;porTipoTot[t].tot+=v.tot;});
   });
@@ -434,7 +434,6 @@ function renderAll(resDias,dias){
   var dispM=dn?dispSum/dn:0;
   var eficM=dn?eficSum/dn:0;
   var ocupM=dn?ocupSum/dn:0;
-  var ocioM=dn?ocioSum/dn:0;
 
   var c=document.getElementById('content');
   var html='';
@@ -446,7 +445,6 @@ function renderAll(resDias,dias){
     {lbl:'OEE',val:oeeM,meta:META_OEE,desc:'Tempo de atendimento / Tempo disponivel'},
     {lbl:'Disponibilidade',val:dispM,meta:META_DISP,desc:'(Tempo disponivel - Tempo em paradas) / Tempo disponivel'},
     {lbl:'Ocupacao',val:ocupM,meta:META_OCUP,desc:'(Tempo atendimento + Tempo paradas) / Tempo disponivel'},
-    {lbl:'Ociosidade',val:ocioM,meta:0.20,desc:'Tempo sem paciente e sem parada / Tempo disponivel',inv:true},
     {lbl:'Pacientes / dia (media)',val:Math.min(1,(totPac/dn)/(nPolFiltradas()||1)),meta:0.7,desc:'Media de atendimentos por dia',qtd:Math.round(totPac/dn)},
   ];
   gauges.forEach(function(g){
