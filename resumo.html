@@ -624,8 +624,8 @@ function renderAll(resDias,dias){
   html+='</div></div>';
   html+='</div>'; // charts-row3
 
-  // PICO HORA A HORA (agregado do periodo)
-  var horasLabels=['07h','08h','09h','10h','11h','12h','13h','14h','15h','16h','17h','18h'];
+  // PICO HORA A HORA (agregado do periodo) — barras horizontais
+  var horasLabels=['07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00'];
   var ocupHTotal=Array(TURNO_FIM-TURNO_INI).fill(0);
   var diasComDadosN=0;
   resDias.forEach(function(x){
@@ -635,34 +635,29 @@ function renderAll(resDias,dias){
   });
   var maxHora=Math.max.apply(null,ocupHTotal)||1;
   var picoHoraIdx=ocupHTotal.indexOf(maxHora);
-  html+='<div class="sec-hdr" style="margin-top:4px"><span style="color:#f59e0b">&#9200; Horários de Pico — Atendimentos por Hora</span><hr></div>';
-  html+='<div class="panel" style="margin-bottom:10px"><div class="phdr" style="color:#f59e0b">Distribuição de Check-ins por hora do turno <span style="font-weight:400;font-size:10px;color:#8b949e">(total do período · '+diasComDadosN+' dias)</span></div><div class="pbody">';
-  html+='<div style="display:flex;align-items:flex-end;gap:4px;height:120px;padding:8px 0 0 0;position:relative">';
+  html+='<div class="sec-hdr" style="margin-top:4px"><span style="color:#f59e0b">&#9200; Demanda por hora do dia</span><hr></div>';
+  html+='<div class="panel" style="margin-bottom:10px"><div class="phdr" style="color:#f59e0b">Check-ins por hora do turno <span style="font-weight:400;font-size:10px;color:#8b949e;text-transform:none">(total do período · '+diasComDadosN+' dias úteis)</span></div><div class="pbody" style="padding:6px 14px 10px">';
+  // tabela header
+  html+='<div style="display:grid;grid-template-columns:64px 52px 1fr;gap:0;margin-bottom:4px">'
+    +'<div style="font-size:9px;color:#8b949e;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Hora</div>'
+    +'<div style="font-size:9px;color:#8b949e;font-weight:600;text-transform:uppercase;letter-spacing:.05em;text-align:right;padding-right:10px">Check-ins</div>'
+    +'<div style="font-size:9px;color:#8b949e;font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding-left:4px">Distribuição</div>'
+    +'</div>';
+  // linhas
   ocupHTotal.forEach(function(v,i){
     var isPico=i===picoHoraIdx;
-    var h=Math.round(v/maxHora*100);
-    var c2=isPico?'#f59e0b':v>=maxHora*0.75?'#fb923c':v>=maxHora*0.5?'#60a5fa':'#30363d';
-    var med=diasComDadosN>0?(v/diasComDadosN).toFixed(1):0;
-    html+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px">'
-      +'<div style="font-size:9px;color:'+(isPico?'#f59e0b':'#8b949e')+';font-weight:'+(isPico?'700':'400')+'">'+v+'</div>'
-      +'<div style="width:100%;border-radius:3px 3px 0 0;background:'+c2+';height:'+h+'%;min-height:3px;position:relative" title="'+horasLabels[i]+': '+v+' check-ins (méd '+med+'/dia)"></div>'
-      +'<div style="font-size:9px;color:'+(isPico?'#f59e0b':'#8b949e')+';font-weight:'+(isPico?'700':'400')+'">'+horasLabels[i]+'</div>'
+    var pct=Math.round(v/maxHora*100);
+    var barColor=isPico?'#f59e0b':'#1b2e6b';
+    var rowBg=isPico?'rgba(245,158,11,0.07)':'transparent';
+    html+='<div style="display:grid;grid-template-columns:64px 52px 1fr;gap:0;align-items:center;padding:3px 0;border-bottom:.5px solid #21262d;background:'+rowBg+'">'
+      +'<div style="font-size:11px;color:'+(isPico?'#f59e0b':'#ccc')+';font-weight:'+(isPico?700:400)+'">'+horasLabels[i]+'</div>'
+      +'<div style="font-size:11px;font-weight:700;color:'+(isPico?'#f59e0b':'#fff')+';text-align:right;padding-right:10px;font-variant-numeric:tabular-nums">'+v+'</div>'
+      +'<div style="padding-left:4px;display:flex;align-items:center;gap:6px">'
+      +'<div style="height:14px;border-radius:2px;background:'+barColor+';width:'+pct+'%;min-width:'+(v>0?4:0)+'px;transition:width .3s"></div>'
+      +(isPico?'<span style="font-size:9px;color:#f59e0b;font-weight:700;white-space:nowrap">&#9650; PICO</span>':'')
+      +'</div>'
       +'</div>';
   });
-  html+='</div>';
-  html+='<div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">';
-  // top 3 horas
-  var rankH=ocupHTotal.map(function(v,i){return{i:i,v:v};}).sort(function(a,b){return b.v-a.v;}).slice(0,3);
-  rankH.forEach(function(h,idx){
-    var medals=['🥇','🥈','🥉'];
-    var med2=diasComDadosN>0?(h.v/diasComDadosN).toFixed(1):0;
-    html+='<div style="background:#111820;border:1px solid #21262d;border-radius:8px;padding:8px 14px;display:flex;align-items:center;gap:8px">'
-      +'<span style="font-size:16px">'+medals[idx]+'</span>'
-      +'<div><div style="font-size:13px;font-weight:700;color:#f59e0b">'+horasLabels[h.i]+'</div>'
-      +'<div style="font-size:10px;color:#8b949e">'+h.v+' check-ins · méd '+med2+'/dia</div></div>'
-      +'</div>';
-  });
-  html+='</div>';
   html+='</div></div>';
 
   // CARDS POR DIA
