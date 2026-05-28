@@ -5,458 +5,295 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Farmácia — Registro de Medicação</title>
+<title>Farmácia — Registro</title>
 <style>
-  /* ── Reset & base ── */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f5f5f3;
+  color: #1a1a18;
+  min-height: 100vh;
+}
+.header {
+  background: #0F6E56;
+  color: #fff;
+  padding: 16px;
+}
+.header h1 { font-size: 18px; font-weight: 600; }
+.header p  { font-size: 13px; opacity: 0.8; margin-top: 2px; }
 
-  :root {
-    --green:       #0F6E56;
-    --green-light: #E1F5EE;
-    --green-dark:  #085041;
-    --amber:       #BA7517;
-    --amber-light: #FAEEDA;
-    --amber-dark:  #633806;
-    --red:         #A32D2D;
-    --red-light:   #FCEBEB;
-    --red-dark:    #791F1F;
-    --gray-bg:     #F5F5F3;
-    --surface:     #FFFFFF;
-    --border:      rgba(0,0,0,0.10);
-    --border-strong: rgba(0,0,0,0.18);
-    --text:        #1a1a18;
-    --text-muted:  #6b6b66;
-    --text-hint:   #9e9e99;
-    --radius:      12px;
-    --radius-sm:   8px;
-    --tap-min:     52px;
-  }
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
 
-  html, body {
-    height: 100%;
-    background: var(--gray-bg);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 16px;
-    color: var(--text);
-    -webkit-tap-highlight-color: transparent;
-    overscroll-behavior: none;
-  }
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b6b66;
+  margin-bottom: 8px;
+}
 
-  /* ── Layout ── */
-  .app { max-width: 480px; margin: 0 auto; padding: 0 0 env(safe-area-inset-bottom); min-height: 100%; display: flex; flex-direction: column; }
+/* Etapa detectada */
+.etapa-box {
+  background: #E1F5EE;
+  border: 2px solid #0F6E56;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #085041;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.etapa-box.vazia {
+  background: #f5f5f3;
+  border-color: #ccc;
+  color: #9e9e99;
+  font-weight: 400;
+  font-size: 14px;
+}
 
-  /* ── Header ── */
-  .header {
-    background: var(--green);
-    color: #fff;
-    padding: 14px 16px 12px;
-    padding-top: calc(14px + env(safe-area-inset-top));
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .header-title { font-size: 16px; font-weight: 600; }
-  .header-sub   { font-size: 12px; opacity: 0.75; margin-top: 2px; }
-  .header-step  {
-    background: rgba(255,255,255,0.2);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
+/* Campo de bipe — igual ao Google Forms */
+input[type="text"] {
+  display: block;
+  width: 100%;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 14px 16px;
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  background: #fff;
+  color: #1a1a18;
+  outline: none;
+  font-family: 'Courier New', monospace;
+  -webkit-appearance: none;
+}
+input[type="text"]:focus {
+  border-color: #0F6E56;
+}
+input[type="text"].preenchido {
+  border-color: #0F6E56;
+  background: #E1F5EE;
+  color: #085041;
+}
+input[type="text"]::placeholder {
+  color: #9e9e99;
+  font-weight: 400;
+  font-family: -apple-system, sans-serif;
+  font-size: 15px;
+}
 
-  /* ── Step dots ── */
-  .stepper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px 0 8px;
-    background: var(--green);
-  }
-  .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.3);
-    transition: background 0.2s;
-  }
-  .dot.active { background: #fff; }
+/* Botão confirmar */
+.btn {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 0 16px 16px;
+  padding: 16px;
+  background: #0F6E56;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+.btn:disabled {
+  background: #ccc;
+  color: #fff;
+  cursor: not-allowed;
+}
 
-  /* ── Body ── */
-  .body { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+/* Alerta justificativa */
+.alerta {
+  background: #FAEEDA;
+  border: 1.5px solid #BA7517;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #633806;
+  margin-bottom: 10px;
+}
+.just-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 13px 14px;
+  font-size: 14px;
+  color: #1a1a18;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+.just-btn.selecionado {
+  border-color: #BA7517;
+  background: #FAEEDA;
+  color: #633806;
+  font-weight: 600;
+}
 
-  /* ── Section label ── */
-  .label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-  }
+/* Tela de sucesso */
+.sucesso {
+  text-align: center;
+  padding: 40px 24px;
+}
+.sucesso-icone {
+  width: 72px; height: 72px;
+  background: #E1F5EE;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 36px;
+}
+.sucesso h2 { font-size: 22px; font-weight: 700; color: #1a1a18; }
+.sucesso p  { font-size: 14px; color: #6b6b66; margin-top: 6px; }
+.resumo {
+  background: #f5f5f3;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 16px 0;
+  text-align: left;
+}
+.resumo-linha {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 6px 0;
+  border-bottom: 1px solid #e0e0de;
+}
+.resumo-linha:last-child { border-bottom: none; }
+.resumo-linha .chave { color: #6b6b66; }
+.resumo-linha .valor { font-weight: 600; font-family: 'Courier New', monospace; }
 
-  /* ── Bipe field ── */
-  .bipe-wrap {
-    background: var(--surface);
-    border: 2px solid var(--green);
-    border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    min-height: var(--tap-min);
-    cursor: pointer;
-    position: relative;
-  }
-  .bipe-wrap.idle   { border-color: var(--border-strong); }
-  .bipe-wrap.filled { border-color: var(--border-strong); background: var(--gray-bg); }
-  .bipe-icon { font-size: 22px; color: var(--text-hint); flex-shrink: 0; }
-  .bipe-text { flex: 1; }
-  .bipe-hint  { font-size: 14px; color: var(--text-hint); }
-  .bipe-value { font-size: 22px; font-weight: 600; letter-spacing: 0.04em; color: var(--text); font-family: 'Courier New', monospace; }
-  .bipe-cursor {
-    display: inline-block; width: 2px; height: 24px;
-    background: var(--green); vertical-align: middle;
-    animation: blink 1s step-end infinite;
-  }
-  .bipe-wrap.filled .bipe-cursor { display: none; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 60px 24px;
+}
+.spinner {
+  width: 40px; height: 40px;
+  border: 3px solid #ddd;
+  border-top-color: #0F6E56;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Campo de input real (oculto visualmente mas acessível ao leitor) */
-  /* #barcode-input — estilo aplicado inline no HTML */
+/* Erro */
+.erro-msg {
+  background: #FCEBEB;
+  border: 1.5px solid #A32D2D;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #791F1F;
+  margin: 0 16px 16px;
+  display: none;
+}
 
-  /* ── Botão de limpar bipe ── */
-  .bipe-clear {
-    background: none; border: none; cursor: pointer;
-    color: var(--text-hint); font-size: 18px; padding: 4px;
-    display: none;
-  }
-  .bipe-wrap.filled .bipe-clear { display: block; }
-
-  /* ── Grid de etapas ── */
-  /* stage-grid removido — etapa detectada via QR Code */
-  .stage-detected {
-    background: var(--green-light);
-    border: 1.5px solid var(--green);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-    display: flex; align-items: center; gap: 12px;
-    min-height: var(--tap-min);
-  }
-  .stage-detected.idle {
-    background: var(--surface);
-    border-color: var(--border);
-  }
-  .stage-detected .stage-icon { font-size: 22px; color: var(--text-hint); flex-shrink: 0; }
-  .stage-detected .stage-text { flex: 1; }
-  .stage-detected.idle .stage-icon { color: var(--text-hint); }
-  .stage-tag { display: inline-block; background: var(--green); color: #fff; border-radius: 6px; padding: 3px 10px; font-size: 12px; font-weight: 600; margin-top: 3px; }
-
-  /* ── Lista de responsáveis ── */
-  .resp-list { display: flex; flex-direction: column; gap: 6px; }
-  .resp-btn {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0 16px;
-    height: var(--tap-min);
-    display: flex; align-items: center;
-    font-size: 15px; color: var(--text);
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .resp-btn:active { background: var(--gray-bg); }
-  .resp-btn.selected { border-color: var(--green); background: var(--green-light); color: var(--green-dark); font-weight: 600; }
-
-  /* ── Justificativas ── */
-  .just-list { display: flex; flex-direction: column; gap: 6px; }
-  .just-btn {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 0 16px;
-    min-height: var(--tap-min);
-    display: flex; align-items: center;
-    font-size: 14px; color: var(--text);
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .just-btn:active { background: var(--gray-bg); }
-  .just-btn.selected { border-color: var(--amber); background: var(--amber-light); color: var(--amber-dark); font-weight: 600; }
-
-  .alert-banner {
-    background: var(--amber-light);
-    border: 1.5px solid var(--amber);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
-    font-size: 13px;
-    color: var(--amber-dark);
-    display: flex; gap: 8px; align-items: flex-start;
-  }
-  .alert-banner svg { flex-shrink: 0; margin-top: 1px; }
-
-  /* ── Botões de ação ── */
-  .btn-primary {
-    background: var(--green);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius);
-    height: 54px;
-    width: 100%;
-    font-size: 16px; font-weight: 600;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    transition: opacity 0.15s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .btn-primary:disabled { opacity: 0.32; cursor: not-allowed; }
-  .btn-primary:not(:disabled):active { opacity: 0.85; }
-
-  .btn-secondary {
-    background: transparent;
-    color: var(--text-muted);
-    border: 1.5px solid var(--border-strong);
-    border-radius: var(--radius);
-    height: 48px;
-    width: 100%;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .btn-secondary:active { background: var(--gray-bg); }
-
-  /* ── Ações do rodapé ── */
-  .footer-actions { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
-
-  /* ── Tela de sucesso ── */
-  .success-wrap {
-    flex: 1;
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 12px;
-    padding: 24px 16px;
-    text-align: center;
-  }
-  .success-icon {
-    width: 72px; height: 72px; border-radius: 50%;
-    background: var(--green-light);
-    display: flex; align-items: center; justify-content: center;
-  }
-  .success-title { font-size: 20px; font-weight: 700; color: var(--text); }
-  .success-sub   { font-size: 14px; color: var(--text-muted); }
-  .summary-card {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    width: 100%; max-width: 340px;
-    overflow: hidden;
-    margin-top: 4px;
-  }
-  .summary-row {
-    display: flex; justify-content: space-between;
-    align-items: center;
-    padding: 13px 16px;
-    font-size: 14px;
-    border-bottom: 1px solid var(--border);
-  }
-  .summary-row:last-child { border-bottom: none; }
-  .summary-row .key { color: var(--text-muted); }
-  .summary-row .val { font-weight: 600; color: var(--text); font-family: 'Courier New', monospace; }
-  .summary-row .val.normal { font-family: inherit; }
-
-  /* ── Loading state ── */
-  .loading-wrap {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 16px;
-  }
-  .spinner {
-    width: 36px; height: 36px;
-    border: 3px solid var(--border);
-    border-top-color: var(--green);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-size: 14px; color: var(--text-muted); }
-
-  /* ── Erro ── */
-  .error-banner {
-    background: var(--red-light);
-    border: 1.5px solid var(--red);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
-    font-size: 13px; color: var(--red-dark);
-    display: none;
-  }
-
-  /* ── Páginas ── */
-  .page { display: none; flex-direction: column; flex: 1; }
-  .page.active { display: flex; }
+/* Páginas */
+.pg { display: none; }
+.pg.ativa { display: block; }
 </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- ═══════════════ PÁGINA 1 — BIPE + ETAPA ═══════════════ -->
-  <div id="pg1" class="page active">
-    <div class="header">
-      <div>
-        <div class="header-title" id="pg1-title">Registro de medicação</div>
-        <div class="header-sub" id="pg1-sub">Farmácia oncológica</div>
-      </div>
+<!-- ══ CABEÇALHO ══ -->
+<div class="header">
+  <h1>Registro de medicação</h1>
+  <p id="header-sub">Farmácia oncológica</p>
+</div>
 
-    </div>
+<!-- ══ PG PRINCIPAL ══ -->
+<div id="pg-main" class="pg ativa">
 
-    <div class="body">
-
-      <!-- PASSO 1: QR Code da estação -->
-      <div>
-        <div class="label">1 — Bipe o QR da estação</div>
-        <div class="stage-detected idle" id="stage-wrap" onclick="focusQR()">
-
-          <svg class="stage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28" aria-hidden="true">
-            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-            <rect x="3" y="14" width="7" height="7"/><rect x="5" y="5" width="3" height="3"/>
-            <rect x="16" y="5" width="3" height="3"/><rect x="5" y="16" width="3" height="3"/>
-            <line x1="14" y1="14" x2="17" y2="14"/><line x1="17" y1="14" x2="17" y2="17"/>
-            <line x1="17" y1="17" x2="20" y2="17"/><line x1="20" y1="14" x2="20" y2="17"/>
-            <line x1="14" y1="17" x2="14" y2="20"/><line x1="14" y1="20" x2="17" y2="20"/>
-          </svg>
-          <div class="stage-text">
-            <div id="stage-hint" style="font-size:14px;color:var(--text-hint);">Aponte o leitor para o QR da estação</div>
-            <div id="stage-value" style="display:none;">
-              <div style="font-size:12px;color:var(--green-dark);font-weight:500;">Etapa detectada</div>
-              <span class="stage-tag" id="stage-tag">—</span>
-            </div>
-          </div>
-          <button id="stage-clear" onclick="clearStage(event)" aria-label="Limpar etapa" style="display:none;background:none;border:none;cursor:pointer;color:var(--text-hint);padding:4px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- PASSO 2: Código de barras do atendimento -->
-      <div>
-        <div class="label">Bipe o código do atendimento</div>
-        <input
-          id="barcode-input"
-          type="text"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-          autofocus
-          placeholder="Bipe o código de barras aqui"
-          aria-label="Campo de leitura do código de barras do atendimento"
-          style="
-            display:block;
-            width:100%;
-            font-size:20px;
-            font-weight:600;
-            padding:16px;
-            border:2px solid var(--green);
-            border-radius:var(--radius);
-            background:var(--surface);
-            color:var(--text);
-            outline:none;
-            font-family:var(--font-mono);
-            caret-color:var(--green);
-            box-sizing:border-box;
-          "
-        >
-      </div>
-
-      <!-- Justificativa — visível só quando ?atraso=1 -->
-      <div id="just-block" style="display:none">
-        <div class="alert-banner">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Tempo acima do limite — informe o motivo.
-        </div>
-        <div class="label" style="margin-top:12px">Motivo da parada</div>
-        <div class="just-list" id="just-list"></div>
-      </div>
-
-      <div id="error-msg" class="error-banner" style="display:none">
-        Erro ao salvar. Verifique a conexão e tente novamente.
-      </div>
-
-      <div class="footer-actions">
-        <button class="btn-primary" id="btn-next1" disabled onclick="submitDireto()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-          Confirmar e salvar
-        </button>
-      </div>
-    </div>
+  <!-- Etapa -->
+  <div class="card">
+    <div class="label">Etapa</div>
+    <div class="etapa-box vazia" id="etapa-box">Não detectada</div>
   </div>
 
-  <!-- pg2 removido — responsável não é mais coletado -->
-
-    <!-- ═══════════════ LOADING ═══════════════ -->
-  <div id="pg-loading" class="page">
-    <div class="loading-wrap">
-      <div class="spinner"></div>
-      <div class="loading-text">Salvando registro...</div>
-    </div>
+  <!-- Atendimento -->
+  <div class="card">
+    <div class="label">Nº atendimento</div>
+    <input
+      type="text"
+      id="campo-atendimento"
+      placeholder="Bipe o código de barras"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="off"
+      spellcheck="false"
+      autofocus
+    >
   </div>
 
-  <!-- ═══════════════ SUCESSO ═══════════════ -->
-  <div id="pg-success" class="page">
-    <div class="header">
-      <div>
-        <div class="header-title">Registro salvo</div>
-        <div class="header-sub" id="success-ts">—</div>
-      </div>
-    </div>
-    <div class="success-wrap">
-      <div class="success-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2.5" width="36" height="36" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div class="success-title">Salvo com sucesso</div>
-      <div class="success-sub">Os dados foram registrados no sistema.</div>
-
-      <div class="summary-card">
-        <div class="summary-row"><span class="key">Atendimento</span><span class="val" id="s-id">—</span></div>
-        <div class="summary-row"><span class="key">Etapa</span>      <span class="val normal" id="s-stage">—</span></div>
-        <div class="summary-row" id="s-just-row" style="display:none">
-          <span class="key">Justificativa</span><span class="val normal" id="s-just">—</span>
-        </div>
-      </div>
-
-      <button class="btn-primary" onclick="novoRegistro()" style="max-width:340px;width:100%;margin-top:8px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18" aria-hidden="true">
-          <path d="M3 9V5a2 2 0 0 1 2-2h4M3 15v4a2 2 0 0 0 2 2h4"/>
-          <line x1="7" y1="8" x2="7" y2="16"/><line x1="11" y1="7" x2="11" y2="17"/>
-        </svg>
-        Novo registro
-      </button>
-    </div>
+  <!-- Justificativa (oculta por padrão) -->
+  <div class="card" id="bloco-just" style="display:none">
+    <div class="alerta">⚠️ Tempo acima do limite — informe o motivo.</div>
+    <div class="label">Motivo da parada</div>
+    <div id="lista-just"></div>
   </div>
 
-</div><!-- .app -->
+  <div class="erro-msg" id="erro-msg">Erro ao salvar. Verifique a conexão.</div>
+
+  <button class="btn" id="btn-confirmar" disabled onclick="enviar()">
+    ✓ Confirmar e salvar
+  </button>
+
+</div>
+
+<!-- ══ PG LOADING ══ -->
+<div id="pg-loading" class="pg">
+  <div class="loading">
+    <div class="spinner"></div>
+    <p>Salvando registro...</p>
+  </div>
+</div>
+
+<!-- ══ PG SUCESSO ══ -->
+<div id="pg-sucesso" class="pg">
+  <div class="sucesso">
+    <div class="sucesso-icone">✓</div>
+    <h2>Registro salvo!</h2>
+    <p id="sucesso-hora">—</p>
+    <div class="resumo">
+      <div class="resumo-linha"><span class="chave">Atendimento</span><span class="valor" id="res-atend">—</span></div>
+      <div class="resumo-linha"><span class="chave">Etapa</span><span class="valor" id="res-etapa" style="font-family:inherit">—</span></div>
+      <div class="resumo-linha" id="res-just-linha" style="display:none"><span class="chave">Justificativa</span><span class="valor" id="res-just" style="font-family:inherit">—</span></div>
+    </div>
+    <button class="btn" onclick="novoRegistro()">
+      ↩ Novo registro
+    </button>
+  </div>
+</div>
 
 <script>
-// ═══════════════════════════════════════════════════
-//  CONFIGURAÇÃO — edite aqui antes de publicar
-// ═══════════════════════════════════════════════════
-
-// URL do Google Apps Script Web App (substitua após publicar o script)
+// ═══════════════════════════════════════
+//  CONFIGURAÇÃO
+// ═══════════════════════════════════════
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwulrdZyfww-3ejAoGIwrGewM2eAmgCYFSY9SUKmJSU9uiGCtnTiGZT9EZxn8j3lgImhA/exec';
 
-// Limites de tempo por etapa (em minutos) — ajuste com a supervisora
-var LIMITES = {
-  'Separação':     20,
-  'Pré QT':        45,
-  'Capela QT':     30,
-  'Disponível QT': 15
+var SLUG_ETAPAS = {
+  'sep':  'Separação',
+  'pre':  'Pré QT',
+  'cap':  'Capela QT',
+  'disp': 'Disponível QT'
 };
 
-// Causas pré-cadastradas de parada
+var LIMITES = {
+  'Separação': 20, 'Pré QT': 45, 'Capela QT': 30, 'Disponível QT': 15
+};
+
 var JUSTIFICATIVAS = [
   'Falta de insumo',
   'Aguardando prescrição médica',
@@ -466,368 +303,142 @@ var JUSTIFICATIVAS = [
   'Outro'
 ];
 
-// ═══════════════════════════════════════════════════
-//  MAPA DE SLUGS DE ETAPA (parâmetro ?etapa= na URL)
-// ═══════════════════════════════════════════════════
-var SLUG_ETAPAS = {
-  'sep':  'Separação',
-  'pre':  'Pré QT',
-  'cap':  'Capela QT',
-  'disp': 'Disponível QT'
-};
-
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════
 //  ESTADO
-// ═══════════════════════════════════════════════════
-var state = { atend: '', stage: '', just: '', needsJust: false };
+// ═══════════════════════════════════════
+var etapa       = '';
+var atendimento = '';
+var just        = '';
+var precisaJust = false;
 
-// ═══════════════════════════════════════════════════
-//  INICIALIZAÇÃO
-// ═══════════════════════════════════════════════════
-(function init() {
-  // Renderiza lista de justificativas (só se o elemento existir)
-  var jl = document.getElementById('just-list');
-  if (jl) {
-    JUSTIFICATIVAS.forEach(function(just) {
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+(function() {
+  // Lê etapa da URL
+  var params = new URLSearchParams(window.location.search);
+  var slug   = (params.get('etapa') || '').toLowerCase();
+  etapa = SLUG_ETAPAS[slug] || '';
+
+  if (etapa) {
+    document.getElementById('etapa-box').textContent = etapa;
+    document.getElementById('etapa-box').classList.remove('vazia');
+    document.getElementById('header-sub').textContent = etapa;
+  }
+
+  // Detecta se precisa justificativa
+  precisaJust = params.get('atraso') === '1';
+  if (precisaJust) {
+    document.getElementById('bloco-just').style.display = 'block';
+    var lista = document.getElementById('lista-just');
+    JUSTIFICATIVAS.forEach(function(j) {
       var btn = document.createElement('button');
       btn.className = 'just-btn';
-      btn.textContent = just;
-      btn.setAttribute('aria-pressed', 'false');
-      btn.onclick = function() { selectJust(btn, just); };
-      jl.appendChild(btn);
+      btn.textContent = j;
+      btn.onclick = function() {
+        document.querySelectorAll('.just-btn').forEach(function(b) { b.classList.remove('selecionado'); });
+        btn.classList.add('selecionado');
+        just = j;
+        verificar();
+      };
+      lista.appendChild(btn);
     });
   }
 
-  // Listener simples — igual ao Google Forms
-  var bipeInp = document.getElementById('barcode-input');
+  // Listener do campo de atendimento
+  var campo = document.getElementById('campo-atendimento');
 
-  function processarBipe() {
-    var val = bipeInp.value.trim();
-    if (!val) return;
-    if (state.stage && !state.atend) {
-      setBipeValue(val);
-    }
-  }
-
-  // Enter — enviado pelo leitor após o código
-  bipeInp.addEventListener('keydown', function(e) {
+  campo.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
       e.preventDefault();
-      processarBipe();
+      var val = campo.value.trim();
+      if (val) confirmarAtendimento(val);
     }
   });
 
-  // Change — disparado quando o campo perde foco com valor novo
-  bipeInp.addEventListener('change', function() {
-    processarBipe();
+  campo.addEventListener('change', function() {
+    var val = campo.value.trim();
+    if (val) confirmarAtendimento(val);
   });
 
-  // Input com debounce — captura injeção direta do DataWedge
-  bipeInp.addEventListener('input', function() {
-    clearTimeout(bipeInp._t);
-    bipeInp._t = setTimeout(processarBipe, 120);
+  campo.addEventListener('input', function() {
+    clearTimeout(campo._t);
+    campo._t = setTimeout(function() {
+      var val = campo.value.trim();
+      if (val && val.length >= 3) confirmarAtendimento(val);
+    }, 150);
   });
 
-  // Lê etapa da URL (?etapa=sep, pre, cap, disp)
-  var params = new URLSearchParams(window.location.search);
-  var slug   = params.get('etapa') || '';
-  var etapa  = SLUG_ETAPAS[slug.toLowerCase()] || '';
-  if (etapa) {
-    setStageValue(etapa);
-  }
-
-  // Detecta atraso via ?atraso=1 na URL
-  state.needsJust = params.get('atraso') === '1';
-  if (state.needsJust) {
-    document.getElementById('just-block').style.display = 'block';
-  }
-
-  // Foca no campo de atendimento
-  setTimeout(focusBipe, 150);
+  campo.focus();
 })();
 
-// ═══════════════════════════════════════════════════
-//  ETAPA — definida pela URL ao abrir o PDA via QR
-// ═══════════════════════════════════════════════════
-function setStageValue(etapa) {
-  state.stage = etapa;
-  var wrap = document.getElementById('stage-wrap');
-  wrap.classList.remove('idle');
-  document.getElementById('stage-hint').style.display  = 'none';
-  document.getElementById('stage-value').style.display = 'block';
-  document.getElementById('stage-tag').textContent     = etapa;
-  document.getElementById('stage-clear').style.display = 'block';
-  checkBtn1();
+// ═══════════════════════════════════════
+//  LÓGICA
+// ═══════════════════════════════════════
+function confirmarAtendimento(val) {
+  atendimento = val;
+  var campo = document.getElementById('campo-atendimento');
+  campo.value    = val;
+  campo.readOnly = true;
+  campo.className = 'preenchido';
+  verificar();
 }
 
-function clearStage(e) {
-  e.stopPropagation();
-  state.stage = '';
-  var wrap = document.getElementById('stage-wrap');
-  wrap.classList.add('idle');
-  document.getElementById('stage-hint').style.display  = '';
-  document.getElementById('stage-value').style.display = 'none';
-  document.getElementById('stage-clear').style.display = 'none';
-  checkBtn1();
+function verificar() {
+  var ok = atendimento && etapa && (!precisaJust || just);
+  document.getElementById('btn-confirmar').disabled = !ok;
 }
 
-// ═══════════════════════════════════════════════════
-//  BIPE DO ATENDIMENTO
-// ═══════════════════════════════════════════════════
-function focusBipe() {
-  var inp = document.getElementById('barcode-input');
-  if (inp) inp.focus();
-}
+function enviar() {
+  document.getElementById('erro-msg').style.display = 'none';
+  mostrarPg('pg-loading');
 
-function pg1Ativa() {
-  var pg1 = document.getElementById('pg1');
-  return pg1 && pg1.classList.contains('active');
-}
-
-function setBipeValue(val) {
-  state.atend = val;
-  var inp = document.getElementById('barcode-input');
-  inp.value    = val;
-  inp.readOnly = true;
-  inp.style.borderColor = '#0F6E56';
-  inp.style.background  = '#E1F5EE';
-  inp.style.color       = '#085041';
-  checkBtn1();
-  if (navigator.vibrate) navigator.vibrate(40);
-}
-
-function clearBipe(e) {
-  if (e) e.stopPropagation();
-  state.atend = '';
-  var inp = document.getElementById('barcode-input');
-  inp.value     = '';
-  inp.readOnly  = false;
-  inp.style.borderColor = 'var(--green)';
-  inp.style.background  = 'var(--surface)';
-  inp.style.color       = 'var(--text)';
-  checkBtn1();
-  inp.focus();
-}
-
-// ═══════════════════════════════════════════════════
-//  SELEÇÕES
-// ═══════════════════════════════════════════════════
-// selectStage removido — etapa detectada via QR Code
-
-function selectJust(el, just) {
-  document.querySelectorAll('.just-btn').forEach(function(b) {
-    b.classList.remove('selected');
-    b.setAttribute('aria-pressed', 'false');
-  });
-  el.classList.add('selected');
-  el.setAttribute('aria-pressed', 'true');
-  state.just = just;
-}
-
-// ═══════════════════════════════════════════════════
-//  VALIDAÇÕES
-// ═══════════════════════════════════════════════════
-function checkBtn1() {
-  var ok = state.atend && state.stage && (!state.needsJust || state.just);
-  document.getElementById('btn-next1').disabled = !ok;
-}
-
-// ═══════════════════════════════════════════════════
-//  NAVEGAÇÃO
-// ═══════════════════════════════════════════════════
-function goTo(id) {
-  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-  document.getElementById(id).classList.add('active');
-
-  if (id === 'pg1') {
-    setTimeout(focusBipe, 150);
-  }
-
-
-}
-
-// ═══════════════════════════════════════════════════
-//  ENVIO PARA GOOGLE APPS SCRIPT → SHEETS
-// ═══════════════════════════════════════════════════
-function submitDireto() {
-  document.getElementById('error-msg') && (document.getElementById('error-msg').style.display = 'none');
-  goTo('pg-loading');
-
-  var now = new Date();
-  var ts  = now.toISOString();
-
-  var payload = {
-    timestamp:     ts,
-    atendimento:   state.atend,
-    etapa:         state.stage,
-    responsavel:   '',
-    justificativa: state.just || '',
-    dispositivo:   navigator.userAgent.substring(0, 80)
-  };
-
+  var ts     = new Date().toISOString();
   var params = new URLSearchParams({
-    timestamp:     payload.timestamp,
-    atendimento:   payload.atendimento,
-    etapa:         payload.etapa,
-    responsavel:   payload.responsavel,
-    justificativa: payload.justificativa,
-    dispositivo:   payload.dispositivo
+    timestamp:     ts,
+    atendimento:   atendimento,
+    etapa:         etapa,
+    responsavel:   '',
+    justificativa: just || '',
+    dispositivo:   navigator.userAgent.substring(0, 80)
   });
 
   fetch(APPS_SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' })
   .then(function() {
-    showSuccess(now);
-    // Redireciona automaticamente após 2.5s para novo registro
+    mostrarSucesso(ts);
     setTimeout(novoRegistro, 2500);
   })
-  .catch(function(err) {
-    console.error(err);
-    goTo('pg1');
-    saveOffline(payload);
+  .catch(function() {
+    mostrarPg('pg-main');
+    document.getElementById('erro-msg').style.display = 'block';
   });
 }
 
-function submit() {
-  document.getElementById('error-msg').style.display = 'none';
-  goTo('pg-loading');
-
-  var now = new Date();
-  var ts  = now.toISOString();
-
-  var payload = {
-    timestamp:    ts,
-    atendimento:  state.atend,
-    etapa:        state.stage,
-    responsavel:  '',
-    justificativa: state.just || '',
-    dispositivo:  navigator.userAgent.substring(0, 80)
-  };
-
-  // Usa GET com parâmetros na URL para contornar CORS do Apps Script
-  var params = new URLSearchParams({
-    timestamp:    payload.timestamp,
-    atendimento:  payload.atendimento,
-    etapa:        payload.etapa,
-    responsavel:  payload.responsavel,
-    justificativa: payload.justificativa,
-    dispositivo:  payload.dispositivo
-  });
-
-  var url = APPS_SCRIPT_URL + '?' + params.toString();
-
-  fetch(url, { method: 'GET', mode: 'no-cors' })
-  .then(function() {
-    // no-cors não retorna body — assume sucesso se não lançou erro
-    showSuccess(now);
-  })
-  .catch(function(err) {
-    console.error(err);
-    goTo('pg2');
-    document.getElementById('error-msg').style.display = 'block';
-    saveOffline(payload);
-  });
-}
-
-// ═══════════════════════════════════════════════════
-//  OFFLINE FALLBACK
-// ═══════════════════════════════════════════════════
-function saveOffline(payload) {
-  try {
-    var queue = JSON.parse(localStorage.getItem('offlineQueue') || '[]');
-    queue.push(payload);
-    localStorage.setItem('offlineQueue', JSON.stringify(queue));
-  } catch(e) {}
-}
-
-function flushOfflineQueue() {
-  try {
-    var queue = JSON.parse(localStorage.getItem('offlineQueue') || '[]');
-    if (!queue.length) return;
-    queue.forEach(function(payload) {
-      var params = new URLSearchParams({
-        timestamp:    payload.timestamp,
-        atendimento:  payload.atendimento,
-        etapa:        payload.etapa,
-        responsavel:  payload.responsavel,
-        justificativa: payload.justificativa || '',
-        dispositivo:  payload.dispositivo || ''
-      });
-      fetch(APPS_SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' })
-      .then(function() {
-        var q = JSON.parse(localStorage.getItem('offlineQueue') || '[]');
-        q = q.filter(function(p) { return p.timestamp !== payload.timestamp; });
-        localStorage.setItem('offlineQueue', JSON.stringify(q));
-      }).catch(function() {});
-    });
-  } catch(e) {}
-}
-
-// Tenta reenviar ao voltar online
-window.addEventListener('online', flushOfflineQueue);
-window.addEventListener('load',   flushOfflineQueue);
-
-// ═══════════════════════════════════════════════════
-//  TELA DE SUCESSO
-// ═══════════════════════════════════════════════════
-function showSuccess(now) {
-  var h = now.getHours().toString().padStart(2,'0');
-  var m = now.getMinutes().toString().padStart(2,'0');
-  var s = now.getSeconds().toString().padStart(2,'0');
-  document.getElementById('success-ts').textContent = 'Salvo às ' + h + ':' + m + ':' + s;
-  document.getElementById('s-id').textContent    = state.atend;
-  document.getElementById('s-stage').textContent = state.stage;
-
-  var jr = document.getElementById('s-just-row');
-  if (state.just) {
-    jr.style.display = 'flex';
-    document.getElementById('s-just').textContent = state.just;
-  } else {
-    jr.style.display = 'none';
+function mostrarSucesso(ts) {
+  var d = new Date(ts);
+  var h = d.getHours().toString().padStart(2,'0');
+  var m = d.getMinutes().toString().padStart(2,'0');
+  document.getElementById('sucesso-hora').textContent = 'Salvo às ' + h + ':' + m;
+  document.getElementById('res-atend').textContent = atendimento;
+  document.getElementById('res-etapa').textContent = etapa;
+  if (just) {
+    document.getElementById('res-just-linha').style.display = 'flex';
+    document.getElementById('res-just').textContent = just;
   }
-
-  goTo('pg-success');
-  if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+  mostrarPg('pg-sucesso');
 }
 
-// ═══════════════════════════════════════════════════
-//  RESET
-// ═══════════════════════════════════════════════════
 function novoRegistro() {
-  // Recarrega a página mantendo o parâmetro de etapa
-  // Garante estado 100% limpo para o próximo bipe
   var params = new URLSearchParams(window.location.search);
-  var etapa  = params.get('etapa') || '';
-  var url    = window.location.pathname + (etapa ? '?etapa=' + etapa : '');
+  var slug   = params.get('etapa') || '';
+  var atraso = params.get('atraso') || '';
+  var url    = window.location.pathname + '?etapa=' + slug + (atraso ? '&atraso=' + atraso : '');
   window.location.replace(url);
 }
 
-function reset() {
-  state = { atend: '', stage: '', resp: '', just: '', needsJust: false };
-
-  // Limpa QR de estação
-  clearStage({ stopPropagation: function(){} });
-
-  // Limpa bipe
-  var wrap  = document.getElementById('bipe-wrap');
-  var hint  = document.getElementById('bipe-hint');
-  var value = document.getElementById('bipe-value');
-  wrap.classList.remove('filled');
-  wrap.classList.add('idle');
-  hint.style.display  = '';
-  value.style.display = 'none';
-  value.textContent   = '';
-
-  // Desmarca tudo
-  document.querySelectorAll('.resp-btn, .just-btn').forEach(function(b) {
-    b.classList.remove('selected');
-    b.setAttribute('aria-pressed', 'false');
-  });
-
-  document.getElementById('btn-next1').disabled = true;
-  document.getElementById('error-msg').style.display = 'none';
-
-  goTo('pg1');
-  setTimeout(focusBipe, 150);
+function mostrarPg(id) {
+  document.querySelectorAll('.pg').forEach(function(p) { p.classList.remove('ativa'); });
+  document.getElementById(id).classList.add('ativa');
 }
 </script>
 </body>
