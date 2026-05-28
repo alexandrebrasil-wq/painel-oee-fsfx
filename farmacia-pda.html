@@ -556,29 +556,48 @@ function clearStage(e) {
 // ═══════════════════════════════════════════════════
 function focusBipe() {
   var inp = document.getElementById('barcode-input');
+  if (!inp) return;
+  // Tenta múltiplas vezes para garantir em PDAs lentos
   inp.focus();
+  setTimeout(function() { inp.focus(); }, 50);
+  setTimeout(function() { inp.focus(); }, 200);
 }
 
-// Mantém o foco no campo de bipe sempre que a página estiver visível
-// Isso garante que o leitor de código de barras sempre encontre o campo
-document.addEventListener('click', function(e) {
+function pg1Ativa() {
   var pg1 = document.getElementById('pg1');
-  if (pg1 && pg1.classList.contains('active')) {
-    var alvo = e.target;
-    // Não rerouta se o clique foi em botão, input ou limpar
-    if (alvo.tagName === 'BUTTON' || alvo.tagName === 'INPUT') return;
-    setTimeout(focusBipe, 50);
-  }
+  return pg1 && pg1.classList.contains('active');
+}
+
+// Redireciona foco para o campo de bipe ao tocar na tela
+document.addEventListener('click', function(e) {
+  if (!pg1Ativa()) return;
+  var tag = e.target.tagName;
+  if (tag === 'BUTTON' || tag === 'INPUT') return;
+  setTimeout(focusBipe, 50);
 });
 
+// Restaura foco ao voltar de tela bloqueada ou outro app
 document.addEventListener('visibilitychange', function() {
-  if (!document.hidden) {
-    var pg1 = document.getElementById('pg1');
-    if (pg1 && pg1.classList.contains('active')) {
-      setTimeout(focusBipe, 100);
-    }
-  }
+  if (!document.hidden && pg1Ativa()) setTimeout(focusBipe, 200);
 });
+
+// Restaura foco quando a janela volta ao primeiro plano
+window.addEventListener('focus', function() {
+  if (pg1Ativa()) setTimeout(focusBipe, 200);
+});
+
+// Pulso de foco a cada 3s enquanto pg1 estiver ativa
+// Garante que o campo nunca fique sem foco por muito tempo
+setInterval(function() {
+  if (!pg1Ativa()) return;
+  var inp = document.getElementById('barcode-input');
+  if (!inp) return;
+  // Só recoloca foco se nenhum outro elemento estiver focado intencionalmente
+  var ativo = document.activeElement;
+  if (!ativo || ativo === document.body || ativo.tagName === 'DIV') {
+    inp.focus();
+  }
+}, 3000);
 
 function setBipeValue(val) {
   state.atend = val;
