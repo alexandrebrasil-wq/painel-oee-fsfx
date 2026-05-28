@@ -311,12 +311,9 @@
         <div class="header-title" id="pg1-title">Registro de medicação</div>
         <div class="header-sub" id="pg1-sub">Farmácia oncológica</div>
       </div>
-      <div class="header-step">1 de 2</div>
+
     </div>
-    <div class="stepper">
-      <div class="dot active" id="d1-1"></div>
-      <div class="dot"        id="d1-2"></div>
-    </div>
+
     <div class="body">
 
       <!-- PASSO 1: QR Code da estação -->
@@ -356,6 +353,7 @@
             type="text"
             inputmode="none"
             autocomplete="off"
+            autofocus
             aria-label="Campo de leitura do código de barras do atendimento"
           >
           <svg class="bipe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28" aria-hidden="true">
@@ -375,67 +373,32 @@
         </div>
       </div>
 
-      <div class="footer-actions">
-        <button class="btn-primary" id="btn-next1" disabled onclick="goTo('pg2')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-          Próximo
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════ PÁGINA 2 — RESPONSÁVEL (+ JUSTIFICATIVA SE PRECISAR) ═══════════════ -->
-  <div id="pg2" class="page">
-    <div class="header">
-      <div>
-        <div class="header-title">Responsável</div>
-        <div class="header-sub" id="pg2-sub">Atend. —</div>
-      </div>
-      <div class="header-step">2 de 2</div>
-    </div>
-    <div class="stepper">
-      <div class="dot active"></div>
-      <div class="dot active"></div>
-    </div>
-    <div class="body">
-
-      <div>
-        <div class="label">Quem está registrando?</div>
-        <div class="resp-list" id="resp-list">
-          <!-- gerado pelo JS via COLABORADORES -->
-        </div>
-      </div>
-
-      <!-- Bloco de justificativa — visível só quando necessário -->
+      <!-- Justificativa — visível só quando ?atraso=1 -->
       <div id="just-block" style="display:none">
         <div class="alert-banner">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Tempo acima do limite nesta etapa — informe o motivo.
+          Tempo acima do limite — informe o motivo.
         </div>
-        <div class="label" style="margin-top:14px">Motivo da parada</div>
-        <div class="just-list" id="just-list">
-          <!-- gerado pelo JS via JUSTIFICATIVAS -->
-        </div>
+        <div class="label" style="margin-top:12px">Motivo da parada</div>
+        <div class="just-list" id="just-list"></div>
       </div>
 
-      <div id="error-msg" class="error-banner">
+      <div id="error-msg" class="error-banner" style="display:none">
         Erro ao salvar. Verifique a conexão e tente novamente.
       </div>
 
       <div class="footer-actions">
-        <button class="btn-primary" id="btn-submit" disabled onclick="submit()">
+        <button class="btn-primary" id="btn-next1" disabled onclick="submitDireto()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
           Confirmar e salvar
-        </button>
-        <button class="btn-secondary" onclick="goTo('pg1')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
-          Voltar
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ═══════════════ LOADING ═══════════════ -->
+  <!-- pg2 removido — responsável não é mais coletado -->
+
+    <!-- ═══════════════ LOADING ═══════════════ -->
   <div id="pg-loading" class="page">
     <div class="loading-wrap">
       <div class="spinner"></div>
@@ -461,7 +424,6 @@
       <div class="summary-card">
         <div class="summary-row"><span class="key">Atendimento</span><span class="val" id="s-id">—</span></div>
         <div class="summary-row"><span class="key">Etapa</span>      <span class="val normal" id="s-stage">—</span></div>
-        <div class="summary-row"><span class="key">Responsável</span><span class="val normal" id="s-resp">—</span></div>
         <div class="summary-row" id="s-just-row" style="display:none">
           <span class="key">Justificativa</span><span class="val normal" id="s-just">—</span>
         </div>
@@ -495,15 +457,6 @@ var LIMITES = {
   'Disponível QT': 15
 };
 
-// Colaboradores da farmácia — ajuste conforme escala
-var COLABORADORES = [
-  'Ana Paula',
-  'Carlos',
-  'Fernanda',
-  'Marcos',
-  'Patrícia'
-];
-
 // Causas pré-cadastradas de parada
 var JUSTIFICATIVAS = [
   'Falta de insumo',
@@ -527,33 +480,24 @@ var SLUG_ETAPAS = {
 // ═══════════════════════════════════════════════════
 //  ESTADO
 // ═══════════════════════════════════════════════════
-var state = { atend: '', stage: '', resp: '', just: '', needsJust: false };
+var state = { atend: '', stage: '', just: '', needsJust: false };
 
 // ═══════════════════════════════════════════════════
 //  INICIALIZAÇÃO
 // ═══════════════════════════════════════════════════
 (function init() {
-  // Renderiza lista de responsáveis
-  var rl = document.getElementById('resp-list');
-  COLABORADORES.forEach(function(nome) {
-    var btn = document.createElement('button');
-    btn.className = 'resp-btn';
-    btn.textContent = nome;
-    btn.setAttribute('aria-pressed', 'false');
-    btn.onclick = function() { selectResp(btn, nome); };
-    rl.appendChild(btn);
-  });
-
-  // Renderiza lista de justificativas
+  // Renderiza lista de justificativas (só se o elemento existir)
   var jl = document.getElementById('just-list');
-  JUSTIFICATIVAS.forEach(function(just) {
-    var btn = document.createElement('button');
-    btn.className = 'just-btn';
-    btn.textContent = just;
-    btn.setAttribute('aria-pressed', 'false');
-    btn.onclick = function() { selectJust(btn, just); };
-    jl.appendChild(btn);
-  });
+  if (jl) {
+    JUSTIFICATIVAS.forEach(function(just) {
+      var btn = document.createElement('button');
+      btn.className = 'just-btn';
+      btn.textContent = just;
+      btn.setAttribute('aria-pressed', 'false');
+      btn.onclick = function() { selectJust(btn, just); };
+      jl.appendChild(btn);
+    });
+  }
 
   // Listener do bipe de atendimento
   var bipeInp = document.getElementById('barcode-input');
@@ -570,6 +514,12 @@ var state = { atend: '', stage: '', resp: '', just: '', needsJust: false };
   var etapa  = SLUG_ETAPAS[slug.toLowerCase()] || '';
   if (etapa) {
     setStageValue(etapa);
+  }
+
+  // Detecta atraso via ?atraso=1 na URL
+  state.needsJust = params.get('atraso') === '1';
+  if (state.needsJust) {
+    document.getElementById('just-block').style.display = 'block';
   }
 
   // Foca no campo de atendimento
@@ -605,10 +555,30 @@ function clearStage(e) {
 //  BIPE DO ATENDIMENTO
 // ═══════════════════════════════════════════════════
 function focusBipe() {
-  if (state.atend) return;
   var inp = document.getElementById('barcode-input');
   inp.focus();
 }
+
+// Mantém o foco no campo de bipe sempre que a página estiver visível
+// Isso garante que o leitor de código de barras sempre encontre o campo
+document.addEventListener('click', function(e) {
+  var pg1 = document.getElementById('pg1');
+  if (pg1 && pg1.classList.contains('active')) {
+    var alvo = e.target;
+    // Não rerouta se o clique foi em botão, input ou limpar
+    if (alvo.tagName === 'BUTTON' || alvo.tagName === 'INPUT') return;
+    setTimeout(focusBipe, 50);
+  }
+});
+
+document.addEventListener('visibilitychange', function() {
+  if (!document.hidden) {
+    var pg1 = document.getElementById('pg1');
+    if (pg1 && pg1.classList.contains('active')) {
+      setTimeout(focusBipe, 100);
+    }
+  }
+});
 
 function setBipeValue(val) {
   state.atend = val;
@@ -646,17 +616,6 @@ function clearBipe(e) {
 // ═══════════════════════════════════════════════════
 // selectStage removido — etapa detectada via QR Code
 
-function selectResp(el, name) {
-  document.querySelectorAll('.resp-btn').forEach(function(b) {
-    b.classList.remove('selected');
-    b.setAttribute('aria-pressed', 'false');
-  });
-  el.classList.add('selected');
-  el.setAttribute('aria-pressed', 'true');
-  state.resp = name;
-  checkBtnSubmit();
-}
-
 function selectJust(el, just) {
   document.querySelectorAll('.just-btn').forEach(function(b) {
     b.classList.remove('selected');
@@ -665,19 +624,14 @@ function selectJust(el, just) {
   el.classList.add('selected');
   el.setAttribute('aria-pressed', 'true');
   state.just = just;
-  checkBtnSubmit();
 }
 
 // ═══════════════════════════════════════════════════
 //  VALIDAÇÕES
 // ═══════════════════════════════════════════════════
 function checkBtn1() {
-  document.getElementById('btn-next1').disabled = !(state.atend && state.stage);
-}
-
-function checkBtnSubmit() {
-  var ok = state.resp && (!state.needsJust || state.just);
-  document.getElementById('btn-submit').disabled = !ok;
+  var ok = state.atend && state.stage && (!state.needsJust || state.just);
+  document.getElementById('btn-next1').disabled = !ok;
 }
 
 // ═══════════════════════════════════════════════════
@@ -687,26 +641,52 @@ function goTo(id) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
 
-  if (id === 'pg2') {
-    document.getElementById('pg2-sub').textContent = 'Atend. ' + state.atend + ' · ' + state.stage;
-    // Detecta se precisa de justificativa (tempo já passado do limite)
-    // Na implementação real, este valor vem do Sheets via query param ou sessionStorage
-    // Aqui usamos uma heurística: se vier ?atraso=1 na URL
-    var params = new URLSearchParams(window.location.search);
-    state.needsJust = params.get('atraso') === '1';
-    document.getElementById('just-block').style.display = state.needsJust ? 'block' : 'none';
-    state.just = '';
-    document.querySelectorAll('.just-btn').forEach(function(b) {
-      b.classList.remove('selected');
-      b.setAttribute('aria-pressed', 'false');
-    });
-    checkBtnSubmit();
+  if (id === 'pg1') {
+    setTimeout(focusBipe, 150);
   }
+
+
 }
 
 // ═══════════════════════════════════════════════════
 //  ENVIO PARA GOOGLE APPS SCRIPT → SHEETS
 // ═══════════════════════════════════════════════════
+function submitDireto() {
+  document.getElementById('error-msg') && (document.getElementById('error-msg').style.display = 'none');
+  goTo('pg-loading');
+
+  var now = new Date();
+  var ts  = now.toISOString();
+
+  var payload = {
+    timestamp:     ts,
+    atendimento:   state.atend,
+    etapa:         state.stage,
+    responsavel:   '',
+    justificativa: state.just || '',
+    dispositivo:   navigator.userAgent.substring(0, 80)
+  };
+
+  var params = new URLSearchParams({
+    timestamp:     payload.timestamp,
+    atendimento:   payload.atendimento,
+    etapa:         payload.etapa,
+    responsavel:   payload.responsavel,
+    justificativa: payload.justificativa,
+    dispositivo:   payload.dispositivo
+  });
+
+  fetch(APPS_SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' })
+  .then(function() {
+    showSuccess(now);
+  })
+  .catch(function(err) {
+    console.error(err);
+    goTo('pg1');
+    saveOffline(payload);
+  });
+}
+
 function submit() {
   document.getElementById('error-msg').style.display = 'none';
   goTo('pg-loading');
@@ -718,7 +698,7 @@ function submit() {
     timestamp:    ts,
     atendimento:  state.atend,
     etapa:        state.stage,
-    responsavel:  state.resp,
+    responsavel:  '',
     justificativa: state.just || '',
     dispositivo:  navigator.userAgent.substring(0, 80)
   };
@@ -796,7 +776,6 @@ function showSuccess(now) {
   document.getElementById('success-ts').textContent = 'Salvo às ' + h + ':' + m + ':' + s;
   document.getElementById('s-id').textContent    = state.atend;
   document.getElementById('s-stage').textContent = state.stage;
-  document.getElementById('s-resp').textContent  = state.resp;
 
   var jr = document.getElementById('s-just-row');
   if (state.just) {
@@ -836,7 +815,6 @@ function reset() {
   });
 
   document.getElementById('btn-next1').disabled = true;
-  document.getElementById('btn-submit').disabled = true;
   document.getElementById('error-msg').style.display = 'none';
 
   goTo('pg1');
