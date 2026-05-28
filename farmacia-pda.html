@@ -347,44 +347,32 @@
       <!-- PASSO 2: Código de barras do atendimento -->
       <div>
         <div class="label">Bipe o código do atendimento</div>
-        <div class="bipe-wrap idle" id="bipe-wrap" onclick="focusBipe()">
-          <svg class="bipe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28" aria-hidden="true">
-            <path d="M3 9V5a2 2 0 0 1 2-2h4M3 15v4a2 2 0 0 0 2 2h4M21 9V5a2 2 0 0 0-2-2h-4M21 15v4a2 2 0 0 1-2 2h-4"/>
-            <line x1="7" y1="8" x2="7" y2="16"/><line x1="10" y1="7" x2="10" y2="17"/>
-            <line x1="13" y1="8" x2="13" y2="16"/><line x1="16" y1="7" x2="16" y2="17"/>
-          </svg>
-          <div class="bipe-text" style="flex:1">
-            <input
-              id="barcode-input"
-              type="text"
-              inputmode="text"
-              autocomplete="off"
-              autocorrect="off"
-              autocapitalize="off"
-              spellcheck="false"
-              autofocus
-              placeholder="Bipe o código aqui"
-              aria-label="Campo de leitura do código de barras do atendimento"
-              style="
-                width:100%;
-                border:none;
-                outline:none;
-                background:transparent;
-                font-size:18px;
-                font-weight:600;
-                font-family:var(--font-mono);
-                color:var(--text);
-                caret-color:var(--green);
-                padding:0;
-              "
-            >
-          </div>
-          <button class="bipe-clear" onclick="clearBipe(event)" aria-label="Limpar número de atendimento" style="display:none" id="btn-bipe-clear">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-            </svg>
-          </button>
-        </div>
+        <input
+          id="barcode-input"
+          type="text"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          autofocus
+          placeholder="Bipe o código de barras aqui"
+          aria-label="Campo de leitura do código de barras do atendimento"
+          style="
+            display:block;
+            width:100%;
+            font-size:20px;
+            font-weight:600;
+            padding:16px;
+            border:2px solid var(--green);
+            border-radius:var(--radius);
+            background:var(--surface);
+            color:var(--text);
+            outline:none;
+            font-family:var(--font-mono);
+            caret-color:var(--green);
+            box-sizing:border-box;
+          "
+        >
       </div>
 
       <!-- Justificativa — visível só quando ?atraso=1 -->
@@ -513,37 +501,35 @@ var state = { atend: '', stage: '', just: '', needsJust: false };
     });
   }
 
-  // Campo de bipe visível — DataWedge injeta diretamente no input
+  // Listener simples — igual ao Google Forms
   var bipeInp = document.getElementById('barcode-input');
 
-  // Evento input: disparado quando DataWedge injeta o valor
-  bipeInp.addEventListener('input', function() {
-    clearTimeout(bipeInp._timer);
-    bipeInp._timer = setTimeout(function() {
-      var val = bipeInp.value.trim();
-      if (!val) return;
-      bipeInp.value = '';
-      processarBuffer(val);
-    }, 80);
-  });
-
-  // Enter finaliza a leitura imediatamente
-  bipeInp.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      clearTimeout(bipeInp._timer);
-      var val = bipeInp.value.trim();
-      bipeInp.value = '';
-      if (val) processarBuffer(val);
-      e.preventDefault();
-    }
-  });
-
-  function processarBuffer(val) {
-    if (!val || !pg1Ativa()) return;
+  function processarBipe() {
+    var val = bipeInp.value.trim();
+    if (!val) return;
     if (state.stage && !state.atend) {
       setBipeValue(val);
     }
   }
+
+  // Enter — enviado pelo leitor após o código
+  bipeInp.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      processarBipe();
+    }
+  });
+
+  // Change — disparado quando o campo perde foco com valor novo
+  bipeInp.addEventListener('change', function() {
+    processarBipe();
+  });
+
+  // Input com debounce — captura injeção direta do DataWedge
+  bipeInp.addEventListener('input', function() {
+    clearTimeout(bipeInp._t);
+    bipeInp._t = setTimeout(processarBipe, 120);
+  });
 
   // Lê etapa da URL (?etapa=sep, pre, cap, disp)
   var params = new URLSearchParams(window.location.search);
@@ -593,11 +579,7 @@ function clearStage(e) {
 // ═══════════════════════════════════════════════════
 function focusBipe() {
   var inp = document.getElementById('barcode-input');
-  if (!inp) return;
-  // Tenta múltiplas vezes para garantir em PDAs lentos
-  inp.focus();
-  setTimeout(function() { inp.focus(); }, 50);
-  setTimeout(function() { inp.focus(); }, 200);
+  if (inp) inp.focus();
 }
 
 function pg1Ativa() {
@@ -605,65 +587,29 @@ function pg1Ativa() {
   return pg1 && pg1.classList.contains('active');
 }
 
-// Redireciona foco para o campo de bipe ao tocar na tela
-document.addEventListener('click', function(e) {
-  if (!pg1Ativa()) return;
-  var tag = e.target.tagName;
-  if (tag === 'BUTTON' || tag === 'INPUT') return;
-  setTimeout(focusBipe, 50);
-});
-
-// Restaura foco ao voltar de tela bloqueada ou outro app
-document.addEventListener('visibilitychange', function() {
-  if (!document.hidden && pg1Ativa()) setTimeout(focusBipe, 200);
-});
-
-// Restaura foco quando a janela volta ao primeiro plano
-window.addEventListener('focus', function() {
-  if (pg1Ativa()) setTimeout(focusBipe, 200);
-});
-
-// Pulso de foco a cada 3s enquanto pg1 estiver ativa
-// Garante que o campo nunca fique sem foco por muito tempo
-setInterval(function() {
-  if (!pg1Ativa()) return;
-  var inp = document.getElementById('barcode-input');
-  if (!inp) return;
-  // Só recoloca foco se nenhum outro elemento estiver focado intencionalmente
-  var ativo = document.activeElement;
-  if (!ativo || ativo === document.body || ativo.tagName === 'DIV') {
-    inp.focus();
-  }
-}, 3000);
-
 function setBipeValue(val) {
   state.atend = val;
-  var wrap  = document.getElementById('bipe-wrap');
-  var inp   = document.getElementById('barcode-input');
-  var clear = document.getElementById('btn-bipe-clear');
-  wrap.classList.remove('idle');
-  wrap.classList.add('filled');
+  var inp = document.getElementById('barcode-input');
   inp.value    = val;
   inp.readOnly = true;
-  if (clear) clear.style.display = 'block';
+  inp.style.borderColor = '#0F6E56';
+  inp.style.background  = '#E1F5EE';
+  inp.style.color       = '#085041';
   checkBtn1();
   if (navigator.vibrate) navigator.vibrate(40);
 }
 
 function clearBipe(e) {
-  e.stopPropagation();
+  if (e) e.stopPropagation();
   state.atend = '';
-  var wrap  = document.getElementById('bipe-wrap');
-  var inp   = document.getElementById('barcode-input');
-  var clear = document.getElementById('btn-bipe-clear');
-  wrap.classList.remove('filled');
-  wrap.classList.add('idle');
-  inp.value    = '';
-  inp.readOnly = false;
-  inp.placeholder = 'Bipe o código aqui';
-  if (clear) clear.style.display = 'none';
+  var inp = document.getElementById('barcode-input');
+  inp.value     = '';
+  inp.readOnly  = false;
+  inp.style.borderColor = 'var(--green)';
+  inp.style.background  = 'var(--surface)';
+  inp.style.color       = 'var(--text)';
   checkBtn1();
-  setTimeout(focusBipe, 100);
+  inp.focus();
 }
 
 // ═══════════════════════════════════════════════════
