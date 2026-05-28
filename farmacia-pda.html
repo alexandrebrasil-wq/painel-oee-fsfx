@@ -139,26 +139,23 @@
   .bipe-wrap.filled .bipe-clear { display: block; }
 
   /* ── Grid de etapas ── */
-  .stage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .stage-btn {
-    background: var(--surface);
-    border: 1.5px solid var(--border);
+  /* stage-grid removido — etapa detectada via QR Code */
+  .stage-detected {
+    background: var(--green-light);
+    border: 1.5px solid var(--green);
     border-radius: var(--radius);
-    padding: 14px 10px;
-    text-align: center;
-    cursor: pointer;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
     min-height: var(--tap-min);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 3px;
-    transition: border-color 0.15s, background 0.15s;
-    -webkit-tap-highlight-color: transparent;
   }
-  .stage-btn:active { background: var(--gray-bg); }
-  .stage-btn.selected { border-color: var(--green); background: var(--green-light); }
-  .stage-num  { font-size: 10px; color: var(--text-hint); text-transform: uppercase; letter-spacing: 0.05em; }
-  .stage-name { font-size: 15px; font-weight: 600; color: var(--text); }
-  .stage-btn.selected .stage-name { color: var(--green-dark); }
-  .stage-btn.selected .stage-num  { color: var(--green); }
+  .stage-detected.idle {
+    background: var(--surface);
+    border-color: var(--border);
+  }
+  .stage-detected .stage-icon { font-size: 22px; color: var(--text-hint); flex-shrink: 0; }
+  .stage-detected .stage-text { flex: 1; }
+  .stage-detected.idle .stage-icon { color: var(--text-hint); }
+  .stage-tag { display: inline-block; background: var(--green); color: #fff; border-radius: 6px; padding: 3px 10px; font-size: 12px; font-weight: 600; margin-top: 3px; }
 
   /* ── Lista de responsáveis ── */
   .resp-list { display: flex; flex-direction: column; gap: 6px; }
@@ -322,27 +319,34 @@
     </div>
     <div class="body">
 
-      <!-- Campo de bipe -->
+      <!-- PASSO 1: QR Code da estação -->
       <div>
-        <div class="label">Nº atendimento</div>
-        <div class="bipe-wrap idle" id="bipe-wrap" onclick="focusBipe()">
+        <div class="label">1 — Bipe o QR da estação</div>
+        <div class="stage-detected idle" id="stage-wrap" onclick="focusQR()">
           <input
-            id="barcode-input"
+            id="qr-input"
             type="text"
             inputmode="none"
             autocomplete="off"
-            aria-label="Campo de leitura do código de barras"
+            aria-label="Campo de leitura do QR Code da estação"
+            style="position:absolute;opacity:0;width:1px;height:1px;top:0;left:0;pointer-events:none;"
           >
-          <svg class="bipe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28" aria-hidden="true">
-            <path d="M3 9V5a2 2 0 0 1 2-2h4M3 15v4a2 2 0 0 0 2 2h4M21 9V5a2 2 0 0 0-2-2h-4M21 15v4a2 2 0 0 1-2 2h-4"/>
-            <line x1="7" y1="8" x2="7" y2="16"/><line x1="10" y1="7" x2="10" y2="17"/>
-            <line x1="13" y1="8" x2="13" y2="16"/><line x1="16" y1="7" x2="16" y2="17"/>
+          <svg class="stage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/><rect x="5" y="5" width="3" height="3"/>
+            <rect x="16" y="5" width="3" height="3"/><rect x="5" y="16" width="3" height="3"/>
+            <line x1="14" y1="14" x2="17" y2="14"/><line x1="17" y1="14" x2="17" y2="17"/>
+            <line x1="17" y1="17" x2="20" y2="17"/><line x1="20" y1="14" x2="20" y2="17"/>
+            <line x1="14" y1="17" x2="14" y2="20"/><line x1="14" y1="20" x2="17" y2="20"/>
           </svg>
-          <div class="bipe-text">
-            <div class="bipe-hint" id="bipe-hint">Toque para bipe ou digitação</div>
-            <div class="bipe-value" id="bipe-value" style="display:none"></div>
+          <div class="stage-text">
+            <div id="stage-hint" style="font-size:14px;color:var(--text-hint);">Aponte o leitor para o QR da estação</div>
+            <div id="stage-value" style="display:none;">
+              <div style="font-size:12px;color:var(--green-dark);font-weight:500;">Etapa detectada</div>
+              <span class="stage-tag" id="stage-tag">—</span>
+            </div>
           </div>
-          <button class="bipe-clear" onclick="clearBipe(event)" aria-label="Limpar número de atendimento">
+          <button id="stage-clear" onclick="clearStage(event)" aria-label="Limpar etapa" style="display:none;background:none;border:none;cursor:pointer;color:var(--text-hint);padding:4px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true">
               <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
@@ -350,25 +354,30 @@
         </div>
       </div>
 
-      <!-- Etapa destino -->
+      <!-- PASSO 2: Código de barras do atendimento -->
       <div>
-        <div class="label">Etapa destino</div>
-        <div class="stage-grid">
-          <button class="stage-btn" onclick="selectStage(this,'Separação')"     aria-pressed="false">
-            <span class="stage-num">etapa 1</span>
-            <span class="stage-name">Separação</span>
-          </button>
-          <button class="stage-btn" onclick="selectStage(this,'Pré QT')"        aria-pressed="false">
-            <span class="stage-num">etapa 2</span>
-            <span class="stage-name">Pré QT</span>
-          </button>
-          <button class="stage-btn" onclick="selectStage(this,'Capela QT')"     aria-pressed="false">
-            <span class="stage-num">etapa 3</span>
-            <span class="stage-name">Capela QT</span>
-          </button>
-          <button class="stage-btn" onclick="selectStage(this,'Disponível QT')" aria-pressed="false">
-            <span class="stage-num">etapa 4</span>
-            <span class="stage-name">Disponível QT</span>
+        <div class="label">2 — Bipe o código do atendimento</div>
+        <div class="bipe-wrap idle" id="bipe-wrap" onclick="focusBipe()">
+          <input
+            id="barcode-input"
+            type="text"
+            inputmode="none"
+            autocomplete="off"
+            aria-label="Campo de leitura do código de barras do atendimento"
+          >
+          <svg class="bipe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28" aria-hidden="true">
+            <path d="M3 9V5a2 2 0 0 1 2-2h4M3 15v4a2 2 0 0 0 2 2h4M21 9V5a2 2 0 0 0-2-2h-4M21 15v4a2 2 0 0 1-2 2h-4"/>
+            <line x1="7" y1="8" x2="7" y2="16"/><line x1="10" y1="7" x2="10" y2="17"/>
+            <line x1="13" y1="8" x2="13" y2="16"/><line x1="16" y1="7" x2="16" y2="17"/>
+          </svg>
+          <div class="bipe-text">
+            <div class="bipe-hint" id="bipe-hint">Aguardando bipe...</div>
+            <div class="bipe-value" id="bipe-value" style="display:none"></div>
+          </div>
+          <button class="bipe-clear" onclick="clearBipe(event)" aria-label="Limpar número de atendimento">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -513,9 +522,24 @@ var JUSTIFICATIVAS = [
 ];
 
 // ═══════════════════════════════════════════════════
+//  MAPA DE QR CODES → ETAPAS
+//  Valor gravado no QR de cada estação
+//  Altere os valores à esquerda se necessário
+// ═══════════════════════════════════════════════════
+var QR_ETAPAS = {
+  'IOMT-SEP':  'Separação',
+  'IOMT-PRE':  'Pré QT',
+  'IOMT-CAP':  'Capela QT',
+  'IOMT-DISP': 'Disponível QT'
+};
+
+// ═══════════════════════════════════════════════════
 //  ESTADO
 // ═══════════════════════════════════════════════════
 var state = { atend: '', stage: '', resp: '', just: '', needsJust: false };
+
+// Controla qual campo está aguardando bipe
+var aguardandoQR = true; // true = QR da estação, false = código atendimento
 
 // ═══════════════════════════════════════════════════
 //  INICIALIZAÇÃO
@@ -543,31 +567,95 @@ var state = { atend: '', stage: '', resp: '', just: '', needsJust: false };
     jl.appendChild(btn);
   });
 
-  // Listener do input de bipe
-  var inp = document.getElementById('barcode-input');
-  inp.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter' && state.atend) {
-      // Bipe confirmado — avança foco para a grade de etapas
-      document.querySelector('.stage-btn').focus();
-    }
+  // Listener unificado — detecta QR ou código de atendimento pelo campo ativo
+  var qrInp   = document.getElementById('qr-input');
+  var bipeInp = document.getElementById('barcode-input');
+
+  qrInp.addEventListener('input', function() {
+    var val = qrInp.value.trim();
+    if (!val) return;
+    qrInp.value = '';
+    processarQR(val);
   });
-  inp.addEventListener('input', function() {
-    var val = inp.value.trim();
+
+  bipeInp.addEventListener('input', function() {
+    var val = bipeInp.value.trim();
     if (!val) return;
     setBipeValue(val);
-    inp.value = '';
+    bipeInp.value = '';
   });
+
+  // Inicia focando no QR
+  setTimeout(focusQR, 150);
 })();
 
 // ═══════════════════════════════════════════════════
-//  BIPE
+//  QR CODE DA ESTAÇÃO
+// ═══════════════════════════════════════════════════
+function focusQR() {
+  if (state.stage) return;
+  document.getElementById('qr-input').focus();
+  aguardandoQR = true;
+}
+
+function processarQR(val) {
+  var etapa = QR_ETAPAS[val.toUpperCase()];
+  if (!etapa) {
+    // Valor não reconhecido como QR de estação
+    // Pode ser o código do atendimento bipado na ordem errada — trata como atendimento
+    if (!state.stage) {
+      // Ainda sem etapa — avisa e aguarda QR válido
+      document.getElementById('stage-hint').textContent = 'QR não reconhecido. Tente novamente.';
+      setTimeout(function() {
+        document.getElementById('stage-hint').textContent = 'Aponte o leitor para o QR da estação';
+      }, 2000);
+      focusQR();
+      return;
+    }
+    // Já tem etapa — trata como atendimento
+    setBipeValue(val);
+    return;
+  }
+  setStageValue(etapa);
+}
+
+function setStageValue(etapa) {
+  state.stage = etapa;
+  var wrap = document.getElementById('stage-wrap');
+  wrap.classList.remove('idle');
+  document.getElementById('stage-hint').style.display  = 'none';
+  document.getElementById('stage-value').style.display = 'block';
+  document.getElementById('stage-tag').textContent     = etapa;
+  document.getElementById('stage-clear').style.display = 'block';
+  aguardandoQR = false;
+  checkBtn1();
+  if (navigator.vibrate) navigator.vibrate(40);
+  // Avança foco para o campo de atendimento
+  setTimeout(focusBipe, 100);
+}
+
+function clearStage(e) {
+  e.stopPropagation();
+  state.stage = '';
+  var wrap = document.getElementById('stage-wrap');
+  wrap.classList.add('idle');
+  document.getElementById('stage-hint').style.display  = '';
+  document.getElementById('stage-hint').textContent    = 'Aponte o leitor para o QR da estação';
+  document.getElementById('stage-value').style.display = 'none';
+  document.getElementById('stage-clear').style.display = 'none';
+  aguardandoQR = true;
+  checkBtn1();
+  setTimeout(focusQR, 100);
+}
+
+// ═══════════════════════════════════════════════════
+//  BIPE DO ATENDIMENTO
 // ═══════════════════════════════════════════════════
 function focusBipe() {
-  if (state.atend) return; // já preenchido — não reabre
+  if (state.atend) return;
   var inp = document.getElementById('barcode-input');
   inp.focus();
-  document.getElementById('bipe-wrap').classList.remove('idle');
-  document.getElementById('bipe-wrap').classList.add('active');
+  aguardandoQR = false;
 }
 
 function setBipeValue(val) {
@@ -604,16 +692,7 @@ function clearBipe(e) {
 // ═══════════════════════════════════════════════════
 //  SELEÇÕES
 // ═══════════════════════════════════════════════════
-function selectStage(el, name) {
-  document.querySelectorAll('.stage-btn').forEach(function(b) {
-    b.classList.remove('selected');
-    b.setAttribute('aria-pressed', 'false');
-  });
-  el.classList.add('selected');
-  el.setAttribute('aria-pressed', 'true');
-  state.stage = name;
-  checkBtn1();
-}
+// selectStage removido — etapa detectada via QR Code
 
 function selectResp(el, name) {
   document.querySelectorAll('.resp-btn').forEach(function(b) {
@@ -785,6 +864,9 @@ function showSuccess(now) {
 function reset() {
   state = { atend: '', stage: '', resp: '', just: '', needsJust: false };
 
+  // Limpa QR de estação
+  clearStage({ stopPropagation: function(){} });
+
   // Limpa bipe
   var wrap  = document.getElementById('bipe-wrap');
   var hint  = document.getElementById('bipe-hint');
@@ -796,7 +878,7 @@ function reset() {
   value.textContent   = '';
 
   // Desmarca tudo
-  document.querySelectorAll('.stage-btn, .resp-btn, .just-btn').forEach(function(b) {
+  document.querySelectorAll('.resp-btn, .just-btn').forEach(function(b) {
     b.classList.remove('selected');
     b.setAttribute('aria-pressed', 'false');
   });
