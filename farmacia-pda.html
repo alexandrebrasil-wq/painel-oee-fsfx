@@ -499,14 +499,60 @@ var state = { atend: '', stage: '', just: '', needsJust: false };
     });
   }
 
-  // Listener do bipe de atendimento
-  var bipeInp = document.getElementById('barcode-input');
-  bipeInp.addEventListener('input', function() {
-    var val = bipeInp.value.trim();
-    if (!val) return;
-    setBipeValue(val);
-    bipeInp.value = '';
+  // Captura global de teclado — funciona independente do foco
+  // PDAs industriais injetam keydown/keypress diretamente na janela
+  var _buffer = '';
+  var _timer  = null;
+
+  document.addEventListener('keydown', function(e) {
+    if (!pg1Ativa()) return;
+
+    // Ignora teclas de controle exceto Enter
+    if (e.key === 'Enter') {
+      if (_buffer.length > 0) {
+        processarBuffer(_buffer.trim());
+        _buffer = '';
+      }
+      return;
+    }
+
+    // Ignora teclas especiais (Alt, Ctrl, Shift, F1-F12, setas, etc.)
+    if (e.key.length > 1) return;
+
+    _buffer += e.key;
+
+    // Leitores de código de barras enviam todos os caracteres muito rápido
+    // Se em 100ms chegou o suficiente, processa
+    clearTimeout(_timer);
+    _timer = setTimeout(function() {
+      if (_buffer.length > 0) {
+        processarBuffer(_buffer.trim());
+        _buffer = '';
+      }
+    }, 100);
   });
+
+  function processarBuffer(val) {
+    if (!val) return;
+    if (!pg1Ativa()) return;
+
+    // Se ainda não tem etapa, tenta interpretar como QR de estação
+    if (!state.stage) {
+      var etapaQR = SLUG_ETAPAS[val.toLowerCase()];
+      if (etapaQR) {
+        setStageValue(etapaQR);
+        return;
+      }
+    }
+
+    // Se já tem etapa, é o código do atendimento
+    if (state.stage && !state.atend) {
+      setBipeValue(val);
+      return;
+    }
+
+    // Se já tem os dois, ignora
+  }
 
   // Lê etapa da URL (?etapa=sep, pre, cap, disp)
   var params = new URLSearchParams(window.location.search);
