@@ -459,21 +459,16 @@ function carregarDados(manual) {
   }
   setStatus('loading', 'atualizando');
 
-  // URL CSV da aba "Posição Atual" (gid=1 — ajuste se necessário)
-  var urlPosicao = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID +
-    '/gviz/tq?tqx=out:csv&sheet=Posi%C3%A7%C3%A3o%20Atual';
-
-  // URL CSV da aba "Registros" (gid=0)
-  var urlRegistros = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID +
-    '/gviz/tq?tqx=out:csv&sheet=Registros';
+  var urlPosicao   = APPS_SCRIPT_URL + '?acao=posicao';
+  var urlRegistros = APPS_SCRIPT_URL + '?acao=registros';
 
   Promise.all([
-    fetch(urlPosicao).then(function(r) { return r.text(); }),
-    fetch(urlRegistros).then(function(r) { return r.text(); })
+    fetch(urlPosicao).then(function(r) { return r.json(); }),
+    fetch(urlRegistros).then(function(r) { return r.json(); })
   ])
   .then(function(results) {
-    dadosAtuais  = parseCSV(results[0]);
-    registrosHoje = filtrarHoje(parseCSV(results[1]));
+    dadosAtuais   = results[0].rows || [];
+    registrosHoje = filtrarHoje(results[1].rows || []);
     renderizar();
     setStatus('online', 'ao vivo');
     hideError();
@@ -482,8 +477,7 @@ function carregarDados(manual) {
   .catch(function(err) {
     console.error('Erro ao carregar dados:', err);
     setStatus('error', 'erro');
-    showError('Não foi possível carregar os dados. Verifique se a planilha está publicada na web.');
-    // Mantém dados anteriores se existirem
+    showError('Não foi possível carregar os dados. Verifique a conexão.');
     if (dadosAtuais.length > 0) renderizar();
   })
   .finally(function() {
