@@ -308,8 +308,8 @@
   <div id="pg1" class="page active">
     <div class="header">
       <div>
-        <div class="header-title">Registro de medicação</div>
-        <div class="header-sub">Farmácia oncológica</div>
+        <div class="header-title" id="pg1-title">Registro de medicação</div>
+        <div class="header-sub" id="pg1-sub">Farmácia oncológica</div>
       </div>
       <div class="header-step">1 de 2</div>
     </div>
@@ -323,14 +323,7 @@
       <div>
         <div class="label">1 — Bipe o QR da estação</div>
         <div class="stage-detected idle" id="stage-wrap" onclick="focusQR()">
-          <input
-            id="qr-input"
-            type="text"
-            inputmode="none"
-            autocomplete="off"
-            aria-label="Campo de leitura do QR Code da estação"
-            style="position:absolute;opacity:0;width:1px;height:1px;top:0;left:0;pointer-events:none;"
-          >
+
           <svg class="stage-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28" aria-hidden="true">
             <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
             <rect x="3" y="14" width="7" height="7"/><rect x="5" y="5" width="3" height="3"/>
@@ -356,7 +349,7 @@
 
       <!-- PASSO 2: Código de barras do atendimento -->
       <div>
-        <div class="label">2 — Bipe o código do atendimento</div>
+        <div class="label">Bipe o código do atendimento</div>
         <div class="bipe-wrap idle" id="bipe-wrap" onclick="focusBipe()">
           <input
             id="barcode-input"
@@ -522,24 +515,19 @@ var JUSTIFICATIVAS = [
 ];
 
 // ═══════════════════════════════════════════════════
-//  MAPA DE QR CODES → ETAPAS
-//  Valor gravado no QR de cada estação
-//  Altere os valores à esquerda se necessário
+//  MAPA DE SLUGS DE ETAPA (parâmetro ?etapa= na URL)
 // ═══════════════════════════════════════════════════
-var QR_ETAPAS = {
-  'IOMT-SEP':  'Separação',
-  'IOMT-PRE':  'Pré QT',
-  'IOMT-CAP':  'Capela QT',
-  'IOMT-DISP': 'Disponível QT'
+var SLUG_ETAPAS = {
+  'sep':  'Separação',
+  'pre':  'Pré QT',
+  'cap':  'Capela QT',
+  'disp': 'Disponível QT'
 };
 
 // ═══════════════════════════════════════════════════
 //  ESTADO
 // ═══════════════════════════════════════════════════
 var state = { atend: '', stage: '', resp: '', just: '', needsJust: false };
-
-// Controla qual campo está aguardando bipe
-var aguardandoQR = true; // true = QR da estação, false = código atendimento
 
 // ═══════════════════════════════════════════════════
 //  INICIALIZAÇÃO
@@ -567,17 +555,8 @@ var aguardandoQR = true; // true = QR da estação, false = código atendimento
     jl.appendChild(btn);
   });
 
-  // Listener unificado — detecta QR ou código de atendimento pelo campo ativo
-  var qrInp   = document.getElementById('qr-input');
+  // Listener do bipe de atendimento
   var bipeInp = document.getElementById('barcode-input');
-
-  qrInp.addEventListener('input', function() {
-    var val = qrInp.value.trim();
-    if (!val) return;
-    qrInp.value = '';
-    processarQR(val);
-  });
-
   bipeInp.addEventListener('input', function() {
     var val = bipeInp.value.trim();
     if (!val) return;
@@ -585,40 +564,21 @@ var aguardandoQR = true; // true = QR da estação, false = código atendimento
     bipeInp.value = '';
   });
 
-  // Inicia focando no QR
-  setTimeout(focusQR, 150);
+  // Lê etapa da URL (?etapa=sep, pre, cap, disp)
+  var params = new URLSearchParams(window.location.search);
+  var slug   = params.get('etapa') || '';
+  var etapa  = SLUG_ETAPAS[slug.toLowerCase()] || '';
+  if (etapa) {
+    setStageValue(etapa);
+  }
+
+  // Foca no campo de atendimento
+  setTimeout(focusBipe, 150);
 })();
 
 // ═══════════════════════════════════════════════════
-//  QR CODE DA ESTAÇÃO
+//  ETAPA — definida pela URL ao abrir o PDA via QR
 // ═══════════════════════════════════════════════════
-function focusQR() {
-  if (state.stage) return;
-  document.getElementById('qr-input').focus();
-  aguardandoQR = true;
-}
-
-function processarQR(val) {
-  var etapa = QR_ETAPAS[val.toUpperCase()];
-  if (!etapa) {
-    // Valor não reconhecido como QR de estação
-    // Pode ser o código do atendimento bipado na ordem errada — trata como atendimento
-    if (!state.stage) {
-      // Ainda sem etapa — avisa e aguarda QR válido
-      document.getElementById('stage-hint').textContent = 'QR não reconhecido. Tente novamente.';
-      setTimeout(function() {
-        document.getElementById('stage-hint').textContent = 'Aponte o leitor para o QR da estação';
-      }, 2000);
-      focusQR();
-      return;
-    }
-    // Já tem etapa — trata como atendimento
-    setBipeValue(val);
-    return;
-  }
-  setStageValue(etapa);
-}
-
 function setStageValue(etapa) {
   state.stage = etapa;
   var wrap = document.getElementById('stage-wrap');
@@ -627,11 +587,7 @@ function setStageValue(etapa) {
   document.getElementById('stage-value').style.display = 'block';
   document.getElementById('stage-tag').textContent     = etapa;
   document.getElementById('stage-clear').style.display = 'block';
-  aguardandoQR = false;
   checkBtn1();
-  if (navigator.vibrate) navigator.vibrate(40);
-  // Avança foco para o campo de atendimento
-  setTimeout(focusBipe, 100);
 }
 
 function clearStage(e) {
@@ -640,12 +596,9 @@ function clearStage(e) {
   var wrap = document.getElementById('stage-wrap');
   wrap.classList.add('idle');
   document.getElementById('stage-hint').style.display  = '';
-  document.getElementById('stage-hint').textContent    = 'Aponte o leitor para o QR da estação';
   document.getElementById('stage-value').style.display = 'none';
   document.getElementById('stage-clear').style.display = 'none';
-  aguardandoQR = true;
   checkBtn1();
-  setTimeout(focusQR, 100);
 }
 
 // ═══════════════════════════════════════════════════
@@ -655,7 +608,6 @@ function focusBipe() {
   if (state.atend) return;
   var inp = document.getElementById('barcode-input');
   inp.focus();
-  aguardandoQR = false;
 }
 
 function setBipeValue(val) {
