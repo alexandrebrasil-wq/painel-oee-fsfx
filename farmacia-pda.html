@@ -483,7 +483,7 @@
 // ═══════════════════════════════════════════════════
 
 // URL do Google Apps Script Web App (substitua após publicar o script)
-var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwulrdZyfww-3ejAoGIwrGewM2eAmgCYFSY9SUKmJSU9uiGCtnTiGZT9EZxn8j3lgImhA/exec';
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/SEU_SCRIPT_ID/exec';
 
 // Limites de tempo por etapa (em minutos) — ajuste com a supervisora
 var LIMITES = {
@@ -692,24 +692,27 @@ function submit() {
     dispositivo:  navigator.userAgent.substring(0, 80)
   };
 
-  fetch(APPS_SCRIPT_URL, {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(payload)
-  })
-  .then(function(res) {
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    return res.json();
-  })
-  .then(function(data) {
-    if (data.status !== 'ok') throw new Error(data.message || 'Erro desconhecido');
+  // Usa GET com parâmetros na URL para contornar CORS do Apps Script
+  var params = new URLSearchParams({
+    timestamp:    payload.timestamp,
+    atendimento:  payload.atendimento,
+    etapa:        payload.etapa,
+    responsavel:  payload.responsavel,
+    justificativa: payload.justificativa,
+    dispositivo:  payload.dispositivo
+  });
+
+  var url = APPS_SCRIPT_URL + '?' + params.toString();
+
+  fetch(url, { method: 'GET', mode: 'no-cors' })
+  .then(function() {
+    // no-cors não retorna body — assume sucesso se não lançou erro
     showSuccess(now);
   })
   .catch(function(err) {
     console.error(err);
     goTo('pg2');
     document.getElementById('error-msg').style.display = 'block';
-    // Fallback: salva localmente para reenvio posterior
     saveOffline(payload);
   });
 }
@@ -730,16 +733,19 @@ function flushOfflineQueue() {
     var queue = JSON.parse(localStorage.getItem('offlineQueue') || '[]');
     if (!queue.length) return;
     queue.forEach(function(payload) {
-      fetch(APPS_SCRIPT_URL, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload)
-      }).then(function(res) {
-        if (res.ok) {
-          var q = JSON.parse(localStorage.getItem('offlineQueue') || '[]');
-          q = q.filter(function(p) { return p.timestamp !== payload.timestamp; });
-          localStorage.setItem('offlineQueue', JSON.stringify(q));
-        }
+      var params = new URLSearchParams({
+        timestamp:    payload.timestamp,
+        atendimento:  payload.atendimento,
+        etapa:        payload.etapa,
+        responsavel:  payload.responsavel,
+        justificativa: payload.justificativa || '',
+        dispositivo:  payload.dispositivo || ''
+      });
+      fetch(APPS_SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' })
+      .then(function() {
+        var q = JSON.parse(localStorage.getItem('offlineQueue') || '[]');
+        q = q.filter(function(p) { return p.timestamp !== payload.timestamp; });
+        localStorage.setItem('offlineQueue', JSON.stringify(q));
       }).catch(function() {});
     });
   } catch(e) {}
