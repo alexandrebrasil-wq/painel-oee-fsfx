@@ -429,7 +429,7 @@
         </div>
       </div>
 
-      <button class="btn-primary" onclick="reset()" style="max-width:340px;width:100%;margin-top:8px">
+      <button class="btn-primary" onclick="novoRegistro()" style="max-width:340px;width:100%;margin-top:8px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18" aria-hidden="true">
           <path d="M3 9V5a2 2 0 0 1 2-2h4M3 15v4a2 2 0 0 0 2 2h4"/>
           <line x1="7" y1="8" x2="7" y2="16"/><line x1="11" y1="7" x2="11" y2="17"/>
@@ -744,6 +744,8 @@ function submitDireto() {
   fetch(APPS_SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' })
   .then(function() {
     showSuccess(now);
+    // Redireciona automaticamente após 2.5s para novo registro
+    setTimeout(novoRegistro, 2500);
   })
   .catch(function(err) {
     console.error(err);
@@ -857,6 +859,15 @@ function showSuccess(now) {
 // ═══════════════════════════════════════════════════
 //  RESET
 // ═══════════════════════════════════════════════════
+function novoRegistro() {
+  // Recarrega a página mantendo o parâmetro de etapa
+  // Garante estado 100% limpo para o próximo bipe
+  var params = new URLSearchParams(window.location.search);
+  var etapa  = params.get('etapa') || '';
+  var url    = window.location.pathname + (etapa ? '?etapa=' + etapa : '');
+  window.location.replace(url);
+}
+
 function reset() {
   state = { atend: '', stage: '', resp: '', just: '', needsJust: false };
 
