@@ -348,24 +348,38 @@
       <div>
         <div class="label">Bipe o código do atendimento</div>
         <div class="bipe-wrap idle" id="bipe-wrap" onclick="focusBipe()">
-          <input
-            id="barcode-input"
-            type="text"
-            inputmode="none"
-            autocomplete="off"
-            autofocus
-            aria-label="Campo de leitura do código de barras do atendimento"
-          >
           <svg class="bipe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28" aria-hidden="true">
             <path d="M3 9V5a2 2 0 0 1 2-2h4M3 15v4a2 2 0 0 0 2 2h4M21 9V5a2 2 0 0 0-2-2h-4M21 15v4a2 2 0 0 1-2 2h-4"/>
             <line x1="7" y1="8" x2="7" y2="16"/><line x1="10" y1="7" x2="10" y2="17"/>
             <line x1="13" y1="8" x2="13" y2="16"/><line x1="16" y1="7" x2="16" y2="17"/>
           </svg>
-          <div class="bipe-text">
-            <div class="bipe-hint" id="bipe-hint">Aguardando bipe...</div>
-            <div class="bipe-value" id="bipe-value" style="display:none"></div>
+          <div class="bipe-text" style="flex:1">
+            <input
+              id="barcode-input"
+              type="text"
+              inputmode="text"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              autofocus
+              placeholder="Bipe o código aqui"
+              aria-label="Campo de leitura do código de barras do atendimento"
+              style="
+                width:100%;
+                border:none;
+                outline:none;
+                background:transparent;
+                font-size:18px;
+                font-weight:600;
+                font-family:var(--font-mono);
+                color:var(--text);
+                caret-color:var(--green);
+                padding:0;
+              "
+            >
           </div>
-          <button class="bipe-clear" onclick="clearBipe(event)" aria-label="Limpar número de atendimento">
+          <button class="bipe-clear" onclick="clearBipe(event)" aria-label="Limpar número de atendimento" style="display:none" id="btn-bipe-clear">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" aria-hidden="true">
               <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
@@ -499,59 +513,36 @@ var state = { atend: '', stage: '', just: '', needsJust: false };
     });
   }
 
-  // Captura global de teclado — funciona independente do foco
-  // PDAs industriais injetam keydown/keypress diretamente na janela
-  var _buffer = '';
-  var _timer  = null;
+  // Campo de bipe visível — DataWedge injeta diretamente no input
+  var bipeInp = document.getElementById('barcode-input');
 
-  document.addEventListener('keydown', function(e) {
-    if (!pg1Ativa()) return;
+  // Evento input: disparado quando DataWedge injeta o valor
+  bipeInp.addEventListener('input', function() {
+    clearTimeout(bipeInp._timer);
+    bipeInp._timer = setTimeout(function() {
+      var val = bipeInp.value.trim();
+      if (!val) return;
+      bipeInp.value = '';
+      processarBuffer(val);
+    }, 80);
+  });
 
-    // Ignora teclas de controle exceto Enter
+  // Enter finaliza a leitura imediatamente
+  bipeInp.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
-      if (_buffer.length > 0) {
-        processarBuffer(_buffer.trim());
-        _buffer = '';
-      }
-      return;
+      clearTimeout(bipeInp._timer);
+      var val = bipeInp.value.trim();
+      bipeInp.value = '';
+      if (val) processarBuffer(val);
+      e.preventDefault();
     }
-
-    // Ignora teclas especiais (Alt, Ctrl, Shift, F1-F12, setas, etc.)
-    if (e.key.length > 1) return;
-
-    _buffer += e.key;
-
-    // Leitores de código de barras enviam todos os caracteres muito rápido
-    // Se em 100ms chegou o suficiente, processa
-    clearTimeout(_timer);
-    _timer = setTimeout(function() {
-      if (_buffer.length > 0) {
-        processarBuffer(_buffer.trim());
-        _buffer = '';
-      }
-    }, 100);
   });
 
   function processarBuffer(val) {
-    if (!val) return;
-    if (!pg1Ativa()) return;
-
-    // Se ainda não tem etapa, tenta interpretar como QR de estação
-    if (!state.stage) {
-      var etapaQR = SLUG_ETAPAS[val.toLowerCase()];
-      if (etapaQR) {
-        setStageValue(etapaQR);
-        return;
-      }
-    }
-
-    // Se já tem etapa, é o código do atendimento
+    if (!val || !pg1Ativa()) return;
     if (state.stage && !state.atend) {
       setBipeValue(val);
-      return;
     }
-
-    // Se já tem os dois, ignora
   }
 
   // Lê etapa da URL (?etapa=sep, pre, cap, disp)
@@ -648,15 +639,14 @@ setInterval(function() {
 function setBipeValue(val) {
   state.atend = val;
   var wrap  = document.getElementById('bipe-wrap');
-  var hint  = document.getElementById('bipe-hint');
-  var value = document.getElementById('bipe-value');
+  var inp   = document.getElementById('barcode-input');
+  var clear = document.getElementById('btn-bipe-clear');
   wrap.classList.remove('idle');
   wrap.classList.add('filled');
-  hint.style.display  = 'none';
-  value.style.display = 'block';
-  value.textContent   = val;
+  inp.value    = val;
+  inp.readOnly = true;
+  if (clear) clear.style.display = 'block';
   checkBtn1();
-  // Vibração tátil de confirmação (se suportado)
   if (navigator.vibrate) navigator.vibrate(40);
 }
 
@@ -664,15 +654,15 @@ function clearBipe(e) {
   e.stopPropagation();
   state.atend = '';
   var wrap  = document.getElementById('bipe-wrap');
-  var hint  = document.getElementById('bipe-hint');
-  var value = document.getElementById('bipe-value');
+  var inp   = document.getElementById('barcode-input');
+  var clear = document.getElementById('btn-bipe-clear');
   wrap.classList.remove('filled');
   wrap.classList.add('idle');
-  hint.style.display  = '';
-  value.style.display = 'none';
-  value.textContent   = '';
+  inp.value    = '';
+  inp.readOnly = false;
+  inp.placeholder = 'Bipe o código aqui';
+  if (clear) clear.style.display = 'none';
   checkBtn1();
-  // Foca de volta para próximo bipe
   setTimeout(focusBipe, 100);
 }
 
