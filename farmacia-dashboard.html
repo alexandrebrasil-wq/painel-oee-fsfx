@@ -217,7 +217,7 @@ html, body {
 .just-label { font-size: 12px; color: var(--text); min-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .just-track { flex: 1; height: 3px; background: var(--border2); border-radius: 2px; }
 .just-fill  { height: 3px; background: var(--amber); border-radius: 2px; transition: width 0.6s ease; }
-.just-num   { font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); min-width: 20px; text-align: right; }
+.just-num   { font-size: 12px; font-family: var(--font-mono); color: var(--amber-text); min-width: 56px; text-align: right; }
 
 .activity-row {
   display: flex; align-items: center; gap: 10px;
@@ -498,6 +498,16 @@ var LIMITES = {
 
 var STAGES = ['Separação', 'Pré QT', 'Capela QT', 'Disponível QT'];
 
+// Justificativas que representam paradas reais — só essas aparecem nos cards e no painel
+var PARADAS_VALIDAS = [
+  'Aguardando autorização',
+  'Aguardando guia',
+  'Aguardando medicamento de outra unidade',
+  'Erro de prescrição, aguardando ajuste médico',
+  'Falta da liberação da prescrição',
+  'Aguardando geração de atendimento'
+];
+
 // Intervalo de atualização automática (ms)
 var REFRESH_INTERVAL = 30000;
 
@@ -627,7 +637,7 @@ function formatarHora(tsStr) {
 //  TEMPO TOTAL DE PARADA NO DIA (por atendimento + justificativa)
 // ═══════════════════════════════════════════════════
 function tempoTotalParada(atendimento, justificativa) {
-  if (!justificativa) return 0;
+  if (!justificativa || PARADAS_VALIDAS.indexOf(justificativa) === -1) return 0;
   var regs = registrosHoje
     .filter(function(r) {
       var a = r['Nº Atendimento'] || r['N Atendimento'] || r['atendimento'] || '';
@@ -700,7 +710,8 @@ function renderKanban() {
       var tsKey = c['Última Atualização'] || c['Última Atualiz.'] || c['Ultima Atualizacao'] || '';
       var mins  = minutosNaEtapa(tsKey);
       var tc    = classeTimer(mins, etapa);
-      var just  = c['Justificativa'] || '';
+      var justRaw = c['Justificativa'] || '';
+      var just = PARADAS_VALIDAS.indexOf(justRaw) !== -1 ? justRaw : '';
       var atend = c['Nº Atendimento'] || c['N Atendimento'] || c['atendimento'] || '—';
       var resp  = c['Responsável'] || c['Responsavel'] || '—';
 
@@ -760,14 +771,38 @@ function renderMetricas() {
 }
 
 function renderJustificativas() {
-  var contagem = {};
+  // Agrupa registros por atendimento, ordenados por timestamp
+  var porAtend = {};
   registrosHoje.forEach(function(r) {
-    var j = r['Justificativa'] || r['justificativa'] || '';
-    if (j) contagem[j] = (contagem[j] || 0) + 1;
+    var a = r['Nº Atendimento'] || r['N Atendimento'] || r['atendimento'] || '';
+    if (!a) return;
+    if (!porAtend[a]) porAtend[a] = [];
+    porAtend[a].push(r);
+  });
+
+  // Para cada atendimento, ordena e calcula tempo por justificativa
+  var temposPorJust = {};
+  Object.keys(porAtend).forEach(function(atend) {
+    var regs = porAtend[atend].sort(function(a, b) {
+      return new Date(a['Timestamp'] || a['timestamp'] || 0) -
+             new Date(b['Timestamp'] || b['timestamp'] || 0);
+    });
+    for (var i = 0; i < regs.length; i++) {
+      var j = regs[i]['Justificativa'] || regs[i]['justificativa'] || '';
+      if (!j || PARADAS_VALIDAS.indexOf(j) === -1) continue;
+      var inicio = new Date(regs[i]['Timestamp'] || regs[i]['timestamp'] || 0);
+      if (isNaN(inicio)) continue;
+      var fim = (i + 1 < regs.length)
+        ? new Date(regs[i + 1]['Timestamp'] || regs[i + 1]['timestamp'] || 0)
+        : new Date();
+      if (isNaN(fim)) fim = new Date();
+      var mins = Math.round((fim - inicio) / 60000);
+      temposPorJust[j] = (temposPorJust[j] || 0) + mins;
+    }
   });
 
   var panel = document.getElementById('just-panel');
-  var entries = Object.entries(contagem).sort(function(a,b){ return b[1]-a[1]; }).slice(0,5);
+  var entries = Object.entries(temposPorJust).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 5);
 
   if (entries.length === 0) {
     panel.innerHTML = '<div style="font-size:12px;color:var(--text-hint);font-family:var(--font-mono);">nenhuma justificativa hoje</div>';
@@ -780,7 +815,7 @@ function renderJustificativas() {
     return '<div class="just-row">' +
       '<span class="just-label">' + e[0] + '</span>' +
       '<div class="just-track"><div class="just-fill" style="width:' + pct + '%"></div></div>' +
-      '<span class="just-num">' + e[1] + '</span>' +
+      '<span class="just-num">' + formatarTempo(e[1]) + '</span>' +
       '</div>';
   }).join('');
 }
