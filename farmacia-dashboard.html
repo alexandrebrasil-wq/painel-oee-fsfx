@@ -187,6 +187,12 @@ html, body {
   font-size: 11px; color: var(--amber-text);
   display: flex; align-items: flex-start; gap: 5px;
 }
+.just-tag-time {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--amber-text);
+  opacity: 0.85;
+}
 
 /* ── Painel inferior: justificativas + última atualização ── */
 .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -618,6 +624,36 @@ function formatarHora(tsStr) {
 }
 
 // ═══════════════════════════════════════════════════
+//  TEMPO TOTAL DE PARADA NO DIA (por atendimento + justificativa)
+// ═══════════════════════════════════════════════════
+function tempoTotalParada(atendimento, justificativa) {
+  if (!justificativa) return 0;
+  var regs = registrosHoje
+    .filter(function(r) {
+      var a = r['Nº Atendimento'] || r['N Atendimento'] || r['atendimento'] || '';
+      return a === atendimento;
+    })
+    .sort(function(a, b) {
+      return new Date(a['Timestamp'] || a['timestamp'] || 0) -
+             new Date(b['Timestamp'] || b['timestamp'] || 0);
+    });
+
+  var totalMins = 0;
+  for (var i = 0; i < regs.length; i++) {
+    var justReg = regs[i]['Justificativa'] || regs[i]['justificativa'] || '';
+    if (justReg !== justificativa) continue;
+    var inicio = new Date(regs[i]['Timestamp'] || regs[i]['timestamp'] || 0);
+    if (isNaN(inicio)) continue;
+    var fim = (i + 1 < regs.length)
+      ? new Date(regs[i + 1]['Timestamp'] || regs[i + 1]['timestamp'] || 0)
+      : new Date();
+    if (isNaN(fim)) fim = new Date();
+    totalMins += Math.round((fim - inicio) / 60000);
+  }
+  return totalMins;
+}
+
+// ═══════════════════════════════════════════════════
 //  RENDERIZAÇÃO
 // ═══════════════════════════════════════════════════
 function renderizar() {
@@ -679,7 +715,15 @@ function renderKanban() {
           '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
           formatarTempo(mins) +
         '</div>' +
-        (just ? '<div class="just-tag"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>' + just + '</div>' : '');
+        (just ? (function() {
+          var minsParada = tempoTotalParada(atend, just);
+          var tempoStr = minsParada > 0 ? ' · ' + formatarTempo(minsParada) : '';
+          return '<div class="just-tag">' +
+            '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>' +
+            '<span>' + just + '</span>' +
+            (tempoStr ? '<span class="just-tag-time">' + tempoStr + '</span>' : '') +
+            '</div>';
+        })() : '');
 
       card.onclick = (function(cc, etapa, mins, tc) {
         return function() { abrirModal(cc, etapa, mins, tc); };
