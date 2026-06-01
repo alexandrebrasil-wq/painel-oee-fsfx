@@ -217,7 +217,7 @@ html, body {
 .just-label { font-size: 12px; color: var(--text); min-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .just-track { flex: 1; height: 3px; background: var(--border2); border-radius: 2px; }
 .just-fill  { height: 3px; background: var(--amber); border-radius: 2px; transition: width 0.6s ease; }
-.just-num   { font-size: 12px; font-family: var(--font-mono); color: var(--amber-text); min-width: 56px; text-align: right; }
+.just-num   { font-size: 12px; font-family: var(--font-mono); color: var(--text-muted); min-width: 20px; text-align: right; }
 
 .activity-row {
   display: flex; align-items: center; gap: 10px;
@@ -484,6 +484,15 @@ html, body {
 // URL do Apps Script — mesma do PDA
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwulrdZyfww-3ejAoGIwrGewM2eAmgCYFSY9SUKmJSU9uiGCtnTiGZT9EZxn8j3lgImhA/exec';
 
+// URL pública do Sheets QT (publicado na web como CSV)
+var QT_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSap2eZ_RANJMRkRQg34TPyHmUO-KHrxO8hMazvmfampJkKpFBGtG3VKB76q3EdRwcDMJqOL30TQ1ZA/pub?gid=1304195408&single=true&output=csv';
+
+// Cache de dados QT para cruzamento com kanban da farmácia
+var qtInfo = {
+  atendAguardando: new Set(), // atendimentos com parada "Aguardando Manipulação" aberta na QT
+  atendInfusao:    new Set()  // atendimentos que iniciaram infusão (Check In QT após Disponível QT)
+};
+
 // ID da planilha Google Sheets (para leitura direta via CSV público)
 // Alternativa: leitura via Apps Script doGet — veja função carregarDados()
 var SHEET_ID = '1phAk5-8oj5doj-7cH_xzm2mho6ig5c2Gru-H-ESB0Tw';
@@ -497,16 +506,6 @@ var LIMITES = {
 };
 
 var STAGES = ['Separação', 'Pré QT', 'Capela QT', 'Disponível QT'];
-
-// Justificativas que representam paradas reais — só essas aparecem nos cards e no painel
-var PARADAS_VALIDAS = [
-  'Aguardando autorização',
-  'Aguardando guia',
-  'Aguardando medicamento de outra unidade',
-  'Erro de prescrição, aguardando ajuste médico',
-  'Falta da liberação da prescrição',
-  'Aguardando geração de atendimento'
-];
 
 // Intervalo de atualização automática (ms)
 var REFRESH_INTERVAL = 30000;
@@ -524,6 +523,79 @@ var timerRefresh = null;
 //  Para usar: Arquivo → Compartilhar → Publicar na web
 //             → Aba "Posição Atual" → Formato CSV
 // ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  INTEGRAÇÃO QT — processa dados do Sheets QT
+// ═══════════════════════════════════════════════════
+function processarQT(rows) {
+  var hoje = new Date().toLocaleDateString('pt-BR'); // "29/05/2026"
+
+  // Mapa poltrona → atendimento (do Check In mais recente hoje)
+  var poltronaAtend = {};
+  // Status de parada por poltrona (true = aberta aguardando farm)
+  var paradaAberta  = {};
+
+  rows.forEach(function(r) {
+    var ts       = r[0] || '';
+    var diaPart  = ts.split(' ')[0];
+    if (diaPart !== hoje) return;
+
+    var poltrona   = (r[1] || '').trim();
+    var evento     = (r[2] || '').trim();
+    var motivo     = (r[3] || '').trim();
+    var atendimento= (r[5] || '').trim();
+    if (!poltrona) return;
+
+    if (evento === 'Check In Paciente' && atendimento) {
+      poltronaAtend[poltrona] = atendimento;
+    }
+    if (evento === 'Início da Parada' && motivo.indexOf('Manipul') >= 0) {
+      paradaAberta[poltrona] = true;
+    }
+    if (evento === 'Fim da parada') {
+      paradaAberta[poltrona] = false;
+    }
+  });
+
+  // Atendimentos com parada aberta na QT aguardando farmácia
+  var aguardando = new Set();
+  Object.keys(paradaAberta).forEach(function(pol) {
+    if (paradaAberta[pol] && poltronaAtend[pol]) {
+      aguardando.add(String(poltronaAtend[pol]));
+    }
+  });
+
+  // Atendimentos que já iniciaram infusão hoje (têm Check In na QT)
+  var infusao = new Set();
+  Object.values(poltronaAtend).forEach(function(atend) {
+    infusao.add(String(atend));
+  });
+
+  qtInfo.atendAguardando = aguardando;
+  qtInfo.atendInfusao    = infusao;
+}
+
+function fetchQTData() {
+  return fetch(QT_CSV_URL, { cache: 'no-store' })
+    .then(function(r) { return r.text(); })
+    .then(function(txt) {
+      var rows = txt.trim().split('\n').slice(1).map(function(l) {
+        var cols = [], cur = '', inQ = false;
+        for (var ci = 0; ci < l.length; ci++) {
+          var ch = l[ci];
+          if (ch === '"') { inQ = !inQ; }
+          else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+          else { cur += ch; }
+        }
+        cols.push(cur.trim());
+        return cols;
+      }).filter(function(r) { return r.length >= 3 && r[0]; });
+      processarQT(rows);
+    })
+    .catch(function(err) {
+      console.warn('QT CSV indisponível:', err.message);
+    });
+}
+
 function carregarDados(manual) {
   if (manual) {
     var btn = document.getElementById('btn-refresh');
@@ -536,7 +608,8 @@ function carregarDados(manual) {
 
   Promise.all([
     fetch(urlPosicao).then(function(r) { return r.json(); }),
-    fetch(urlRegistros).then(function(r) { return r.json(); })
+    fetch(urlRegistros).then(function(r) { return r.json(); }),
+    fetchQTData()
   ])
   .then(function(results) {
     dadosAtuais   = results[0].rows || [];
@@ -637,7 +710,7 @@ function formatarHora(tsStr) {
 //  TEMPO TOTAL DE PARADA NO DIA (por atendimento + justificativa)
 // ═══════════════════════════════════════════════════
 function tempoTotalParada(atendimento, justificativa) {
-  if (!justificativa || PARADAS_VALIDAS.indexOf(justificativa) === -1) return 0;
+  if (!justificativa) return 0;
   var regs = registrosHoje
     .filter(function(r) {
       var a = r['Nº Atendimento'] || r['N Atendimento'] || r['atendimento'] || '';
@@ -710,13 +783,23 @@ function renderKanban() {
       var tsKey = c['Última Atualização'] || c['Última Atualiz.'] || c['Ultima Atualizacao'] || '';
       var mins  = minutosNaEtapa(tsKey);
       var tc    = classeTimer(mins, etapa);
-      var justRaw = c['Justificativa'] || '';
-      var just = PARADAS_VALIDAS.indexOf(justRaw) !== -1 ? justRaw : '';
+      var just  = c['Justificativa'] || '';
       var atend = c['Nº Atendimento'] || c['N Atendimento'] || c['atendimento'] || '—';
       var resp  = c['Responsável'] || c['Responsavel'] || '—';
 
+      // ── Integração QT: badges de parada e infusão ──
+      var atendStr     = String(atend);
+      var isAguardando = qtInfo.atendAguardando.has(atendStr);
+      var isInfusao    = (etapa === 'Disponível QT') && qtInfo.atendInfusao.has(atendStr);
+      var badgeQT = '';
+      if (isInfusao) {
+        badgeQT = '<div style="margin-top:5px;padding:3px 7px;background:rgba(29,158,117,0.18);border:1px solid rgba(29,158,117,0.4);border-radius:5px;font-size:10px;color:#3dd68c;font-weight:600;">💉 Infusão iniciada</div>';
+      } else if (isAguardando) {
+        badgeQT = '<div style="margin-top:5px;padding:3px 7px;background:rgba(218,54,51,0.18);border:1px solid rgba(218,54,51,0.4);border-radius:5px;font-size:10px;color:#f85149;font-weight:600;">⚠ Parada na QT</div>';
+      }
+
       var card = document.createElement('div');
-      card.className = 'card' + (tc === 'red' ? ' red-card' : '');
+      card.className = 'card' + ((tc === 'red' || isAguardando) ? ' red-card' : '');
       card.innerHTML =
         '<div class="card-id">' +
           '<span class="card-id-icon">▍</span>' + atend +
@@ -734,7 +817,8 @@ function renderKanban() {
             '<span>' + just + '</span>' +
             (tempoStr ? '<span class="just-tag-time">' + tempoStr + '</span>' : '') +
             '</div>';
-        })() : '');
+        })() : '') +
+        badgeQT;
 
       card.onclick = (function(cc, etapa, mins, tc) {
         return function() { abrirModal(cc, etapa, mins, tc); };
@@ -771,38 +855,14 @@ function renderMetricas() {
 }
 
 function renderJustificativas() {
-  // Agrupa registros por atendimento, ordenados por timestamp
-  var porAtend = {};
+  var contagem = {};
   registrosHoje.forEach(function(r) {
-    var a = r['Nº Atendimento'] || r['N Atendimento'] || r['atendimento'] || '';
-    if (!a) return;
-    if (!porAtend[a]) porAtend[a] = [];
-    porAtend[a].push(r);
-  });
-
-  // Para cada atendimento, ordena e calcula tempo por justificativa
-  var temposPorJust = {};
-  Object.keys(porAtend).forEach(function(atend) {
-    var regs = porAtend[atend].sort(function(a, b) {
-      return new Date(a['Timestamp'] || a['timestamp'] || 0) -
-             new Date(b['Timestamp'] || b['timestamp'] || 0);
-    });
-    for (var i = 0; i < regs.length; i++) {
-      var j = regs[i]['Justificativa'] || regs[i]['justificativa'] || '';
-      if (!j || PARADAS_VALIDAS.indexOf(j) === -1) continue;
-      var inicio = new Date(regs[i]['Timestamp'] || regs[i]['timestamp'] || 0);
-      if (isNaN(inicio)) continue;
-      var fim = (i + 1 < regs.length)
-        ? new Date(regs[i + 1]['Timestamp'] || regs[i + 1]['timestamp'] || 0)
-        : new Date();
-      if (isNaN(fim)) fim = new Date();
-      var mins = Math.round((fim - inicio) / 60000);
-      temposPorJust[j] = (temposPorJust[j] || 0) + mins;
-    }
+    var j = r['Justificativa'] || r['justificativa'] || '';
+    if (j) contagem[j] = (contagem[j] || 0) + 1;
   });
 
   var panel = document.getElementById('just-panel');
-  var entries = Object.entries(temposPorJust).sort(function(a, b) { return b[1] - a[1]; }).slice(0, 5);
+  var entries = Object.entries(contagem).sort(function(a,b){ return b[1]-a[1]; }).slice(0,5);
 
   if (entries.length === 0) {
     panel.innerHTML = '<div style="font-size:12px;color:var(--text-hint);font-family:var(--font-mono);">nenhuma justificativa hoje</div>';
@@ -815,7 +875,7 @@ function renderJustificativas() {
     return '<div class="just-row">' +
       '<span class="just-label">' + e[0] + '</span>' +
       '<div class="just-track"><div class="just-fill" style="width:' + pct + '%"></div></div>' +
-      '<span class="just-num">' + formatarTempo(e[1]) + '</span>' +
+      '<span class="just-num">' + e[1] + '</span>' +
       '</div>';
   }).join('');
 }
