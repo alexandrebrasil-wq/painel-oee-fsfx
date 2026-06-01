@@ -886,8 +886,12 @@ function renderMetricas() {
 function renderJustificativas() {
   var contagem = {};
   registrosHoje.forEach(function(r) {
-    var j = r['Justificativa'] || r['justificativa'] || '';
-    if (j) contagem[j] = (contagem[j] || 0) + 1;
+    var j    = r['Justificativa'] || r['justificativa'] || '';
+    var tipo = r['Tipo']          || r['tipo']          || '';
+    // Conta apenas paradas reais — exclui encerramentos e transições normais
+    if (j && tipo === 'parada') {
+      contagem[j] = (contagem[j] || 0) + 1;
+    }
   });
 
   var panel = document.getElementById('just-panel');
