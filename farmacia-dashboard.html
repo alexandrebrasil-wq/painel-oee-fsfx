@@ -821,8 +821,14 @@ function renderKanban() {
       }
 
       var badgeQT = '';
-      if (isEntregue) {
-        badgeQT = '<div style="margin-top:5px;padding:3px 7px;background:rgba(29,158,117,0.18);border:1px solid rgba(29,158,117,0.4);border-radius:5px;font-size:10px;color:#3dd68c;font-weight:600;">✓ Entregue · paciente na poltrona</div>';
+      if (etapa === 'Disponível QT') {
+        if (isEntregue) {
+          // Paciente confirmado na poltrona após entrega
+          badgeQT = '<div style="margin-top:6px;padding:4px 8px;background:rgba(29,158,117,0.15);border:1px solid rgba(29,158,117,0.35);border-radius:6px;font-size:11px;color:#3dd68c;font-weight:600;">✓ Entregue · paciente na poltrona</div>';
+        } else {
+          // Entregue mas ainda sem confirmação de Check In QT posterior
+          badgeQT = '<div style="margin-top:6px;padding:4px 8px;background:rgba(29,158,117,0.1);border:1px solid rgba(29,158,117,0.25);border-radius:6px;font-size:11px;color:#3dd68c;font-weight:500;">✓ Entregue</div>';
+        }
       } else if (isAguardando) {
         badgeQT = '<div style="margin-top:5px;padding:3px 7px;background:rgba(218,54,51,0.18);border:1px solid rgba(218,54,51,0.4);border-radius:5px;font-size:10px;color:#f85149;font-weight:600;">⚠ Parada na QT</div>';
       }
@@ -838,7 +844,7 @@ function renderKanban() {
         '</div>' +
         '<div class="card-entry">desde ' + formatarHora(tsKey) + ' · ' + resp + '</div>' +
         (etapa === 'Disponível QT'
-          ? '<div class="timer-badge green" style="opacity:0.7;">✓ Entregue</div>'
+          ? '' // timer omitido — badge unificado abaixo
           : '<div class="timer-badge ' + tc + '">' +
               '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
               formatarTempo(mins) +
