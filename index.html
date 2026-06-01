@@ -266,13 +266,13 @@ function render(st,fonte){
     // Badge de medicação — só relevante quando poltrona está em parada aguardando farmácia
     const pNome=`Poltrona ${num.replace(/^0/,'')}`;
     const atendNum=poltronaAtend[pNome]||'';
-    const estaAguardandoFarm = s.s==='parada' && s.d && s.d.indexOf('Manipul')>=0;
-    const medDisp = estaAguardandoFarm && atendNum && farmDisponivel.has(atendNum);
-    const medBadge = estaAguardandoFarm
-      ? (medDisp
-          ? '<div class="med-badge med-disp">💊 Medicação liberada</div>'
-          : '<div class="med-badge med-wait">⏳ Aguard. farmácia</div>')
-      : '';
+    const estaAguardandoFarm  = s.s==='parada' && s.d && s.d.indexOf('Manipul')>=0;
+    const estaAguardReceber   = s.s==='parada' && s.d && s.d.indexOf('aguardando recebimento')>=0;
+    const medBadge = estaAguardReceber
+      ? '<div class="med-badge med-disp">💊 Medicação disponível</div>'
+      : estaAguardandoFarm
+        ? '<div class="med-badge med-wait">⏳ Aguard. farmácia</div>'
+        : '';
     c.innerHTML='<div class="cn">P'+num+'</div>'
       +'<div class="ci">'+svgIcon+'</div>'
       +'<div class="cb">'
