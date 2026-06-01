@@ -1067,4 +1067,70 @@ function abrirModal(c, etapa, mins, tc) {
   var atend = c['Nº Atendimento'] || c['N Atendimento'] || c['atendimento'] || '—';
   var resp  = c['Responsável'] || c['Responsavel'] || '—';
   var just  = c['Justificativa'] || c['justificativa'] || '';
-  var labels = { green: 'Dentro do prazo', yellow: 'Atenção — próximo do limite
+  var labels = { green: 'Dentro do prazo', yellow: 'Atenção — próximo do limite', red: 'Acima do limite' };
+
+  document.getElementById('modal-title').textContent = atend;
+  document.getElementById('m-id').textContent    = atend;
+  document.getElementById('m-stage').textContent = etapa;
+  document.getElementById('m-time').textContent  = formatarTempo(mins);
+  document.getElementById('m-resp').textContent  = resp;
+  document.getElementById('m-status').textContent = labels[tc];
+  document.getElementById('m-status').className  = 'modal-val ' + tc;
+
+  var jr = document.getElementById('m-just-row');
+  if (just) {
+    jr.style.display = 'flex';
+    document.getElementById('m-just').textContent = just;
+  } else {
+    jr.style.display = 'none';
+  }
+
+  document.getElementById('modal-backdrop').classList.add('open');
+}
+
+function fecharModal(e) {
+  if (e && e.target !== document.getElementById('modal-backdrop') && e.type !== 'click') return;
+  if (e && e.currentTarget === document.getElementById('modal-backdrop') && e.target !== e.currentTarget) return;
+  document.getElementById('modal-backdrop').classList.remove('open');
+}
+
+document.getElementById('modal-backdrop').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+
+// ═══════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════
+function setStatus(type, label) {
+  var dot  = document.getElementById('status-dot');
+  var text = document.getElementById('status-text');
+  dot.className  = 'status-dot ' + type;
+  text.textContent = label;
+}
+
+function atualizarTimestamp() {
+  var now = new Date();
+  var h   = now.getHours().toString().padStart(2,'0');
+  var m   = now.getMinutes().toString().padStart(2,'0');
+  var s   = now.getSeconds().toString().padStart(2,'0');
+  document.getElementById('last-update').textContent = 'Atualizado às ' + h + ':' + m + ':' + s;
+}
+
+function showError(msg) {
+  var bar = document.getElementById('error-bar');
+  bar.textContent = msg;
+  bar.classList.add('show');
+}
+
+function hideError() {
+  document.getElementById('error-bar').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════════
+//  INICIALIZAÇÃO
+// ═══════════════════════════════════════════════════
+carregarDados(false);
+timerRefresh = setInterval(function() { carregarDados(false); }, REFRESH_INTERVAL);
+</script>
+</body>
+</html>
