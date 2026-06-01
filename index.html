@@ -263,15 +263,16 @@ function render(st,fonte){
     const lbl={livre:'Disponível',ocupada:'Em atendimento',parada:'Em parada'};
     const t=s.ts?el(s.ts):'';
     c.className='card '+s.s+(s.s==='livre'?' f'+s.fi:'');
-    // Badge de medicação (integração farmácia)
+    // Badge de medicação — só relevante quando poltrona está em parada aguardando farmácia
     const pNome=`Poltrona ${num.replace(/^0/,'')}`;
     const atendNum=poltronaAtend[pNome]||'';
-    const medDisp=atendNum&&farmDisponivel.has(atendNum);
-    const medBadge=medDisp
-      ?'<div class="med-badge med-disp">💊 Medicação liberada</div>'
-      :(s.s==='parada'&&s.d&&s.d.indexOf('Manipul')>=0
-        ?'<div class="med-badge med-wait">⏳ Aguard. farmácia</div>'
-        :'');
+    const estaAguardandoFarm = s.s==='parada' && s.d && s.d.indexOf('Manipul')>=0;
+    const medDisp = estaAguardandoFarm && atendNum && farmDisponivel.has(atendNum);
+    const medBadge = estaAguardandoFarm
+      ? (medDisp
+          ? '<div class="med-badge med-disp">💊 Medicação liberada</div>'
+          : '<div class="med-badge med-wait">⏳ Aguard. farmácia</div>')
+      : '';
     c.innerHTML='<div class="cn">P'+num+'</div>'
       +'<div class="ci">'+svgIcon+'</div>'
       +'<div class="cb">'
