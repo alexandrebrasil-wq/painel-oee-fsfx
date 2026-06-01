@@ -490,7 +490,7 @@ var QT_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSap2eZ_RANJMR
 // Cache de dados QT para cruzamento com kanban da farmácia
 var qtInfo = {
   atendAguardando: new Set(), // atendimentos com parada "Aguardando Manipulação" aberta na QT
-  atendInfusao:    new Set()  // atendimentos que iniciaram infusão (Check In QT após Disponível QT)
+  checkInQT:       {}         // atendimento → timestamp do Check In na QT
 };
 
 // ID da planilha Google Sheets (para leitura direta via CSV público)
@@ -526,17 +526,27 @@ var timerRefresh = null;
 // ═══════════════════════════════════════════════════
 //  INTEGRAÇÃO QT — processa dados do Sheets QT
 // ═══════════════════════════════════════════════════
-function processarQT(rows) {
-  var hoje = new Date().toLocaleDateString('pt-BR'); // "29/05/2026"
+function parseTsQT(tsStr) {
+  // Converte "29/05/2026 10:09:36" → Date
+  try {
+    var parts = tsStr.split(' ');
+    var dp = parts[0].split('/');
+    var hp = (parts[1] || '00:00:00').split(':');
+    return new Date(+dp[2], +dp[1]-1, +dp[0], +hp[0], +hp[1], +(hp[2]||0));
+  } catch(e) { return null; }
+}
 
-  // Mapa poltrona → atendimento (do Check In mais recente hoje)
-  var poltronaAtend = {};
+function processarQT(rows) {
+  var hoje = new Date().toLocaleDateString('pt-BR');
+
+  // Mapa poltrona → { atendimento, tsCheckin }
+  var poltronaInfo  = {};
   // Status de parada por poltrona (true = aberta aguardando farm)
   var paradaAberta  = {};
 
   rows.forEach(function(r) {
-    var ts       = r[0] || '';
-    var diaPart  = ts.split(' ')[0];
+    var ts         = r[0] || '';
+    var diaPart    = ts.split(' ')[0];
     if (diaPart !== hoje) return;
 
     var poltrona   = (r[1] || '').trim();
@@ -546,7 +556,10 @@ function processarQT(rows) {
     if (!poltrona) return;
 
     if (evento === 'Check In Paciente' && atendimento) {
-      poltronaAtend[poltrona] = atendimento;
+      poltronaInfo[poltrona] = {
+        atendimento: atendimento,
+        tsCheckin:   parseTsQT(ts)
+      };
     }
     if (evento === 'Início da Parada' && motivo.indexOf('Manipul') >= 0) {
       paradaAberta[poltrona] = true;
@@ -559,19 +572,21 @@ function processarQT(rows) {
   // Atendimentos com parada aberta na QT aguardando farmácia
   var aguardando = new Set();
   Object.keys(paradaAberta).forEach(function(pol) {
-    if (paradaAberta[pol] && poltronaAtend[pol]) {
-      aguardando.add(String(poltronaAtend[pol]));
+    if (paradaAberta[pol] && poltronaInfo[pol]) {
+      aguardando.add(String(poltronaInfo[pol].atendimento));
     }
   });
 
-  // Atendimentos que já iniciaram infusão hoje (têm Check In na QT)
-  var infusao = new Set();
-  Object.values(poltronaAtend).forEach(function(atend) {
-    infusao.add(String(atend));
+  // Mapa atendimento → timestamp do Check In na QT (para comparar com Disponível QT)
+  // "Medicação entregue e paciente na poltrona" só é verdade se:
+  // Check In na QT aconteceu APÓS o registro "Disponível QT" na farmácia
+  var checkInQT = {};
+  Object.values(poltronaInfo).forEach(function(info) {
+    checkInQT[String(info.atendimento)] = info.tsCheckin;
   });
 
   qtInfo.atendAguardando = aguardando;
-  qtInfo.atendInfusao    = infusao;
+  qtInfo.checkInQT       = checkInQT; // timestamp do Check In por atendimento
 }
 
 function fetchQTData() {
@@ -791,13 +806,23 @@ function renderKanban() {
       var atend = c['Nº Atendimento'] || c['N Atendimento'] || c['atendimento'] || '—';
       var resp  = c['Responsável'] || c['Responsavel'] || '—';
 
-      // ── Integração QT: badges de parada e infusão ──
+      // ── Integração QT: badges de parada e entrega ──
       var atendStr     = String(atend);
       var isAguardando = qtInfo.atendAguardando.has(atendStr);
-      var isInfusao    = (etapa === 'Disponível QT') && qtInfo.atendInfusao.has(atendStr);
+
+      // "Medicação entregue e paciente na poltrona": Check In na QT deve ser
+      // POSTERIOR ao registro "Disponível QT" na farmácia — senão o Check In
+      // é de antes da medicação ficar pronta, não significa infusão iniciada.
+      var isEntregue = false;
+      if (etapa === 'Disponível QT' && qtInfo.checkInQT[atendStr]) {
+        var tsDispFarm = new Date(tsKey); // timestamp do "Disponível QT" na farmácia
+        var tsCheckInQT = qtInfo.checkInQT[atendStr];
+        isEntregue = !isNaN(tsDispFarm) && tsCheckInQT > tsDispFarm;
+      }
+
       var badgeQT = '';
-      if (isInfusao) {
-        badgeQT = '<div style="margin-top:5px;padding:3px 7px;background:rgba(29,158,117,0.18);border:1px solid rgba(29,158,117,0.4);border-radius:5px;font-size:10px;color:#3dd68c;font-weight:600;">💉 Infusão iniciada</div>';
+      if (isEntregue) {
+        badgeQT = '<div style="margin-top:5px;padding:3px 7px;background:rgba(29,158,117,0.18);border:1px solid rgba(29,158,117,0.4);border-radius:5px;font-size:10px;color:#3dd68c;font-weight:600;">✓ Entregue · paciente na poltrona</div>';
       } else if (isAguardando) {
         badgeQT = '<div style="margin-top:5px;padding:3px 7px;background:rgba(218,54,51,0.18);border:1px solid rgba(218,54,51,0.4);border-radius:5px;font-size:10px;color:#f85149;font-weight:600;">⚠ Parada na QT</div>';
       }
