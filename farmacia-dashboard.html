@@ -137,6 +137,7 @@ html, body {
   display: flex; align-items: center; justify-content: space-between;
 }
 .col-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); }
+.col-avg { font-size: 10px; color: var(--text-hint); font-family: var(--font-mono); margin-top: 2px; }
 .col-count {
   font-size: 11px; font-weight: 600; font-family: var(--font-mono);
   border-radius: 20px; padding: 2px 9px;
@@ -765,6 +766,54 @@ function renderizar() {
   renderAtividade();
 }
 
+// Calcula tempo médio que os atendimentos passaram em cada etapa hoje
+// Usa o histórico de Registros: para cada atendimento, calcula quanto tempo
+// ficou em cada etapa antes de avançar para a próxima
+function calcularTempoMedioEtapa() {
+  var medias = {};
+  STAGES.forEach(function(e) { medias[e] = { total: 0, count: 0 }; });
+
+  // Agrupa registros por atendimento e ordena por timestamp
+  var porAtend = {};
+  registrosHoje.forEach(function(r) {
+    var atend = r['Nº Atendimento'] || r['N Atendimento'] || r['atendimento'] || '';
+    var tipo  = r['Tipo'] || r['tipo'] || '';
+    if (!atend || tipo === 'parada' || tipo === 'encerramento') return;
+    if (!porAtend[atend]) porAtend[atend] = [];
+    porAtend[atend].push(r);
+  });
+
+  Object.values(porAtend).forEach(function(registros) {
+    // Ordena por timestamp
+    registros.sort(function(a, b) {
+      return new Date(a['Timestamp'] || a['timestamp'] || 0) -
+             new Date(b['Timestamp'] || b['timestamp'] || 0);
+    });
+
+    // Calcula delta entre transições consecutivas
+    for (var i = 0; i < registros.length - 1; i++) {
+      var etapaAtual = registros[i]['Etapa'] || registros[i]['etapa'] || '';
+      var tsAtual    = new Date(registros[i]['Timestamp'] || registros[i]['timestamp'] || 0);
+      var tsProx     = new Date(registros[i+1]['Timestamp'] || registros[i+1]['timestamp'] || 0);
+      var delta      = (tsProx - tsAtual) / 60000; // minutos
+
+      if (medias[etapaAtual] && delta > 0 && delta < 600) {
+        medias[etapaAtual].total += delta;
+        medias[etapaAtual].count++;
+      }
+    }
+  });
+
+  // Converte para média
+  var resultado = {};
+  STAGES.forEach(function(e) {
+    resultado[e] = medias[e].count > 0
+      ? Math.round(medias[e].total / medias[e].count)
+      : null;
+  });
+  return resultado;
+}
+
 function renderKanban() {
   var board = document.getElementById('kanban-board');
   board.innerHTML = '';
@@ -784,9 +833,22 @@ function renderKanban() {
     col.className = 'col';
 
     var countClass = temVermelho ? 'has-red' : (cards.length > 0 ? 'has-items' : '');
-    col.innerHTML = '<div class="col-header">' +
-      '<span class="col-name">' + etapa + '</span>' +
-      '<span class="col-count ' + countClass + '">' + cards.length + '</span>' +
+    var medias     = calcularTempoMedioEtapa();
+    var media      = medias[etapa];
+    var mediaStr   = media !== null ? formatarTempo(media) : '—';
+    var limite     = LIMITES[etapa] || 30;
+    var mediaCorClass = media === null ? ''
+      : media <= limite * 0.6  ? 'style="color:var(--green-text)"'
+      : media <= limite        ? 'style="color:var(--amber-text)"'
+      : 'style="color:var(--red-text)"';
+
+    col.innerHTML = '<div class="col-header" style="flex-direction:column;align-items:flex-start;gap:3px;">' +
+      '<div style="display:flex;justify-content:space-between;width:100%;align-items:center;">' +
+        '<span class="col-name">' + etapa + '</span>' +
+        '<span class="col-count ' + countClass + '">' + cards.length + '</span>' +
+      '</div>' +
+      '<div class="col-avg">média hoje: <span ' + mediaCorClass + '>' + mediaStr + '</span>' +
+        ' <span style="color:var(--text-hint)">/ meta ' + formatarTempo(limite) + '</span></div>' +
       '</div>' +
       '<div class="col-body" id="col-' + etapa.replace(/\s/g,'') + '"></div>';
     board.appendChild(col);
@@ -810,25 +872,11 @@ function renderKanban() {
       var atendStr     = String(atend);
       var isAguardando = qtInfo.atendAguardando.has(atendStr);
 
-      // "Medicação entregue e paciente na poltrona": Check In na QT deve ser
-      // POSTERIOR ao registro "Disponível QT" na farmácia — senão o Check In
-      // é de antes da medicação ficar pronta, não significa infusão iniciada.
-      var isEntregue = false;
-      if (etapa === 'Disponível QT' && qtInfo.checkInQT[atendStr]) {
-        var tsDispFarm = new Date(tsKey); // timestamp do "Disponível QT" na farmácia
-        var tsCheckInQT = qtInfo.checkInQT[atendStr];
-        isEntregue = !isNaN(tsDispFarm) && tsCheckInQT > tsDispFarm;
-      }
+
 
       var badgeQT = '';
       if (etapa === 'Disponível QT') {
-        if (isEntregue) {
-          // Paciente confirmado na poltrona após entrega
-          badgeQT = '<div style="margin-top:6px;padding:4px 8px;background:rgba(29,158,117,0.15);border:1px solid rgba(29,158,117,0.35);border-radius:6px;font-size:11px;color:#3dd68c;font-weight:600;">✓ Entregue · paciente na poltrona</div>';
-        } else {
-          // Entregue mas ainda sem confirmação de Check In QT posterior
-          badgeQT = '<div style="margin-top:6px;padding:4px 8px;background:rgba(29,158,117,0.1);border:1px solid rgba(29,158,117,0.25);border-radius:6px;font-size:11px;color:#3dd68c;font-weight:500;">✓ Entregue</div>';
-        }
+        badgeQT = '<div style="margin-top:6px;padding:4px 8px;background:rgba(29,158,117,0.12);border:1px solid rgba(29,158,117,0.3);border-radius:6px;font-size:11px;color:#3dd68c;font-weight:600;">✓ Entregue</div>';
       } else if (isAguardando) {
         badgeQT = '<div style="margin-top:5px;padding:3px 7px;background:rgba(218,54,51,0.18);border:1px solid rgba(218,54,51,0.4);border-radius:5px;font-size:10px;color:#f85149;font-weight:600;">⚠ Parada na QT</div>';
       }
