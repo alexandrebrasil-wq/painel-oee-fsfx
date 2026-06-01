@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>i-OMT — Painel Gerencial Farmácia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--s1:#161b22;--s2:#1c2128;--s3:#21262d;
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.13);--b3:rgba(255,255,255,.22);
+  --tx:#e6edf3;--tx2:#8b949e;--tx3:#484f58;
+  --green:#1D9E75;--gt:#3dd68c;--gd:rgba(29,158,117,.15);
+  --amber:#d29922;--at:#e3b341;--ad:rgba(210,153,34,.15);
+  --red:#da3633;--rt:#f85149;--rd:rgba(218,54,51,.15);
+  --blue:#388bfd;--bt:#79c0ff;--bd:rgba(56,139,253,.12);
+  --purple:#8957e5;--pt:#d2a8ff;--pd:rgba(137,87,229,.15);
+  --ff:'Syne',sans-serif;--fm:'DM Mono',monospace;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(--ff);font-size:14px}
+
+/* ─── HEADER ─── */
+.hdr{background:var(--s1);border-bottom:1px solid var(--b1);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hdr-left{display:flex;align-items:center;gap:12px}
+.logo{height:28px}
+.hdr-title{font-size:15px;font-weight:600}
+.hdr-sub{font-size:11px;color:var(--tx2);margin-top:2px;font-family:var(--fm)}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* ─── FILTROS ─── */
+.filters{background:var(--s1);border-bottom:1px solid var(--b1);padding:10px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.filter-label{font-size:11px;color:var(--tx2);margin-right:4px}
+.date-input{background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--tx);font-family:var(--fm);cursor:pointer}
+.date-input:focus{outline:none;border-color:var(--green)}
+.btn-preset{background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--tx2);cursor:pointer;font-family:var(--ff);transition:all .15s}
+.btn-preset:hover,.btn-preset.active{background:var(--gd);border-color:var(--green);color:var(--gt)}
+.btn-analisar{background:var(--green);border:none;border-radius:6px;padding:5px 16px;font-size:12px;font-weight:600;color:#fff;cursor:pointer;transition:opacity .15s}
+.btn-analisar:hover{opacity:.85}
+.status-pill{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--b2);border-radius:20px;padding:4px 12px;font-size:11px;font-family:var(--fm);color:var(--tx2);margin-left:auto}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--tx3);transition:background .3s}
+.sdot.ok{background:var(--gt);animation:pdot 2s ease-in-out infinite}
+.sdot.err{background:var(--rt)}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ─── KPI BAR ─── */
+.kpi-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--b1);border-bottom:1px solid var(--b1)}
+.kpi{background:var(--s1);padding:14px 18px}
+.kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:5px}
+.kpi-val{font-size:26px;font-weight:700;line-height:1;font-family:var(--fm)}
+.kpi-val.green{color:var(--gt)}
+.kpi-val.amber{color:var(--at)}
+.kpi-val.red{color:var(--rt)}
+.kpi-val.blue{color:var(--bt)}
+.kpi-sub{font-size:11px;color:var(--tx2);margin-top:3px}
+.kpi-meta{font-size:10px;margin-top:4px;font-family:var(--fm)}
+
+/* ─── MAIN ─── */
+.main{padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* ─── PANEL ─── */
+.panel{background:var(--s1);border:1px solid var(--b1);border-radius:10px;overflow:hidden}
+.panel-hdr{padding:11px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
+.panel-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx2);display:flex;align-items:center;gap:6px}
+.panel-meta{font-size:10px;font-family:var(--fm);color:var(--tx3)}
+.panel-body{padding:14px}
+.chart-wrap{position:relative;height:180px}
+.chart-wrap-sm{position:relative;height:140px}
+
+/* ─── ETAPAS ─── */
+.etapas-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.etapa-card{background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:10px 12px;text-align:center}
+.etapa-name{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.etapa-val{font-size:18px;font-weight:700;font-family:var(--fm);line-height:1}
+.etapa-meta{font-size:10px;color:var(--tx2);margin-top:3px}
+.etapa-bar{height:3px;border-radius:2px;margin-top:7px;background:var(--b2)}
+.etapa-fill{height:3px;border-radius:2px}
+
+/* ─── PARETO ─── */
+.pareto-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--b1)}
+.pareto-row:last-child{border-bottom:none}
+.pareto-rank{font-size:10px;color:var(--tx3);font-family:var(--fm);min-width:18px}
+.pareto-label{font-size:12px;color:var(--tx);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pareto-track{flex:0 0 80px;height:3px;background:var(--b2);border-radius:2px}
+.pareto-fill{height:3px;border-radius:2px;background:var(--at);transition:width .6s ease}
+.pareto-n{font-size:11px;color:var(--tx2);font-family:var(--fm);min-width:30px;text-align:right}
+.pareto-t{font-size:11px;color:var(--at);font-family:var(--fm);min-width:52px;text-align:right}
+
+/* ─── FLUXO TABLE ─── */
+.ft{width:100%;border-collapse:collapse;font-size:12px}
+.ft th{padding:6px 8px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);border-bottom:1px solid var(--b1);text-align:left}
+.ft th:not(:first-child){text-align:center}
+.ft td{padding:7px 8px;border-bottom:1px solid var(--b1);color:var(--tx)}
+.ft td:not(:first-child){text-align:center;font-family:var(--fm);font-size:11px}
+.ft tr:last-child td{border-bottom:none}
+.pill{display:inline-block;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600;font-family:var(--fm)}
+.pill-g{background:var(--gd);color:var(--gt)}
+.pill-a{background:var(--ad);color:var(--at)}
+.pill-r{background:var(--rd);color:var(--rt)}
+
+/* ─── LOADING ─── */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 0;gap:14px}
+.spinner{width:32px;height:32px;border:2px solid var(--b2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{font-size:13px;color:var(--tx2)}
+
+/* ─── EMPTY ─── */
+.empty{text-align:center;padding:32px;font-size:12px;color:var(--tx3);font-family:var(--fm)}
+
+@media(max-width:820px){.row2,.row3{grid-template-columns:1fr}.kpi-bar{grid-template-columns:1fr 1fr}.etapas-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-left">
+    <img src="https://painel.i-omt.com/logo_iomt_branco.png" class="logo" alt="i-OMT">
+    <div>
+      <div class="hdr-title">Painel Gerencial — Farmácia Oncológica</div>
+      <div class="hdr-sub" id="hdr-sub">análise histórica por período</div>
+    </div>
+  </div>
+</header>
+
+<!-- FILTROS -->
+<div class="filters">
+  <span class="filter-label">De</span>
+  <input type="date" id="dt-ini" class="date-input">
+  <span class="filter-label">até</span>
+  <input type="date" id="dt-fim" class="date-input">
+  <button class="btn-analisar" onclick="analisar()">Analisar</button>
+  <button class="btn-preset" onclick="setPreset('ontem')">Ontem</button>
+  <button class="btn-preset" onclick="setPreset('7d')">7 dias</button>
+  <button class="btn-preset" onclick="setPreset('mes')">Mês</button>
+  <div class="status-pill">
+    <div class="sdot" id="sdot"></div>
+    <span id="status-txt">carregando</span>
+  </div>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-bar">
+  <div class="kpi">
+    <div class="kpi-label">TPF médio</div>
+    <div class="kpi-val" id="k-tpf">—</div>
+    <div class="kpi-sub">Separação → Disponível QT</div>
+    <div class="kpi-meta" id="k-tpf-meta"></div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">% no SLA</div>
+    <div class="kpi-val" id="k-sla">—</div>
+    <div class="kpi-sub">entregues dentro do prazo</div>
+    <div class="kpi-meta" id="k-sla-meta"></div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">% com parada</div>
+    <div class="kpi-val" id="k-par">—</div>
+    <div class="kpi-sub">atendimentos com parada</div>
+    <div class="kpi-meta" id="k-par-meta"></div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Liberações</div>
+    <div class="kpi-val green" id="k-lib">—</div>
+    <div class="kpi-sub">disponíveis QT no período</div>
+    <div class="kpi-meta" id="k-lib-meta"></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main" id="main-content">
+  <div class="loading" id="loading-state">
+    <div class="spinner"></div>
+    <p>Carregando dados...</p>
+  </div>
+</main>
+
+<script>
+// ═══════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════
+var APPS_URL  = 'https://script.google.com/macros/s/AKfycbwulrdZyfww-3ejAoGIwrGewM2eAmgCYFSY9SUKmJSU9uiGCtnTiGZT9EZxn8j3lgImhA/exec';
+var QT_CSV    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSap2eZ_RANJMRkRQg34TPyHmUO-KHrxO8hMazvmfampJkKpFBGtG3VKB76q3EdRwcDMJqOL30TQ1ZA/pub?gid=1304195408&single=true&output=csv';
+
+// SLA por etapa (minutos)
+var SLA = {'Separação':20,'Pré QT':45,'Capela QT':30,'Disponível QT':15};
+var ETAPAS = ['Separação','Pré QT','Capela QT','Disponível QT'];
+var FLUXOS = ['Longa/Longuissima','Media','Curta/Rapida','Convenio','Leito'];
+
+// Chart instances
+var charts = {};
+
+// ═══════════════════════════════════
+//  DATAS
+// ═══════════════════════════════════
+function fmtDate(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function parseDateStr(s){
+  var p=s.split('-'); return new Date(+p[0],+p[1]-1,+p[2]);
+}
+function fmtBR(d){
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
+}
+function fmtMin(m){
+  if(!m||m<1) return '<1min';
+  if(m<60) return Math.round(m)+'min';
+  return Math.floor(m/60)+'h'+String(Math.round(m%60)).padStart(2,'0')+'min';
+}
+function pct(v){return Math.round((v||0)*100)+'%'}
+
+function setPreset(p){
+  var hoje=new Date(), ini=new Date();
+  if(p==='ontem'){ini.setDate(hoje.getDate()-1);hoje.setDate(hoje.getDate()-1);}
+  else if(p==='7d'){ini.setDate(hoje.getDate()-7);}
+  else if(p==='mes'){ini=new Date(hoje.getFullYear(),hoje.getMonth(),1);}
+  document.getElementById('dt-ini').value=fmtDate(ini);
+  document.getElementById('dt-fim').value=fmtDate(hoje);
+  document.querySelectorAll('.btn-preset').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  analisar();
+}
+
+// Init datas
+(function(){
+  var hoje=new Date(), ini=new Date();
+  ini.setDate(hoje.getDate()-7);
+  document.getElementById('dt-ini').value=fmtDate(ini);
+  document.getElementById('dt-fim').value=fmtDate(hoje);
+})();
+
+// ═══════════════════════════════════
+//  FETCH
+// ═══════════════════════════════════
+var dadosRegistros=[], dadosQT=[];
+
+async function fetchTodos(){
+  setStatus('loading','carregando');
+  try{
+    var [rReg, rQT] = await Promise.all([
+      fetch(APPS_URL+'?acao=registros').then(r=>r.json()),
+      fetch(QT_CSV,{cache:'no-store'}).then(r=>r.text()).catch(()=>null)
+    ]);
+    dadosRegistros = rReg.rows||[];
+    dadosQT        = rQT ? parseCSV(rQT) : [];
+    setStatus('ok','dados carregados');
+  } catch(e){
+    setStatus('err','erro ao carregar');
+    console.error(e);
+  }
+}
+
+function parseCSV(txt){
+  var linhas=txt.trim().split('\n');
+  if(linhas.length<2) return [];
+  var cab=linhas[0].split(',').map(s=>s.replace(/"/g,'').trim());
+  return linhas.slice(1).map(l=>{
+    var cols=[],cur='',inQ=false;
+    for(var i=0;i<l.length;i++){
+      var c=l[i];
+      if(c==='"'){inQ=!inQ;}
+      else if(c===','&&!inQ){cols.push(cur.trim());cur='';}
+      else cur+=c;
+    }
+    cols.push(cur.trim());
+    var obj={};
+    cab.forEach((h,i)=>{obj[h]=( cols[i]||'').replace(/"/g,'').trim();});
+    return obj;
+  }).filter(r=>r[cab[0]]);
+}
+
+function setStatus(t,txt){
+  var dot=document.getElementById('sdot'), s=document.getElementById('status-txt');
+  dot.className='sdot'+(t==='ok'?' ok':t==='err'?' err':'');
+  s.textContent=txt;
+}
+
+// ═══════════════════════════════════
+//  ANÁLISE
+// ═══════════════════════════════════
+function analisar(){
+  var ini = parseDateStr(document.getElementById('dt-ini').value);
+  var fim = parseDateStr(document.getElementById('dt-fim').value);
+  fim.setHours(23,59,59);
+
+  // Filtra registros do período (tipo = transicao)
+  var regs = dadosRegistros.filter(r=>{
+    var ts = new Date(r['Timestamp']||r['timestamp']||0);
+    var tipo = r['Tipo']||r['tipo']||'transicao';
+    return ts>=ini && ts<=fim && tipo!=='parada' && tipo!=='encerramento';
+  });
+
+  // Filtra paradas do período
+  var paradas = dadosRegistros.filter(r=>{
+    var ts = new Date(r['Timestamp']||r['timestamp']||0);
+    var tipo = r['Tipo']||r['tipo']||'';
+    return ts>=ini && ts<=fim && tipo==='parada';
+  });
+
+  // Filtra QT do período
+  var qtRows = dadosQT.filter(r=>{
+    var ts = parseQTDate(r['Carimbo de data/hora']||'');
+    return ts && ts>=ini && ts<=fim;
+  });
+
+  var analise = calcularAnalise(regs, paradas, qtRows, ini, fim);
+  renderTudo(analise, ini, fim);
+}
+
+function parseQTDate(s){
+  try{
+    if(!s) return null;
+    var p=s.split(' ');
+    var dp=p[0].split('/');
+    var hp=(p[1]||'00:00:00').split(':');
+    return new Date(+dp[2],+dp[1]-1,+dp[0],+hp[0],+hp[1],+(hp[2]||0));
+  } catch(e){return null;}
+}
+
+// ─── CALCULAR ───
+function calcularAnalise(regs, paradas, qtRows, ini, fim){
+  // Por atendimento: agrupa transições
+  var porAtend = {};
+  regs.forEach(r=>{
+    var a = r['Nº Atendimento']||r['atendimento']||'';
+    if(!a) return;
+    if(!porAtend[a]) porAtend[a]={regs:[]};
+    porAtend[a].regs.push({
+      ts: new Date(r['Timestamp']||r['timestamp']||0),
+      etapa: r['Etapa']||r['etapa']||''
+    });
+  });
+
+  // Calcula TPF por atendimento (Separação → Disponível QT)
+  var tpfList=[]; // minutos
+  var tpfPorEtapa={};
+  ETAPAS.forEach(e=>tpfPorEtapa[e]=[]);
+
+  var atendComParada = new Set(paradas.map(r=>r['Nº Atendimento']||r['atendimento']||''));
+  var liberados=0;
+
+  Object.entries(porAtend).forEach(([atend,info])=>{
+    var rr = info.regs.sort((a,b)=>a.ts-b.ts);
+    var temDisp = rr.some(r=>r.etapa==='Disponível QT');
+    if(temDisp) liberados++;
+
+    // TPF: diff entre primeira transição e "Disponível QT"
+    var tsSep  = rr.find(r=>r.etapa==='Separação');
+    var tsDisp = [...rr].reverse().find(r=>r.etapa==='Disponível QT');
+    if(tsSep && tsDisp && tsDisp.ts > tsSep.ts){
+      var delta=(tsDisp.ts-tsSep.ts)/60000;
+      if(delta>0&&delta<600) tpfList.push(delta);
+    }
+
+    // Tempo por etapa (diff entre transições consecutivas)
+    for(var i=0;i<rr.length-1;i++){
+      var e=rr[i].etapa, delta2=(rr[i+1].ts-rr[i].ts)/60000;
+      if(tpfPorEtapa[e]!==undefined && delta2>0&&delta2<600){
+        tpfPorEtapa[e].push(delta2);
+      }
+    }
+  });
+
+  var tpfMed = tpfList.length ? tpfList.reduce((a,b)=>a+b,0)/tpfList.length : 0;
+
+  // SLA: atendimentos liberados dentro do SLA total (≤ soma dos SLAs das etapas)
+  var slaTotal = Object.values(SLA).reduce((a,b)=>a+b,0); // 110min
+  var dentroSLA = tpfList.filter(t=>t<=slaTotal).length;
+  var pctSLA = tpfList.length ? dentroSLA/tpfList.length : 0;
+
+  // Médias por etapa
+  var medEtapa={};
+  ETAPAS.forEach(e=>{
+    var arr=tpfPorEtapa[e];
+    medEtapa[e] = arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+  });
+
+  // % com parada
+  var totalAtends = Object.keys(porAtend).length;
+  var comParada   = atendComParada.size;
+  var pctParada   = totalAtends ? comParada/totalAtends : 0;
+
+  // Pareto de motivos
+  var motivos={};
+  paradas.forEach(r=>{
+    var j=r['Justificativa']||r['justificativa']||'Sem motivo';
+    if(!motivos[j]) motivos[j]={n:0,tot:0};
+    motivos[j].n++;
+  });
+
+  // Evolução diária
+  var dias=[];
+  var d=new Date(ini);
+  while(d<=fim){
+    var dStr=fmtDate(d);
+    var regsD=regs.filter(r=>fmtDate(new Date(r['Timestamp']||r['timestamp']||0))===dStr);
+    var paradasD=paradas.filter(r=>fmtDate(new Date(r['Timestamp']||r['timestamp']||0))===dStr);
+
+    var pAtD={};
+    regsD.forEach(r=>{
+      var a=r['Nº Atendimento']||r['atendimento']||'';
+      if(!a) return;
+      if(!pAtD[a]) pAtD[a]=[];
+      pAtD[a].push({ts:new Date(r['Timestamp']||r['timestamp']||0),etapa:r['Etapa']||r['etapa']||''});
+    });
+
+    var tpfsD=[];
+    Object.values(pAtD).forEach(rr=>{
+      rr.sort((a,b)=>a.ts-b.ts);
+      var s=rr.find(r=>r.etapa==='Separação');
+      var v=[...rr].reverse().find(r=>r.etapa==='Disponível QT');
+      if(s&&v&&v.ts>s.ts){var dt=(v.ts-s.ts)/60000;if(dt>0&&dt<600)tpfsD.push(dt);}
+    });
+
+    var libD=Object.values(pAtD).filter(rr=>rr.some(r=>r.etapa==='Disponível QT')).length;
+    var tpfD=tpfsD.length?tpfsD.reduce((a,b)=>a+b,0)/tpfsD.length:0;
+
+    dias.push({
+      label:fmtBR(d),
+      tpf:Math.round(tpfD),
+      lib:libD,
+      paradas:paradasD.length
+    });
+    d.setDate(d.getDate()+1);
+  }
+
+  // Pico por hora
+  var horasLib=Array(12).fill(0);
+  regs.filter(r=>(r['Etapa']||r['etapa']==='Disponível QT')).forEach(r=>{
+    var h=new Date(r['Timestamp']||r['timestamp']||0).getHours();
+    var idx=h-7; if(idx>=0&&idx<12) horasLib[idx]++;
+  });
+
+  // Por fluxo — usa tipo de infusão da QT
+  var porFluxo={};
+  FLUXOS.forEach(f=>porFluxo[f]={lib:0,paradas:0,tpfs:[]});
+
+  // Mapa atendimento → tipo (QT)
+  var atendTipo={};
+  qtRows.filter(r=>(r['Evento']||r['C']||'')==='Check In Paciente').forEach(r=>{
+    var atend=(r['Número do atendimento']||r['F']||'').trim();
+    var tipo=(r['Qual o tipo de infusão?']||r['E']||'').trim();
+    if(atend&&tipo) atendTipo[atend]=tipo;
+  });
+
+  Object.entries(porAtend).forEach(([atend,info])=>{
+    var tipo=atendTipo[atend]||'';
+    var fluxo=FLUXOS.find(f=>f.toLowerCase().includes(tipo.toLowerCase().replace('í','i').replace('ô','o').split('/')[0].trim()))||null;
+    if(!fluxo) return;
+    var rr=info.regs.sort((a,b)=>a.ts-b.ts);
+    if(rr.some(r=>r.etapa==='Disponível QT')) porFluxo[fluxo].lib++;
+    if(atendComParada.has(atend)) porFluxo[fluxo].paradas++;
+    var s=rr.find(r=>r.etapa==='Separação');
+    var v=[...rr].reverse().find(r=>r.etapa==='Disponível QT');
+    if(s&&v&&v.ts>s.ts){var dt=(v.ts-s.ts)/60000;if(dt>0&&dt<600)porFluxo[fluxo].tpfs.push(dt);}
+  });
+
+  // Tempo recebimento QT (Disponível QT → Fim parada "aguardando recebimento")
+  var recTimes=[];
+  var atendDispTs={};
+  regs.filter(r=>(r['Etapa']||r['etapa'])==='Disponível QT').forEach(r=>{
+    var a=r['Nº Atendimento']||r['atendimento']||'';
+    if(a) atendDispTs[a]=new Date(r['Timestamp']||r['timestamp']||0);
+  });
+
+  // Poltronas da QT
+  var poltronaAtend={};
+  qtRows.filter(r=>(r['Evento']||'')==='Check In Paciente').forEach(r=>{
+    var pol=(r['ID da Poltrona']||'').trim();
+    var atend=(r['Número do atendimento']||r['Nº Atendimento']||'').trim();
+    if(pol&&atend) poltronaAtend[pol]=atend;
+  });
+
+  var paradaRecAberta={};
+  qtRows.filter(r=>(r['Evento']||'')==='Início da Parada'&&(r['Motivo da Parada']||'').includes('recebimento')).forEach(r=>{
+    var pol=(r['ID da Poltrona']||'').trim();
+    if(pol) paradaRecAberta[pol]=parseQTDate(r['Carimbo de data/hora']||'');
+  });
+  qtRows.filter(r=>(r['Evento']||'')==='Fim da parada').forEach(r=>{
+    var pol=(r['ID da Poltrona']||'').trim();
+    var atend=poltronaAtend[pol];
+    if(pol&&paradaRecAberta[pol]&&atend&&atendDispTs[atend]){
+      var tsFim=parseQTDate(r['Carimbo de data/hora']||'');
+      if(tsFim&&tsFim>atendDispTs[atend]){
+        var dt=(tsFim-atendDispTs[atend])/60000;
+        if(dt>0&&dt<240) recTimes.push(dt);
+        delete paradaRecAberta[pol];
+      }
+    }
+  });
+
+  var tRecMed=recTimes.length?recTimes.reduce((a,b)=>a+b,0)/recTimes.length:0;
+
+  // % paradas QT por farmácia
+  var totalParadasQT=qtRows.filter(r=>(r['Evento']||'')==='Início da Parada').length;
+  var paradasQTFarm=qtRows.filter(r=>(r['Evento']||'')==='Início da Parada'&&(r['Motivo da Parada']||'').includes('Manipul')).length;
+  var pctQTFarm=totalParadasQT?paradasQTFarm/totalParadasQT:0;
+
+  return {
+    tpfMed,pctSLA,pctParada,liberados,totalAtends,comParada,
+    medEtapa,motivos,dias,horasLib,porFluxo,
+    tRecMed,pctQTFarm,paradasQTFarm,totalParadasQT,
+    nDias:dias.length
+  };
+}
+
+// ═══════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════
+function renderTudo(a, ini, fim){
+  // KPIs
+  var kTpf = document.getElementById('k-tpf');
+  kTpf.textContent = fmtMin(a.tpfMed);
+  kTpf.className = 'kpi-val '+(a.tpfMed<=110?'green':a.tpfMed<=150?'amber':'red');
+  document.getElementById('k-tpf-meta').textContent = 'SLA total: '+fmtMin(Object.values(SLA).reduce((x,y)=>x+y,0));
+
+  var kSla = document.getElementById('k-sla');
+  kSla.textContent = pct(a.pctSLA);
+  kSla.className = 'kpi-val '+(a.pctSLA>=.8?'green':a.pctSLA>=.6?'amber':'red');
+  document.getElementById('k-sla-meta').textContent = 'meta: ≥80%';
+
+  var kPar = document.getElementById('k-par');
+  kPar.textContent = pct(a.pctParada);
+  kPar.className = 'kpi-val '+(a.pctParada<=.3?'green':a.pctParada<=.5?'amber':'red');
+  document.getElementById('k-par-meta').textContent = a.comParada+' de '+a.totalAtends+' atendimentos';
+
+  document.getElementById('k-lib').textContent = a.liberados;
+  document.getElementById('k-lib-meta').textContent = a.nDias+' dias · média '+Math.round(a.liberados/Math.max(a.nDias,1))+'/dia';
+
+  document.getElementById('hdr-sub').textContent =
+    fmtBR(ini)+' a '+fmtBR(fim)+' · '+a.nDias+' dias analisados';
+
+  // Renderiza seções
+  var main = document.getElementById('main-content');
+  main.innerHTML = '';
+
+  // ─ Etapas
+  main.appendChild(buildEtapas(a));
+
+  // ─ Row 2: evolução + pareto
+  var r2=document.createElement('div'); r2.className='row2';
+  r2.appendChild(buildEvolucao(a));
+  r2.appendChild(buildPareto(a));
+  main.appendChild(r2);
+
+  // ─ Row 2: pico horas + integração QT
+  var r2b=document.createElement('div'); r2b.className='row2';
+  r2b.appendChild(buildPicoHoras(a));
+  r2b.appendChild(buildIntegracao(a));
+  main.appendChild(r2b);
+
+  // ─ Fluxo
+  main.appendChild(buildFluxo(a));
+}
+
+function buildEtapas(a){
+  var p=document.createElement('div'); p.className='panel';
+  p.innerHTML='<div class="panel-hdr"><span class="panel-title">Tempo médio por etapa</span><span class="panel-meta">Separação → Disponível QT</span></div>';
+  var body=document.createElement('div'); body.className='panel-body';
+  var grid=document.createElement('div'); grid.className='etapas-grid';
+
+  ETAPAS.forEach(e=>{
+    var med=a.medEtapa[e]||0;
+    var sla=SLA[e];
+    var pct=sla?Math.min(med/sla,1.5):0;
+    var cor=med<=sla*.6?'var(--gt)':med<=sla?'var(--at)':'var(--rt)';
+    var card=document.createElement('div'); card.className='etapa-card';
+    card.innerHTML=`
+      <div class="etapa-name">${e}</div>
+      <div class="etapa-val" style="color:${cor}">${fmtMin(med)}</div>
+      <div class="etapa-meta">SLA: ${fmtMin(sla)}</div>
+      <div class="etapa-bar"><div class="etapa-fill" style="width:${Math.min(pct*100,100)}%;background:${cor}"></div></div>`;
+    grid.appendChild(card);
+  });
+  body.appendChild(grid);
+  p.appendChild(body);
+  return p;
+}
+
+function buildEvolucao(a){
+  var p=document.createElement('div'); p.className='panel';
+  p.innerHTML='<div class="panel-hdr"><span class="panel-title">Evolução diária</span><span class="panel-meta">TPF médio · liberações · paradas</span></div>';
+  var body=document.createElement('div'); body.className='panel-body';
+  var wrap=document.createElement('div'); wrap.className='chart-wrap';
+  var canvas=document.createElement('canvas'); canvas.id='chart-evolucao';
+  wrap.appendChild(canvas); body.appendChild(wrap); p.appendChild(body);
+  setTimeout(()=>{
+    if(charts['evolucao']) charts['evolucao'].destroy();
+    charts['evolucao']=new Chart(canvas,{
+      type:'bar',
+      data:{
+        labels:a.dias.map(d=>d.label),
+        datasets:[
+          {label:'TPF (min)',data:a.dias.map(d=>d.tpf),backgroundColor:'rgba(56,139,253,.5)',borderColor:'#388bfd',borderWidth:1,borderRadius:3,yAxisID:'y'},
+          {label:'Paradas',data:a.dias.map(d=>d.paradas),backgroundColor:'rgba(210,153,34,.4)',borderColor:'#d29922',borderWidth:1,borderRadius:3,yAxisID:'y'},
+          {label:'Liberações',type:'line',data:a.dias.map(d=>d.lib),borderColor:'#3dd68c',backgroundColor:'rgba(29,158,117,.08)',pointRadius:3,tension:.3,yAxisID:'y2'}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#8b949e',font:{size:11},boxWidth:12}}},
+        scales:{
+          x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},
+          y:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'},title:{display:true,text:'min / paradas',color:'#484f58',font:{size:10}}},
+          y2:{position:'right',ticks:{color:'#3dd68c',font:{size:10}},grid:{display:false},title:{display:true,text:'liberações',color:'#3dd68c',font:{size:10}}}
+        }
+      }
+    });
+  },50);
+  return p;
+}
+
+function buildPareto(a){
+  var p=document.createElement('div'); p.className='panel';
+  var entries=Object.entries(a.motivos).sort((x,y)=>y[1].n-x[1].n);
+  var total=entries.reduce((s,e)=>s+e[1].n,0)||1;
+  p.innerHTML='<div class="panel-hdr"><span class="panel-title">Pareto de paradas</span><span class="panel-meta">'+total+' ocorrências no período</span></div>';
+  var body=document.createElement('div'); body.className='panel-body';
+  if(!entries.length){body.innerHTML='<div class="empty">sem paradas no período</div>';}
+  else{
+    var maxN=entries[0][1].n;
+    entries.forEach((e,i)=>{
+      var row=document.createElement('div'); row.className='pareto-row';
+      row.innerHTML=`
+        <span class="pareto-rank">${i+1}.</span>
+        <span class="pareto-label" title="${e[0]}">${e[0]}</span>
+        <div class="pareto-track"><div class="pareto-fill" style="width:${Math.round(e[1].n/maxN*100)}%"></div></div>
+        <span class="pareto-n">${e[1].n}x</span>
+        <span class="pareto-t">${Math.round(e[1].n/total*100)}%</span>`;
+      body.appendChild(row);
+    });
+  }
+  p.appendChild(body);
+  return p;
+}
+
+function buildPicoHoras(a){
+  var p=document.createElement('div'); p.className='panel';
+  p.innerHTML='<div class="panel-hdr"><span class="panel-title">Pico de liberações por hora</span><span class="panel-meta">média acumulada do período</span></div>';
+  var body=document.createElement('div'); body.className='panel-body';
+  var wrap=document.createElement('div'); wrap.className='chart-wrap-sm';
+  var canvas=document.createElement('canvas'); canvas.id='chart-horas';
+  wrap.appendChild(canvas); body.appendChild(wrap); p.appendChild(body);
+  var horas=['07h','08h','09h','10h','11h','12h','13h','14h','15h','16h','17h','18h'];
+  setTimeout(()=>{
+    if(charts['horas']) charts['horas'].destroy();
+    charts['horas']=new Chart(canvas,{
+      type:'bar',
+      data:{
+        labels:horas,
+        datasets:[{
+          data:a.horasLib,
+          backgroundColor:a.horasLib.map((v,i)=>v===Math.max(...a.horasLib)?'rgba(29,158,117,.8)':'rgba(56,139,253,.4)'),
+          borderRadius:3
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},
+          y:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}
+        }
+      }
+    });
+  },50);
+  return p;
+}
+
+function buildIntegracao(a){
+  var p=document.createElement('div'); p.className='panel';
+  p.innerHTML='<div class="panel-hdr"><span class="panel-title">Integração QT</span><span class="panel-meta">impacto da farmácia na infusão</span></div>';
+  var body=document.createElement('div'); body.className='panel-body';
+
+  var corRec=a.tRecMed<=15?'var(--gt)':a.tRecMed<=30?'var(--at)':'var(--rt)';
+  var corQT=a.pctQTFarm<=.4?'var(--gt)':a.pctQTFarm<=.6?'var(--at)':'var(--rt)';
+
+  body.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">T. recebimento QT</div>
+        <div style="font-size:22px;font-weight:700;font-family:var(--fm);color:${corRec}">${fmtMin(a.tRecMed)||'—'}</div>
+        <div style="font-size:10px;color:var(--tx2);margin-top:3px">Disponível QT → enfermeira</div>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:12px;text-align:center">
+        <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">% paradas QT / farmácia</div>
+        <div style="font-size:22px;font-weight:700;font-family:var(--fm);color:${corQT}">${pct(a.pctQTFarm)}</div>
+        <div style="font-size:10px;color:var(--tx2);margin-top:3px">${a.paradasQTFarm} de ${a.totalParadasQT} paradas QT</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);padding-top:10px;border-top:1px solid var(--b1)">
+      Dados cruzados com Sheets da QT — requer publicação CSV ativa.
+      ${a.tRecMed===0?'<br>Nenhum fechamento de parada "aguardando recebimento" encontrado no período.':''}
+    </div>`;
+  p.appendChild(body);
+  return p;
+}
+
+function buildFluxo(a){
+  var p=document.createElement('div'); p.className='panel';
+  p.innerHTML='<div class="panel-hdr"><span class="panel-title">Resultado por fluxo</span><span class="panel-meta">baseado no tipo de infusão registrado na QT</span></div>';
+  var body=document.createElement('div'); body.className='panel-body';
+
+  var rows=Object.entries(a.porFluxo).filter(e=>e[1].lib>0);
+  if(!rows.length){
+    body.innerHTML='<div class="empty">sem dados de fluxo no período</div>';
+  } else {
+    var table=document.createElement('table'); table.className='ft';
+    table.innerHTML=`<thead><tr>
+      <th>Fluxo</th>
+      <th>Liberações</th>
+      <th>Paradas</th>
+      <th>Par/Lib</th>
+      <th>TPF médio</th>
+    </tr></thead>`;
+    var tbody=document.createElement('tbody');
+    rows.sort((a,b)=>b[1].lib-a[1].lib).forEach(([fluxo,v])=>{
+      var ratio=v.lib?v.paradas/v.lib:0;
+      var tpf=v.tpfs.length?v.tpfs.reduce((a,b)=>a+b,0)/v.tpfs.length:0;
+      var pillClass=ratio<=.3?'pill-g':ratio<=.5?'pill-a':'pill-r';
+      var tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td>${fluxo}</td>
+        <td>${v.lib}</td>
+        <td>${v.paradas}</td>
+        <td><span class="pill ${pillClass}">${Math.round(ratio*100)}%</span></td>
+        <td>${fmtMin(tpf)||'—'}</td>`;
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    body.appendChild(table);
+  }
+  p.appendChild(body);
+  return p;
+}
+
+// ═══════════════════════════════════
+//  INIT
+// ═══════════════════════════════════
+(async function(){
+  await fetchTodos();
+  analisar();
+})();
+</script>
+</body>
+</html>
