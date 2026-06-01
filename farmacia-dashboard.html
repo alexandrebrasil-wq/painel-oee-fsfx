@@ -612,7 +612,7 @@ function carregarDados(manual) {
     fetchQTData()
   ])
   .then(function(results) {
-    dadosAtuais   = results[0].rows || [];
+    dadosAtuais   = filtrarHoje(results[0].rows || []);
     registrosHoje = filtrarHoje(results[1].rows || []);
     renderizar();
     setStatus('online', 'ao vivo');
@@ -668,9 +668,13 @@ function parseLinha(linha) {
 function filtrarHoje(registros) {
   var hoje = new Date();
   return registros.filter(function(r) {
-    var ts = r['Timestamp'] || r['timestamp'] || '';
+    // Aceita campos de ambas as abas: Registros e Posição Atual
+    var ts = r['Timestamp'] || r['timestamp']
+          || r['Última Atualização'] || r['Ultima Atualizacao']
+          || r['Última Atualiz.'] || '';
     if (!ts) return false;
     var d = new Date(ts);
+    if (isNaN(d)) return false;
     return d.getFullYear() === hoje.getFullYear() &&
            d.getMonth()    === hoje.getMonth()    &&
            d.getDate()     === hoje.getDate();
