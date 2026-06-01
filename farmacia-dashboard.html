@@ -828,16 +828,21 @@ function renderKanban() {
       }
 
       var card = document.createElement('div');
-      card.className = 'card' + ((tc === 'red' || isAguardando) ? ' red-card' : '');
+      var cardClass = etapa === 'Disponível QT'
+        ? 'card' // concluído — nunca vermelho
+        : 'card' + ((tc === 'red' || isAguardando) ? ' red-card' : '');
+      card.className = cardClass;
       card.innerHTML =
         '<div class="card-id">' +
           '<span class="card-id-icon">▍</span>' + atend +
         '</div>' +
         '<div class="card-entry">desde ' + formatarHora(tsKey) + ' · ' + resp + '</div>' +
-        '<div class="timer-badge ' + tc + '">' +
-          '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
-          formatarTempo(mins) +
-        '</div>' +
+        (etapa === 'Disponível QT'
+          ? '<div class="timer-badge green" style="opacity:0.7;">✓ Entregue</div>'
+          : '<div class="timer-badge ' + tc + '">' +
+              '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+              formatarTempo(mins) +
+            '</div>') +
         (just ? (function() {
           var minsParada = tempoTotalParada(atend, just);
           var tempoStr = minsParada > 0 ? ' · ' + formatarTempo(minsParada) : '';
@@ -859,9 +864,13 @@ function renderKanban() {
 }
 
 function renderMetricas() {
-  var total  = dadosAtuais.length;
+  var total = dadosAtuais.filter(function(c) {
+    var etapa = c['Etapa Atual'] || c['Etapa atual'] || '';
+    return etapa !== 'Disponível QT';
+  }).length;
   var vermelhos = dadosAtuais.filter(function(c) {
     var etapa = c['Etapa Atual'] || c['Etapa atual'] || '';
+    if (etapa === 'Disponível QT') return false; // farmácia já concluiu — não conta como alerta
     var ts    = c['Última Atualização'] || c['Última Atualiz.'] || c['Ultima Atualizacao'] || '';
     return classeTimer(minutosNaEtapa(ts), etapa) === 'red';
   }).length;
@@ -871,7 +880,11 @@ function renderMetricas() {
     return e === 'Disponível QT';
   }).length;
 
-  var todosMins = dadosAtuais.map(function(c) {
+  var dadosAtivos = dadosAtuais.filter(function(c) {
+    var etapa = c['Etapa Atual'] || c['Etapa atual'] || '';
+    return etapa !== 'Disponível QT'; // exclui concluídos do tempo médio
+  });
+  var todosMins = dadosAtivos.map(function(c) {
     var ts = c['Última Atualização'] || c['Última Atualiz.'] || c['Ultima Atualizacao'] || '';
     return minutosNaEtapa(ts);
   });
