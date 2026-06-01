@@ -490,8 +490,9 @@ var QT_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSap2eZ_RANJMR
 
 // Cache de dados QT para cruzamento com kanban da farmácia
 var qtInfo = {
-  atendAguardando: new Set(), // atendimentos com parada "Aguardando Manipulação" aberta na QT
-  checkInQT:       {}         // atendimento → timestamp do Check In na QT
+  atendAguardando:    new Set(), // atendimentos com parada "Aguardando Manipulação" aberta na QT
+  checkInQT:          {},        // atendimento → timestamp do Check In na QT
+  recebimentoFechado: {}         // atendimento → timestamp do fechamento da parada de recebimento
 };
 
 // ID da planilha Google Sheets (para leitura direta via CSV público)
@@ -586,8 +587,40 @@ function processarQT(rows) {
     checkInQT[String(info.atendimento)] = info.tsCheckin;
   });
 
-  qtInfo.atendAguardando = aguardando;
-  qtInfo.checkInQT       = checkInQT; // timestamp do Check In por atendimento
+  // Rastreia quando a parada "Medicação disponível — aguardando recebimento" foi fechada
+  // Mapa: atendimento → timestamp do Fim da parada de recebimento
+  var recebimentoFechado = {};
+  var ultimaParadaReceb  = {}; // atendimento → ts início da parada de recebimento
+
+  rows.forEach(function(r) {
+    var ts         = r[0] || '';
+    var diaPart    = ts.split(' ')[0];
+    if (diaPart !== hoje) return;
+
+    var poltrona   = (r[1] || '').trim();
+    var evento     = (r[2] || '').trim();
+    var motivo     = (r[3] || '').trim();
+    var atendimento= (r[5] || '').trim();
+    if (!poltrona) return;
+
+    // Início da parada de recebimento — registra timestamp
+    if (evento === 'Início da Parada' && motivo.indexOf('aguardando recebimento') >= 0 && atendimento) {
+      ultimaParadaReceb[atendimento] = parseTsQT(ts);
+    }
+
+    // Fim da parada — se poltrona tinha parada de recebimento aberta, fecha
+    if (evento === 'Fim da parada') {
+      // Busca atendimento da poltrona
+      var atendPol = poltronaInfo[poltrona] ? String(poltronaInfo[poltrona].atendimento) : '';
+      if (atendPol && ultimaParadaReceb[atendPol]) {
+        recebimentoFechado[atendPol] = parseTsQT(ts);
+      }
+    }
+  });
+
+  qtInfo.atendAguardando    = aguardando;
+  qtInfo.checkInQT          = checkInQT;
+  qtInfo.recebimentoFechado = recebimentoFechado; // atend → ts fechamento
 }
 
 function fetchQTData() {
@@ -804,12 +837,35 @@ function calcularTempoMedioEtapa() {
     }
   });
 
+  // Para "Disponível QT": tempo desde liberação farmácia até fechamento da parada pela enfermeira
+  // Usa dados cruzados com o Sheets QT (qtInfo.recebimentoFechado)
+  var totalDispQT = 0, countDispQT = 0;
+  registrosHoje.forEach(function(r) {
+    var etapa = r['Etapa'] || r['etapa'] || '';
+    var tipo  = r['Tipo']  || r['tipo']  || '';
+    if (etapa !== 'Disponível QT' || tipo === 'parada' || tipo === 'encerramento') return;
+
+    var atend   = r['Nº Atendimento'] || r['N Atendimento'] || r['atendimento'] || '';
+    var tsDisp  = new Date(r['Timestamp'] || r['timestamp'] || 0);
+    var tsFecho = qtInfo.recebimentoFechado[String(atend)];
+
+    if (tsFecho && tsFecho > tsDisp) {
+      var delta = (tsFecho - tsDisp) / 60000;
+      if (delta > 0 && delta < 480) {
+        totalDispQT += delta;
+        countDispQT++;
+      }
+    }
+  });
+
   // Converte para média
   var resultado = {};
   STAGES.forEach(function(e) {
-    resultado[e] = medias[e].count > 0
-      ? Math.round(medias[e].total / medias[e].count)
-      : null;
+    if (e === 'Disponível QT') {
+      resultado[e] = countDispQT > 0 ? Math.round(totalDispQT / countDispQT) : null;
+    } else {
+      resultado[e] = medias[e].count > 0 ? Math.round(medias[e].total / medias[e].count) : null;
+    }
   });
   return resultado;
 }
@@ -1011,70 +1067,4 @@ function abrirModal(c, etapa, mins, tc) {
   var atend = c['Nº Atendimento'] || c['N Atendimento'] || c['atendimento'] || '—';
   var resp  = c['Responsável'] || c['Responsavel'] || '—';
   var just  = c['Justificativa'] || c['justificativa'] || '';
-  var labels = { green: 'Dentro do prazo', yellow: 'Atenção — próximo do limite', red: 'Acima do limite' };
-
-  document.getElementById('modal-title').textContent = atend;
-  document.getElementById('m-id').textContent    = atend;
-  document.getElementById('m-stage').textContent = etapa;
-  document.getElementById('m-time').textContent  = formatarTempo(mins);
-  document.getElementById('m-resp').textContent  = resp;
-  document.getElementById('m-status').textContent = labels[tc];
-  document.getElementById('m-status').className  = 'modal-val ' + tc;
-
-  var jr = document.getElementById('m-just-row');
-  if (just) {
-    jr.style.display = 'flex';
-    document.getElementById('m-just').textContent = just;
-  } else {
-    jr.style.display = 'none';
-  }
-
-  document.getElementById('modal-backdrop').classList.add('open');
-}
-
-function fecharModal(e) {
-  if (e && e.target !== document.getElementById('modal-backdrop') && e.type !== 'click') return;
-  if (e && e.currentTarget === document.getElementById('modal-backdrop') && e.target !== e.currentTarget) return;
-  document.getElementById('modal-backdrop').classList.remove('open');
-}
-
-document.getElementById('modal-backdrop').addEventListener('click', function(e) {
-  if (e.target === this) fecharModal();
-});
-
-// ═══════════════════════════════════════════════════
-//  UI HELPERS
-// ═══════════════════════════════════════════════════
-function setStatus(type, label) {
-  var dot  = document.getElementById('status-dot');
-  var text = document.getElementById('status-text');
-  dot.className  = 'status-dot ' + type;
-  text.textContent = label;
-}
-
-function atualizarTimestamp() {
-  var now = new Date();
-  var h   = now.getHours().toString().padStart(2,'0');
-  var m   = now.getMinutes().toString().padStart(2,'0');
-  var s   = now.getSeconds().toString().padStart(2,'0');
-  document.getElementById('last-update').textContent = 'Atualizado às ' + h + ':' + m + ':' + s;
-}
-
-function showError(msg) {
-  var bar = document.getElementById('error-bar');
-  bar.textContent = msg;
-  bar.classList.add('show');
-}
-
-function hideError() {
-  document.getElementById('error-bar').classList.remove('show');
-}
-
-// ═══════════════════════════════════════════════════
-//  INICIALIZAÇÃO
-// ═══════════════════════════════════════════════════
-carregarDados(false);
-timerRefresh = setInterval(function() { carregarDados(false); }, REFRESH_INTERVAL);
-</script>
-</body>
-</html>
+  var labels = { green: 'Dentro do prazo', yellow: 'Atenção — próximo do limite
