@@ -296,39 +296,43 @@ function renderKanban(pos){
 // ── PARETO EM TEMPO REAL (paradas da farmácia hoje) ──────────
 function renderPareto(farmRegs){
   var hoje=new Date().toISOString().slice(0,10);
+  var now=new Date();
   var motivos={};
   farmRegs.filter(function(r){
     var ts=new Date(r['Timestamp']||r['timestamp']||0);
     var tipo=r['Tipo']||r['tipo']||'';
     var just=r['Justificativa']||r['justificativa']||'';
-    // Aceita tipo='parada' explícito OU registros com justificativa mas sem tipo definido
-    // (registros gravados antes da coluna Tipo ser adicionada)
-    var isParada = tipo==='parada' || (tipo===''&&just&&just!=='Encerramento manual de parada');
+    var isParada=tipo==='parada'||(tipo===''&&just&&just!=='Encerramento manual de parada');
     return ts.toISOString().slice(0,10)===hoje && isParada;
   }).forEach(function(r){
     var j=r['Justificativa']||r['justificativa']||'Sem motivo';
-    if(j==='Encerramento manual de parada') return; // exclui encerramentos
-    if(!motivos[j]) motivos[j]={n:0};
+    if(j==='Encerramento manual de parada') return;
+    // Calcula duração: usa campo Encerramento se existir, senão conta até agora
+    var tsIni=new Date(r['Timestamp']||r['timestamp']||0);
+    var tsEnd=r['Encerramento']||r['encerramento']||'';
+    var dur=tsEnd?((new Date(tsEnd)-tsIni)/60000):((now-tsIni)/60000);
+    if(dur<0||dur>480) dur=0; // ignora valores absurdos
+    if(!motivos[j]) motivos[j]={n:0,tot:0};
     motivos[j].n++;
+    motivos[j].tot+=dur;
   });
-  var entries=Object.entries(motivos).sort(function(a,b){return b[1].n-a[1].n;});
-  var total=entries.reduce(function(s,e){return s+e[1].n;},0);
+  var entries=Object.entries(motivos).sort(function(a,b){return b[1].tot-a[1].tot;});
+  var totalMin=entries.reduce(function(s,e){return s+e[1].tot;},0);
   var pl=document.getElementById('pareto-list');
   var pt=document.getElementById('pareto-total');
-  pt.textContent=total?total+' ocorrência'+(total>1?'s':''):'';
+  pt.textContent=entries.length?fmtMin(totalMin)+' acumulado':'';
   if(!entries.length){
     pl.innerHTML='<div style="padding:24px;text-align:center;color:var(--tx3);font-size:12px;font-family:var(--fm)">Nenhuma parada registrada hoje</div>';
     return;
   }
-  var maxN=entries[0][1].n;
+  var maxTot=entries[0][1].tot||1;
   pl.innerHTML=entries.slice(0,5).map(function(e,i){
-    var pct=Math.round(e[1].n/total*100);
-    var barW=Math.round(e[1].n/maxN*100);
+    var barW=Math.round(e[1].tot/maxTot*100);
     var cor=i===0?'var(--rt)':i===1?'var(--at)':'var(--bt)';
-    return'<div style="padding:8px 0;border-bottom:1px solid var(--b1)">'
+    return'<div style="padding:7px 0;border-bottom:1px solid var(--b1)">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">'
         +'<span style="font-size:12px;color:var(--tx);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">'+(i+1)+'. '+e[0]+'</span>'
-        +'<span style="font-size:11px;font-family:var(--fm);color:'+cor+';font-weight:700;white-space:nowrap">'+e[1].n+'x &nbsp;'+pct+'%</span>'
+        +'<span style="font-size:12px;font-family:var(--fm);color:'+cor+';font-weight:700;white-space:nowrap">'+fmtMin(e[1].tot)+'</span>'
       +'</div>'
       +'<div style="height:4px;background:var(--b2);border-radius:2px"><div style="height:4px;width:'+barW+'%;background:'+cor+';border-radius:2px;transition:width .5s ease"></div></div>'
     +'</div>';
