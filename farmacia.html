@@ -279,7 +279,7 @@ function renderKanban(pos){
       var na=String(atend);
       var qtBadge='';
       if(qtAguardando.has(na))qtBadge='<div class="kbadge kbadge-wait">⚠ Parada na QT</div>';
-      else if(qtRecebimento.has(na))qtBadge='<div class="kbadge kbadge-receb">💊 Aguard. recebimento</div>';
+      else if(isDisp && qtRecebimento.has(na))qtBadge='<div class="kbadge kbadge-receb">💊 Aguard. recebimento</div>';
       else if(isDisp)qtBadge='<div class="kbadge kbadge-ok">✓ Entregue</div>';
       var timerHtml=isDisp?qtBadge:'<div class="tbadge '+tc+'">⏱ '+fmtMin(mins)+'</div>'+(qtBadge?'<br>'+qtBadge:'');
       var justHtml=info.just?'<span style="color:var(--at);font-size:9px"> ⚠ '+info.just+'</span>':'';
