@@ -129,8 +129,8 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
     </div>
   </div>
   <div class="panel">
-    <div class="phdr" style="color:var(--gt)">Atendimentos de hoje<span id="hist-count" style="font-weight:400;color:var(--tx3);font-size:10px;text-transform:none"></span></div>
-    <div class="pbody" id="hist-list"></div>
+    <div class="phdr" style="color:var(--at)">⏸ Paradas — tempo acumulado hoje<span id="pareto-total" style="font-weight:400;color:var(--tx3);font-size:10px;text-transform:none"></span></div>
+    <div class="pbody" id="pareto-list"></div>
   </div>
   <div class="panel">
     <div class="phdr" style="color:var(--at)">Ranking — Maior espera hoje<span style="font-weight:400;color:var(--tx3);font-size:10px;text-transform:none">top 6</span></div>
@@ -252,7 +252,13 @@ function renderKanban(pos){
     var temRed=!isDisp&&cards.some(function(e){return minutosDesde(e[1].ts)>LIMITES[etapa];});
     var cCls=temRed?'has-red':cards.length?'has-items':'';
     var col=document.createElement('div');col.className='kcol';
-    col.innerHTML='<div class="kcol-hdr"><div><span class="kcol-name">'+etapa+'</span></div><span class="kcol-count '+cCls+'">'+cards.length+'</span></div><div class="kcol-body" id="kc_'+etapa.replace(/[^a-z]/gi,'')+'"></div>';
+    // Calcula tempo médio dos cards ativos nesta etapa
+    var minsArr=cards.filter(function(e){return e[1].etapa!=='Disponível QT';}).map(function(e){return minutosDesde(e[1].ts);});
+    var medEtapa=minsArr.length?Math.round(minsArr.reduce(function(a,b){return a+b;},0)/minsArr.length):null;
+    var medStr=medEtapa!==null?fmtMin(medEtapa):'—';
+    var medCor=medEtapa===null?'var(--tx3)':medEtapa<=LIMITES[etapa]*.6?'var(--gt)':medEtapa<=LIMITES[etapa]?'var(--at)':'var(--rt)';
+    var avgHtml=isDisp?'':'<span style="font-size:9px;color:'+medCor+';font-family:var(--fm);margin-left:6px">⌀ '+medStr+'</span>';
+    col.innerHTML='<div class="kcol-hdr"><div style="display:flex;align-items:center"><span class="kcol-name">'+etapa+'</span>'+avgHtml+'</div><span class="kcol-count '+cCls+'">'+cards.length+'</span></div><div class="kcol-body" id="kc_'+etapa.replace(/[^a-z]/gi,'')+'"></div>';
     grid.appendChild(col);
     var body=col.querySelector('.kcol-body');
     if(!cards.length){body.innerHTML='<div class="kempty">vazio</div>';return;}
@@ -276,6 +282,43 @@ function renderKanban(pos){
 }
 
 // ── RENDER QT (fila, historico, ranking, KPIs) ─────────────
+// ── PARETO EM TEMPO REAL (paradas da farmácia hoje) ──────────
+function renderPareto(farmRegs){
+  var hoje=new Date().toISOString().slice(0,10);
+  var motivos={};
+  farmRegs.filter(function(r){
+    var ts=new Date(r['Timestamp']||r['timestamp']||0);
+    var tipo=r['Tipo']||r['tipo']||'';
+    return ts.toISOString().slice(0,10)===hoje && tipo==='parada';
+  }).forEach(function(r){
+    var j=r['Justificativa']||r['justificativa']||'Sem motivo';
+    if(!motivos[j]) motivos[j]={n:0};
+    motivos[j].n++;
+  });
+  var entries=Object.entries(motivos).sort(function(a,b){return b[1].n-a[1].n;});
+  var total=entries.reduce(function(s,e){return s+e[1].n;},0);
+  var pl=document.getElementById('pareto-list');
+  var pt=document.getElementById('pareto-total');
+  pt.textContent=total?total+' ocorrência'+(total>1?'s':''):'';
+  if(!entries.length){
+    pl.innerHTML='<div style="padding:24px;text-align:center;color:var(--tx3);font-size:12px;font-family:var(--fm)">Nenhuma parada registrada hoje</div>';
+    return;
+  }
+  var maxN=entries[0][1].n;
+  pl.innerHTML=entries.map(function(e,i){
+    var pct=Math.round(e[1].n/total*100);
+    var barW=Math.round(e[1].n/maxN*100);
+    var cor=i===0?'var(--rt)':i===1?'var(--at)':'var(--bt)';
+    return'<div style="padding:8px 0;border-bottom:1px solid var(--b1)">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">'
+        +'<span style="font-size:12px;color:var(--tx);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">'+(i+1)+'. '+e[0]+'</span>'
+        +'<span style="font-size:11px;font-family:var(--fm);color:'+cor+';font-weight:700;white-space:nowrap">'+e[1].n+'x &nbsp;'+pct+'%</span>'
+      +'</div>'
+      +'<div style="height:4px;background:var(--b2);border-radius:2px"><div style="height:4px;width:'+barW+'%;background:'+cor+';border-radius:2px;transition:width .5s ease"></div></div>'
+    +'</div>';
+  }).join('');
+}
+
 function renderQT(data,fonte){
   document.getElementById('k-fila').textContent=data.fila.length||'0';
   document.getElementById('k-tmedio').textContent=data.fila.length?data.tmed:'-';
@@ -301,14 +344,7 @@ function renderQT(data,fonte){
       return'<tr><td><span class="badge-pol">P'+f.num+'</span></td><td>'+na+'</td><td><span class="bf f'+f.fi+'">'+f.fnome+'</span></td><td class="'+tc+'" style="font-weight:600">'+fmtMin(f.dur)+motSuf+'</td><td style="color:var(--tx3);font-size:10px">'+fmtHora(f.ini)+'</td></tr>';
     }).join('');
   }
-  // Historico
-  var hl=document.getElementById('hist-list');
-  document.getElementById('hist-count').textContent=data.historico.length?data.historico.length+' atend.':'';
-  hl.innerHTML=data.historico.length?data.historico.slice(0,25).map(function(h){
-    var tag=h.temFarm?'<span class="hist-tag tag-farm">Farm. '+fmtMin(h.espFarm)+'</span>':'<span class="hist-tag tag-ok">Sem espera</span>';
-    var na=h.numAtend?'<span class="hist-num">'+h.numAtend+'</span>':'';
-    return'<div class="hist-item"><span class="hist-pol">P'+h.num+'</span>'+na+'<span class="hist-dur '+(h.temFarm?'t-warn':'t-ok')+'">'+fmtMin(h.dur)+'</span><span style="font-size:9px;color:var(--tx3)">'+fmtHora(h.ts)+'</span>'+tag+'</div>';
-  }).join(''):'<div style="padding:20px;text-align:center;color:var(--tx3);font-size:12px">Nenhum atendimento hoje</div>';
+
   // Ranking
   var maxTot=data.ranking[0]?data.ranking[0].tot:1;
   document.getElementById('rank-list').innerHTML=data.ranking.map(function(r,i){
@@ -328,6 +364,7 @@ function carregar(){
     var qtData=processQT(qtRowsArr),pos=processFarm(farmRegs);
     renderKanban(pos);
     renderQT(qtData,'Ao vivo - Sheets');
+    renderPareto(farmRegs);
     setStatus('ok','ao vivo');
     document.getElementById('fmsg').textContent=farmRegs.length+' reg. farm. · '+qtRowsArr.length+' reg. QT · '+new Date().toLocaleTimeString('pt-BR');
     document.getElementById('hdr-sub').textContent='Centro de Infusão QT · '+new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
