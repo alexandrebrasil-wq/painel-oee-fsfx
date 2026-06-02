@@ -186,10 +186,18 @@ function abrevMot(mot){return ABREV[mot]||mot||'Parada';}
 
 function tsToDate(ts){
   try{
-    const[d,h]=ts.split(' ');
+    if(!ts) return null;
+    const s=String(ts).trim();
+    // ISO: "2026-06-02T09:15:01.000Z" ou "2026-06-02 09:15:01"
+    if(s.includes('T') || /^\d{4}-/.test(s)){
+      const d=new Date(s);
+      return isNaN(d)?null:d;
+    }
+    // pt-BR: "02/06/2026 09:15:01"
+    const[d,h]=s.split(' ');
     const[dd,mm,aa]=d.split('/');
     const[hh,mi,ss]=(h||'00:00:00').split(':');
-    return new Date(aa,mm-1,dd,hh,mi,ss||0);
+    return new Date(+aa,+mm-1,+dd,+hh,+mi,+(ss||0));
   }catch{return null;}
 }
 
@@ -210,8 +218,17 @@ function process(rows){
     const num=pol.replace('Poltrona ','').trim().padStart(2,'0');
     if(!st[num]) return;
 
-    // filtra somente registros de hoje
-    if(ts.split(' ')[0] !== hoje) return;
+    // filtra somente registros de hoje — aceita formato pt-BR e ISO
+    const tsPart=ts.split(' ')[0];
+    const tsDate=tsPart.includes('-')?tsPart.split('T')[0]:tsPart; // "2026-06-02" ou "02/06/2026"
+    let dataHoje;
+    if(tsDate.includes('-')){
+      const [ay,am,ad]=tsDate.split('-');
+      dataHoje=String(+ad).padStart(2,'0')+'/'+String(+am).padStart(2,'0')+'/'+ay;
+    } else {
+      dataHoje=tsDate;
+    }
+    if(dataHoje !== hoje) return;
 
     const fi=st[num].fi;
     const fl=FLUXOS[fi];
