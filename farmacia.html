@@ -166,9 +166,20 @@ setInterval(tick,1000);tick();
 function fmtMin(m){if(!m||m<1)return'<1min';if(m<60)return Math.round(m)+'min';return Math.floor(m/60)+'h'+String(Math.round(m%60)).padStart(2,'0')+'min';}
 function fmtHora(ts){
   try{
-    var s=String(ts).replace('T',' ').replace('Z','').trim();
-    var part=s.split(' ')[1]||'';
-    return part.slice(0,5)||'--';
+    var s=String(ts).trim();
+    // ISO: "2026-06-02T10:53:00.000Z" ou "2026-06-02 10:53:00"
+    if(/^\d{4}-\d{2}-\d{2}/.test(s)){
+      var part=s.replace('T',' ').replace('Z','').split(' ')[1]||'';
+      return part.slice(0,5)||'--';
+    }
+    // Apps Script localizado: "02/06/2026 10:53:00"
+    if(/^\d{2}\/\d{2}\/\d{4}/.test(s)){
+      var part=s.split(' ')[1]||'';
+      return part.slice(0,5)||'--';
+    }
+    // Fallback: tenta extrair HH:MM com regex
+    var m=s.match(/(\d{2}):(\d{2})/);
+    return m?m[1]+':'+m[2]:'--';
   }catch(e){return'--';}
 }
 function tClass(m){return m<20?'green':m<45?'yellow':'red';}
@@ -289,9 +300,14 @@ function renderPareto(farmRegs){
   farmRegs.filter(function(r){
     var ts=new Date(r['Timestamp']||r['timestamp']||0);
     var tipo=r['Tipo']||r['tipo']||'';
-    return ts.toISOString().slice(0,10)===hoje && tipo==='parada';
+    var just=r['Justificativa']||r['justificativa']||'';
+    // Aceita tipo='parada' explícito OU registros com justificativa mas sem tipo definido
+    // (registros gravados antes da coluna Tipo ser adicionada)
+    var isParada = tipo==='parada' || (tipo===''&&just&&just!=='Encerramento manual de parada');
+    return ts.toISOString().slice(0,10)===hoje && isParada;
   }).forEach(function(r){
     var j=r['Justificativa']||r['justificativa']||'Sem motivo';
+    if(j==='Encerramento manual de parada') return; // exclui encerramentos
     if(!motivos[j]) motivos[j]={n:0};
     motivos[j].n++;
   });
@@ -339,7 +355,7 @@ function renderQT(data,fonte){
   else{
     fe.style.display='none';
     fb2.innerHTML=data.fila.map(function(f){
-      var tc=tClass(f.dur),na=f.numAtend?'<span class="badge-atend">'+f.numAtend+'</span>':'-';
+      var tc=tClass(f.dur),na=f.numAtend?'<span class="badge-atend">'+f.numAtend+'</span>':'<span style="color:var(--tx3);font-size:10px">sem registro</span>';
       var motSuf=f.mot&&f.mot.indexOf('recebimento')>=0?'<br><span style="color:var(--at);font-size:9px">aguard. recebimento</span>':'';
       return'<tr><td><span class="badge-pol">P'+f.num+'</span></td><td>'+na+'</td><td><span class="bf f'+f.fi+'">'+f.fnome+'</span></td><td class="'+tc+'" style="font-weight:600">'+fmtMin(f.dur)+motSuf+'</td><td style="color:var(--tx3);font-size:10px">'+fmtHora(f.ini)+'</td></tr>';
     }).join('');
