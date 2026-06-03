@@ -158,7 +158,7 @@ var FLUXOS=[
   {idx:3,nome:'Convenio',poltronas:[34,35,36,37,38,39,40,41,42,43]},
   {idx:4,nome:'Leito',poltronas:[44,45,46,47]},
 ];
-var qtAguardando=new Set(),qtRecebimento=new Set();
+var qtAguardando=new Set();
 
 function tick(){var n=new Date();document.getElementById('clock').textContent=n.toLocaleTimeString('pt-BR');document.getElementById('dateStr').textContent=n.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});}
 setInterval(tick,1000);tick();
@@ -285,7 +285,6 @@ function renderKanban(pos){
       var na=String(atend);
       var qtBadge='';
       if(qtAguardando.has(na))qtBadge='<div class="kbadge kbadge-wait">⚠ Parada na QT</div>';
-      else if(isDisp && qtRecebimento.has(na))qtBadge='<div class="kbadge kbadge-receb">💊 Aguard. recebimento</div>';
       else if(isDisp)qtBadge='<div class="kbadge kbadge-ok">✓ Entregue</div>';
       var timerHtml=isDisp?qtBadge:'<div class="tbadge '+tc+'">⏱ '+fmtMin(mins)+'</div>'+(qtBadge?'<br>'+qtBadge:'');
       var justHtml=info.just?'<span style="color:var(--at);font-size:9px"> ⚠ '+info.just+'</span>':'';
@@ -366,7 +365,7 @@ function renderQT(data,fonte){
     fe.style.display='none';
     fb2.innerHTML=data.fila.slice(0,6).map(function(f){
       var tc=tClass(f.dur),na=f.numAtend?'<span class="badge-atend">'+f.numAtend+'</span>':'<span style="color:var(--tx3);font-size:10px">sem registro</span>';
-      var motSuf=f.mot&&f.mot.indexOf('recebimento')>=0?'<br><span style="color:var(--at);font-size:9px">aguard. recebimento</span>':'';
+      var motSuf='';
       return'<tr><td><span class="badge-pol">P'+f.num+'</span></td><td>'+na+'</td><td><span class="bf f'+f.fi+'">'+f.fnome+'</span></td><td class="'+tc+'" style="font-weight:600">'+fmtMin(f.dur)+motSuf+'</td><td style="color:var(--tx3);font-size:10px">'+fmtHora(f.ini)+'</td></tr>';
     }).join('');
   }
