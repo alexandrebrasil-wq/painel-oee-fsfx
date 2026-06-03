@@ -232,7 +232,7 @@ function processQT(rows){
   qtAguardando=new Set();qtRecebimento=new Set();
   Object.keys(st).forEach(function(num){
     var s=st[num],pA=s.paradas.filter(function(p){return !p.fim&&p.isFarm;}).pop();
-    if(pA){var ini=parseDtQT(pA.ini);if(ini){var dur=(now-ini)/60000;if(dur>0&&dur<=240){var fl=getFluxo(parseInt(num));fila.push({num:num,dur:dur,ini:pA.ini,fi:fl.idx,fnome:fl.nome,mot:pA.mot,numAtend:pA.numAtend||s.numAtend||''});var na=String(pA.numAtend||s.numAtend||'');if(na){if(pA.mot.indexOf('recebimento')>=0)qtRecebimento.add(na);else qtAguardando.add(na);}}}}
+    if(pA){var ini=parseDtQT(pA.ini);if(ini){var dur=(now-ini)/60000;if(dur>0&&dur<=720){var fl=getFluxo(parseInt(num));fila.push({num:num,dur:dur,ini:pA.ini,fi:fl.idx,fnome:fl.nome,mot:pA.mot,numAtend:pA.numAtend||s.numAtend||''});var na=String(pA.numAtend||s.numAtend||'');if(na){if(pA.mot.indexOf('recebimento')>=0)qtRecebimento.add(na);else qtAguardando.add(na);}}}}
     s.sessoes.forEach(function(sess){if(sess.espFarm>0)rankMap[num]=(rankMap[num]||0)+sess.espFarm;});
     if(pA){var ini2=parseDtQT(pA.ini);if(ini2){var d2=(now-ini2)/60000;if(d2>0&&d2<=240)rankMap[num]=(rankMap[num]||0)+d2;}}
   });
