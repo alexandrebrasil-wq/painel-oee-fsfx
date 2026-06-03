@@ -209,7 +209,19 @@ function process(rows){
     st[String(n).padStart(2,'0')]={s:'livre',d:fl.tipo,ts:null,t:'',fi:fl.idx,paciente:false};
   }
 
-  rows.forEach(r=>{
+  // ── ORDENAÇÃO POR TIMESTAMP ──────────────────────────────────
+  // O appendRow do Apps Script insere no final da planilha independente
+  // do timestamp — sem ordenar, eventos automáticos mais antigos ficam
+  // depois de eventos mais recentes e corrompem o estado da poltrona.
+  const rowsOrdenados = rows.slice().sort(function(a, b){
+    const da = tsToDate(a[0]), db = tsToDate(b[0]);
+    if(!da && !db) return 0;
+    if(!da) return 1;
+    if(!db) return -1;
+    return da - db;
+  });
+
+  rowsOrdenados.forEach(r=>{
     const[ts,pol,ev,mot,tipo]=r;
 
     // ── CORREÇÃO 1: ignora linhas sem poltrona OU sem evento ─────────────────
