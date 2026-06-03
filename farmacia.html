@@ -201,7 +201,13 @@ function parseCSV(txt){
 function processQT(rows){
   var hoje=new Date().toLocaleDateString('pt-BR'),now=new Date(),st={};
   for(var n=1;n<=47;n++){var num=String(n).padStart(2,'0'),fl=getFluxo(n);st[num]={fi:fl.idx,ciTs:null,numAtend:'',paradas:[],sessoes:[]};}
-  rows.forEach(function(r){
+  // Ordena por timestamp — appendRow do Apps Script insere no final
+  // independente do horário, causando estados incorretos se não ordenado
+  var rowsOrd=rows.slice().sort(function(a,b){
+    var da=parseDtQT(a[0]),db=parseDtQT(b[0]);
+    if(!da&&!db)return 0; if(!da)return 1; if(!db)return -1; return da-db;
+  });
+  rowsOrd.forEach(function(r){
     var ts=r[0],pol=r[1],ev=r[2],mot=r[3]||'',numAtend=r.length>5?r[5]:'';
     if(!pol)return;
     var num=pol.replace('Poltrona ','').trim().padStart(2,'0');
