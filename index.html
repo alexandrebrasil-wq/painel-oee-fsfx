@@ -126,6 +126,10 @@ document.getElementById("cr-year").textContent="© "+new Date().getFullYear();
 
 const SHEET_ID='1wDkI4jw6mzAE08kab6GhDf5H7zMq4fRw21AHg4d5JFo',GID='1304195408';
 const FARM_URL='https://script.google.com/macros/s/AKfycbwulrdZyfww-3ejAoGIwrGewM2eAmgCYFSY9SUKmJSU9uiGCtnTiGZT9EZxn8j3lgImhA/exec?acao=posicao';
+// ── URL da nova API do Sheets QT (Apps Script) ────────────────────────────────
+// Substitua pelo URL gerado ao implantar o Code_QT_API.gs no Sheets QT
+const QT_API_URL='https://script.google.com/macros/s/AKfycbz-wiMFjIy65nSK_n6ukvV-wZE5h_SqhOdLcztXh6DOSCqgnbZbzHSAqM5JURHhp5qf/exec';
+const QT_CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vSap2eZ_RANJMRkRQg34TPyHmUO-KHrxO8hMazvmfampJkKpFBGtG3VKB76q3EdRwcDMJqOL30TQ1ZA/pub?gid=1304195408&single=true&output=csv';
 let farmDisponivel=new Set(); // atendimentos com "Disponível QT" na farmácia
 let poltronaAtend={};         // poltrona → atendimento (construído no process())
 const FLUXOS=[
@@ -332,19 +336,50 @@ async function loadFarmData(){
   }
 }
 
+// ── Parses CSV string → array of rows ────────────────────────────────────────
+function parseCSVrows(txt){
+  return txt.trim().split('\n').slice(1).map(l=>{
+    const cols=[];let cur='',inQ=false;
+    for(const ch of l){if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=ch;}
+    cols.push(cur.trim());return cols;
+  }).filter(r=>r.length>=3&&r[0]);
+}
+
 async function fetch_data(){
+  // Tenta Apps Script primeiro (baixa latência) — fallback para CSV — fallback para dados locais
+  const usarAPI = QT_API_URL && !QT_API_URL.includes('COLE_AQUI');
   try{
-    const r=await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vSap2eZ_RANJMRkRQg34TPyHmUO-KHrxO8hMazvmfampJkKpFBGtG3VKB76q3EdRwcDMJqOL30TQ1ZA/pub?gid=1304195408&single=true&output=csv',{cache:'no-store'});
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const txt=await r.text();
-    const rows=txt.trim().split('\n').slice(1).map(l=>{
-      const cols=[];let cur='',inQ=false;
-      for(const ch of l){if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=ch;}
-      cols.push(cur.trim());return cols;
-    }).filter(r=>r.length>=3&&r[0]);
-    live=true;await loadFarmData();render(process(rows),'Ao vivo · Sheets');
+    let rows;
+    if(usarAPI){
+      const r=await fetch(QT_API_URL+'?acao=registros',{cache:'no-store'});
+      if(!r.ok)throw new Error('API HTTP '+r.status);
+      const data=await r.json();
+      if(data.erro)throw new Error('API: '+data.erro);
+      rows=data.rows||[];
+    } else {
+      // Fallback: CSV publicado
+      const r=await fetch(QT_CSV_URL,{cache:'no-store'});
+      if(!r.ok)throw new Error('CSV HTTP '+r.status);
+      rows=parseCSVrows(await r.text());
+    }
+    live=true;
+    await loadFarmData();
+    render(process(rows), usarAPI ? 'Ao vivo · API' : 'Ao vivo · Sheets');
     document.getElementById('fmsg').textContent=rows.length+' registros · '+new Date().toLocaleTimeString('pt-BR');
   }catch(e){
+    // Se API falhou, tenta CSV antes de usar dados locais
+    if(usarAPI){
+      try{
+        const r=await fetch(QT_CSV_URL,{cache:'no-store'});
+        if(!r.ok)throw new Error('CSV '+r.status);
+        const rows=parseCSVrows(await r.text());
+        live=true;
+        await loadFarmData();
+        render(process(rows),'Ao vivo · Sheets (fallback)');
+        document.getElementById('fmsg').textContent=rows.length+' reg (fallback CSV) · '+new Date().toLocaleTimeString('pt-BR');
+        return;
+      }catch(e2){ /* cai nos dados locais */ }
+    }
     live=false;render(process(DADOS),'Dados locais');
     document.getElementById('fmsg').textContent='Sheets indisponível · '+e.message;
   }
