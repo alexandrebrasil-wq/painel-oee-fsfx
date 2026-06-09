@@ -189,15 +189,23 @@ window.onload = function() {
 // ── CARREGA ESTADO ATUAL ──────────────────────────────────────────────────────
 function carregarEstado() {
   mostrar('tela-loading');
-  fetch(QT_API + '?acao=registros', {cache:'no-store'})
+  fetch(QT_API + '?acao=estado&poltrona=' + poltrona, {cache:'no-store'})
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      calcularEstado(data.rows || []);
+      if (data.erro) throw new Error(data.erro);
+      estadoAtual = data.estado || 'livre';
+      motivoAtual = data.motivo || '';
+      var labels = {livre:'Disponível', ocupada:'Em atendimento', parada:'Em parada'};
+      var el = document.getElementById('estado-val');
+      el.textContent = labels[estadoAtual] || estadoAtual;
+      el.className   = 'estado-val ' + estadoAtual;
+      document.getElementById('estado-mot').textContent = motivoAtual;
       mostrar('tela-main');
       renderAcoes();
     })
     .catch(function(e) {
-      document.getElementById('tela-loading').innerHTML = '<div style="color:var(--rt);text-align:center;padding:32px">Erro ao carregar estado.<br>' + e.message + '</div>';
+      document.getElementById('tela-loading').innerHTML =
+        '<div style="color:var(--rt);text-align:center;padding:32px">Erro ao carregar estado.<br>' + e.message + '</div>';
     });
 }
 
