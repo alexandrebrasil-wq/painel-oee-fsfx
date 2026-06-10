@@ -66,6 +66,8 @@ header{background:#0d1419;border-bottom:2px solid #1b2e6b;padding:0 20px;height:
 .blink{animation:blink .9s step-start infinite;}
 @keyframes blink{50%{opacity:0}}
 .med-badge{display:block;margin:4px 6px 2px;font-size:7px;font-weight:700;padding:2px 5px;border-radius:3px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.med-wait{background:rgba(56,139,253,.18);color:#79c0ff;}
+.med-disp{background:rgba(29,158,117,.25);color:#3dd68c;animation:blink .9s step-start infinite;}
 .med-disp{background:rgba(29,158,117,0.25);color:#3fb950;border:1px solid rgba(29,158,117,0.4);}
 .med-wait{background:rgba(218,54,51,0.25);color:#f85149;border:1px solid rgba(218,54,51,0.4);}
 
@@ -301,9 +303,12 @@ function render(st,fonte){
     const pNome=`Poltrona ${num.replace(/^0/,'')}`;
     const atendNum=poltronaAtend[pNome]||'';
     const estaAguardandoFarm = s.s==='parada' && s.d && s.d.indexOf('Manipul')>=0;
+    const medicacaoDisp = s.s==='ocupada' && s.atend && farmDisponivel.has(s.atend);
     const medBadge = estaAguardandoFarm
       ? '<div class="med-badge med-wait">⏳ Aguard. farmácia</div>'
-      : '';
+      : medicacaoDisp
+        ? '<div class="med-badge med-disp">💊 Medicação disponível</div>'
+        : '';
     c.innerHTML='<div class="cn">P'+num+'</div>'
       +'<div class="ci">'+svgIcon+'</div>'
       +'<div class="cb">'
