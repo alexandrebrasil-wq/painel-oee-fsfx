@@ -42,20 +42,20 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
 .pbody{padding:10px 14px;flex:1;overflow:hidden}
 .kanban-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;grid-column:1/4;min-height:0}
 .kcol{background:var(--s1);border:1px solid var(--b1);border-radius:10px;overflow:hidden}
-.kcol-hdr{padding:10px 12px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
+.kcol-hdr{padding:7px 10px;border-bottom:1px solid var(--b1);display:flex;flex-direction:column;gap:3px}
 .kcol-name{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx2)}
 .kcol-avg{font-size:10px;color:var(--tx3);margin-top:2px}
 .kcol-count{font-size:10px;font-weight:600;font-family:var(--fm);border-radius:20px;padding:2px 8px;background:var(--s2);color:var(--tx2);border:1px solid var(--b2)}
 .kcol-count.has-red{background:var(--rd);color:var(--rt);border-color:rgba(218,54,51,.3)}
 .kcol-count.has-items{background:var(--gd);color:var(--gt);border-color:rgba(29,158,117,.3)}
-.kcol-body{padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:5px;min-height:40px;overflow:hidden;align-content:start}
-.kcard{background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:6px 9px;font-size:11px;min-width:0}
+.kcol-body{padding:5px;display:grid;grid-template-columns:1fr 1fr;gap:4px;min-height:30px;overflow:hidden;align-content:start}
+.kcard{background:var(--s2);border:1px solid var(--b2);border-radius:5px;padding:4px 7px;font-size:10px;min-width:0}
 .kcard.red-card{border-color:rgba(218,54,51,.4);background:rgba(218,54,51,.06)}
-.kcard-id{font-weight:600;font-family:var(--fm);color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kcard-time{font-size:10px;color:var(--tx3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tbadge{display:inline-flex;align-items:center;gap:3px;border-radius:4px;padding:2px 6px;font-size:10px;font-weight:500;font-family:var(--fm);margin-top:5px;white-space:nowrap}
+.kcard-id{font-weight:600;font-family:var(--fm);color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px}
+.kcard-time{font-size:9px;color:var(--tx3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbadge{display:inline-flex;align-items:center;gap:2px;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:500;font-family:var(--fm);margin-top:3px;white-space:nowrap}
 .tbadge.green{background:var(--gd);color:var(--gt)} .tbadge.yellow{background:var(--ad);color:var(--at)} .tbadge.red{background:var(--rd);color:var(--rt)}
-.kbadge{margin-top:4px;padding:2px 6px;border-radius:5px;font-size:9px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kbadge{margin-top:2px;padding:1px 5px;border-radius:4px;font-size:8px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kbadge-wait{background:rgba(218,54,51,.18);border:1px solid rgba(218,54,51,.4);color:var(--rt)}
 .kbadge-receb{background:rgba(210,153,34,.18);border:1px solid rgba(210,153,34,.4);color:var(--at)}
 .kbadge-ok{background:var(--gd);border:1px solid rgba(29,158,117,.35);color:var(--gt)}
@@ -275,7 +275,19 @@ function renderKanban(pos){
     var medStr=medEtapa!==null?fmtMin(medEtapa):'—';
     var medCor=medEtapa===null?'var(--tx3)':medEtapa<=LIMITES[etapa]*.6?'var(--gt)':medEtapa<=LIMITES[etapa]?'var(--at)':'var(--rt)';
     var avgHtml=isDisp?'':'<span style="font-size:9px;color:'+medCor+';font-family:var(--fm);margin-left:6px">⌀ '+medStr+'</span>';
-    col.innerHTML='<div class="kcol-hdr"><div style="display:flex;align-items:center"><span class="kcol-name">'+etapa+'</span>'+avgHtml+'</div><span class="kcol-count '+cCls+'">'+cards.length+'</span></div><div class="kcol-body" id="kc_'+etapa.replace(/[^a-z]/gi,'')+'"></div>';
+    var meta=LIMITES[etapa];
+    var metaStr=meta?fmtMin(meta):'—';
+    var metaCor=medEtapa===null?'var(--tx3)':medEtapa<=meta?'var(--gt)':'var(--rt)';
+    var topRow='<div style="display:flex;align-items:center;justify-content:space-between">'
+      +'<span class="kcol-name">'+etapa+'</span>'
+      +'<span class="kcol-count '+cCls+'">'+cards.length+'</span>'
+      +'</div>';
+    var botRow=isDisp?'':
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px">'
+        +'<span style="font-size:9px;color:'+metaCor+';font-family:var(--fm)">⌀ '+(medEtapa!==null?fmtMin(medEtapa):'—')+'</span>'
+        +'<span style="font-size:9px;color:var(--tx3);font-family:var(--fm)">meta: '+metaStr+'</span>'
+      +'</div>';
+    col.innerHTML='<div class="kcol-hdr">'+topRow+botRow+'</div><div class="kcol-body" id="kc_'+etapa.replace(/[^a-z]/gi,'')+'"></div>';
     grid.appendChild(col);
     var body=col.querySelector('.kcol-body');
     if(!cards.length){body.innerHTML='<div class="kempty">vazio</div>';return;}
