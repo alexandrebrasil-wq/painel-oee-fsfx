@@ -48,18 +48,18 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
 .kcol-count{font-size:10px;font-weight:600;font-family:var(--fm);border-radius:20px;padding:2px 8px;background:var(--s2);color:var(--tx2);border:1px solid var(--b2)}
 .kcol-count.has-red{background:var(--rd);color:var(--rt);border-color:rgba(218,54,51,.3)}
 .kcol-count.has-items{background:var(--gd);color:var(--gt);border-color:rgba(29,158,117,.3)}
-.kcol-body{padding:5px;display:grid;grid-template-columns:1fr 1fr;gap:4px;min-height:30px;overflow:hidden;align-content:start}
-.kcard{background:var(--s2);border:1px solid var(--b2);border-radius:5px;padding:4px 7px;font-size:10px;min-width:0}
+.kcol-body{padding:5px;display:flex;flex-direction:column;gap:3px;min-height:20px;overflow:hidden}
+.kcard{background:var(--s2);border:1px solid var(--b2);border-radius:5px;padding:3px 6px;font-size:10px;min-width:0;display:flex;align-items:center;gap:5px;height:26px;overflow:hidden}
 .kcard.red-card{border-color:rgba(218,54,51,.4);background:rgba(218,54,51,.06)}
-.kcard-id{font-weight:600;font-family:var(--fm);color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px}
-.kcard-time{font-size:9px;color:var(--tx3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tbadge{display:inline-flex;align-items:center;gap:2px;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:500;font-family:var(--fm);margin-top:3px;white-space:nowrap}
+.kcard-id{font-weight:600;font-family:var(--fm);color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;flex-shrink:0}
+.kcard-time{font-size:9px;color:var(--tx3);white-space:nowrap;flex-shrink:0}
+.tbadge{display:inline-flex;align-items:center;gap:2px;border-radius:3px;padding:1px 5px;font-size:9px;font-weight:500;font-family:var(--fm);white-space:nowrap;margin-left:auto;flex-shrink:0}
 .tbadge.green{background:var(--gd);color:var(--gt)} .tbadge.yellow{background:var(--ad);color:var(--at)} .tbadge.red{background:var(--rd);color:var(--rt)}
-.kbadge{margin-top:2px;padding:1px 5px;border-radius:4px;font-size:8px;font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kbadge{padding:1px 5px;border-radius:4px;font-size:8px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:auto;flex-shrink:0}
 .kbadge-wait{background:rgba(218,54,51,.18);border:1px solid rgba(218,54,51,.4);color:var(--rt)}
 .kbadge-receb{background:rgba(210,153,34,.18);border:1px solid rgba(210,153,34,.4);color:var(--at)}
 .kbadge-ok{background:var(--gd);border:1px solid rgba(29,158,117,.35);color:var(--gt)}
-.kempty{font-size:11px;color:var(--tx3);text-align:center;padding:14px 0;font-family:var(--fm);grid-column:1/-1}
+.kempty{font-size:11px;color:var(--tx3);text-align:center;padding:14px 0;font-family:var(--fm)}
 .ftable{width:100%;border-collapse:collapse;font-size:12px}
 .ftable th{padding:5px 7px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:1px solid var(--b1);text-align:left}
 .ftable td{padding:7px;border-bottom:1px solid var(--b1);color:var(--tx)}
@@ -291,7 +291,7 @@ function renderKanban(pos){
     grid.appendChild(col);
     var body=col.querySelector('.kcol-body');
     if(!cards.length){body.innerHTML='<div class="kempty">vazio</div>';return;}
-    cards.slice(0,8).forEach(function(e){
+    cards.slice(0,16).forEach(function(e){
       var atend=e[0],info=e[1],mins=minutosDesde(info.ts);
       var tc=isDisp?'green':(mins<=LIMITES[etapa]*.6?'green':mins<=LIMITES[etapa]?'yellow':'red');
       var na=String(atend);
@@ -302,7 +302,12 @@ function renderKanban(pos){
       var justHtml=info.just?'<span style="color:var(--at);font-size:9px"> ⚠ '+info.just+'</span>':'';
       var card=document.createElement('div');
       card.className='kcard'+(tc==='red'&&!isDisp?' red-card':'');
-      card.innerHTML='<div class="kcard-id">▍ '+atend+'</div><div class="kcard-time">'+fmtHora(info.ts)+justHtml+'</div>'+timerHtml;
+      // Card linha única: ▍ id · hora · timer/badge
+      var timerInline = isDisp ? qtBadge
+        : '<span class="tbadge '+tc+'">⏱ '+fmtMin(mins)+'</span>'+(qtBadge?qtBadge:'');
+      card.innerHTML='<span class="kcard-id">▍ '+atend+'</span>'
+        +'<span class="kcard-time">'+fmtHora(info.ts)+(justHtml?'<span style="color:var(--at);font-size:8px"> ⚠</span>':'')+'</span>'
+        +timerInline;
       body.appendChild(card);
     });
   });
