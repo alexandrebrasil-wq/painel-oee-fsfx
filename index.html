@@ -134,6 +134,7 @@ const FARM_URL='https://script.google.com/macros/s/AKfycbwulrdZyfww-3ejAoGIwrGew
 const QT_API_URL='https://script.google.com/macros/s/AKfycbz-wiMFjIy65nSK_n6ukvV-wZE5h_SqhOdLcztXh6DOSCqgnbZbzHSAqM5JURHhp5qf/exec';
 const QT_CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vSap2eZ_RANJMRkRQg34TPyHmUO-KHrxO8hMazvmfampJkKpFBGtG3VKB76q3EdRwcDMJqOL30TQ1ZA/pub?gid=1304195408&single=true&output=csv';
 let farmDisponivel=new Set(); // atendimentos com "Disponível QT" na farmácia
+let farmEtapa=new Map();      // atendimento → etapa atual na farmácia
 let poltronaAtend={};         // poltrona → atendimento (construído no process())
 const FLUXOS=[
   {idx:0,label:'Fluxo Longa / Longuíssima',cor:'#7c3aed',fundo:'#2a1a50',poltronas:Array.from({length:14},(_,i)=>i+1),tipo:'Longa · Longuíssima'},
@@ -303,12 +304,17 @@ function render(st,fonte){
     const pNome=`Poltrona ${num.replace(/^0/,'')}`;
     const atendNum=poltronaAtend[pNome]||'';
     const estaAguardandoFarm = s.s==='parada' && s.d && s.d.indexOf('Manipul')>=0;
-    const medicacaoDisp = estaAguardandoFarm && s.atend && farmDisponivel.has(s.atend);
-    const medBadge = medicacaoDisp
-      ? '<div class="med-badge med-disp">💊 Medicação disponível</div>'
-      : estaAguardandoFarm
-        ? '<div class="med-badge med-wait">⏳ Aguard. farmácia</div>'
-        : '';
+    const etapaFarm = estaAguardandoFarm && s.atend ? (farmEtapa.get(s.atend)||'') : '';
+    const medicacaoDisp = etapaFarm === 'Disponível QT';
+    const ETAPA_LABEL = {'Separação':'📦 Separação','Pré QT':'🔬 Pré QT','Capela QT':'⚗️ Capela QT','Disponível QT':'💊 Disponível'};
+    const ETAPA_COR   = {'Separação':'#79c0ff','Pré QT':'#e3b341','Capela QT':'#f97316','Disponível QT':'#3dd68c'};
+    const etapaLabel = ETAPA_LABEL[etapaFarm] || '';
+    const etapaCor   = ETAPA_COR[etapaFarm] || '#8b949e';
+    const medBadge = estaAguardandoFarm
+      ? (etapaLabel
+          ? '<div class="med-badge" style="background:rgba(0,0,0,.3);color:'+etapaCor+';border:1px solid '+etapaCor+'">'+etapaLabel+'</div>'
+          : '<div class="med-badge med-wait">⏳ Aguard. farmácia</div>')
+      : '';
     c.innerHTML='<div class="cn">P'+num+'</div>'
       +'<div class="ci">'+svgIcon+'</div>'
       +'<div class="cb">'
@@ -337,6 +343,10 @@ async function loadFarmData(){
     farmDisponivel=new Set(
       rows.filter(r=>r['Etapa Atual']==='Disponível QT')
           .map(r=>String(r['Nº Atendimento']||'').trim())
+    );
+    farmEtapa=new Map(
+      rows.filter(r=>r['Etapa Atual'] && r['Nº Atendimento'])
+          .map(r=>[String(r['Nº Atendimento']||'').trim(), String(r['Etapa Atual']||'').trim()])
     );
   }catch(e){
     console.warn('Farm data unavailable:',e.message);
