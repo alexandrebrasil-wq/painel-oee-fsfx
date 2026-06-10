@@ -303,11 +303,11 @@ function render(st,fonte){
     const pNome=`Poltrona ${num.replace(/^0/,'')}`;
     const atendNum=poltronaAtend[pNome]||'';
     const estaAguardandoFarm = s.s==='parada' && s.d && s.d.indexOf('Manipul')>=0;
-    const medicacaoDisp = s.s==='ocupada' && s.atend && farmDisponivel.has(s.atend);
-    const medBadge = estaAguardandoFarm
-      ? '<div class="med-badge med-wait">⏳ Aguard. farmácia</div>'
-      : medicacaoDisp
-        ? '<div class="med-badge med-disp">💊 Medicação disponível</div>'
+    const medicacaoDisp = estaAguardandoFarm && s.atend && farmDisponivel.has(s.atend);
+    const medBadge = medicacaoDisp
+      ? '<div class="med-badge med-disp">💊 Medicação disponível</div>'
+      : estaAguardandoFarm
+        ? '<div class="med-badge med-wait">⏳ Aguard. farmácia</div>'
         : '';
     c.innerHTML='<div class="cn">P'+num+'</div>'
       +'<div class="ci">'+svgIcon+'</div>'
