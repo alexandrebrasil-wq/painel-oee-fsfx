@@ -354,11 +354,11 @@ async function loadFarmData(){
       const tipo  = String(reg[6]||'transicao').trim();
       if(!atend||!etapa) return;
       if(tipo==='parada'||tipo==='encerramento') return;
-      // Filtra por hoje — aceita pt-BR "dd/MM/yyyy HH:mm:ss"
-      const diaReg = tsRaw.split(' ')[0]; // "11/06/2026"
-      if(diaReg!==hoje) return;
-      // Guarda o mais recente por atendimento
+      // Usa tsToDate para aceitar ISO ("2026-06-11T08:19:00.000Z") e pt-BR
       const tsD = tsToDate(tsRaw);
+      if(!tsD) return;
+      // Compara datas usando pt-BR igual ao restante do código
+      if(tsD.toLocaleDateString('pt-BR')!==hoje) return;
       if(!posMap[atend]||tsD>posMap[atend].ts) posMap[atend]={etapa:etapa,ts:tsD};
     });
 
