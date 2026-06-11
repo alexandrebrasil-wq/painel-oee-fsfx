@@ -336,17 +336,36 @@ function render(st,fonte){
 
 async function loadFarmData(){
   try{
-    const r=await fetch(FARM_URL,{cache:'no-store'});
+    // Usa registros completos e calcula posição atual dinamicamente
+    // (mais preciso que ?acao=posicao que pode estar desatualizado)
+    const FARM_REG = FARM_URL.replace('?acao=posicao','') + '?acao=registros';
+    const r=await fetch(FARM_REG,{cache:'no-store'});
     if(!r.ok)return;
     const data=await r.json();
-    const rows=data.rows||[];
+    const regs=data.rows||[];
+    const hoje=new Date().toISOString().slice(0,10);
+
+    // Calcula última etapa de cada atendimento hoje
+    const posMap={};
+    regs
+      .filter(reg=>{
+        const ts=new Date(reg['Timestamp']||reg['timestamp']||0);
+        const tipo=reg['Tipo']||reg['tipo']||'transicao';
+        return ts.toISOString().slice(0,10)===hoje && tipo!=='parada' && tipo!=='encerramento';
+      })
+      .forEach(reg=>{
+        const a=String(reg['Nº Atendimento']||reg['atendimento']||'').trim();
+        const e=String(reg['Etapa']||reg['etapa']||'').trim();
+        const ts=new Date(reg['Timestamp']||reg['timestamp']||0);
+        if(!a||!e)return;
+        if(!posMap[a]||ts>posMap[a].ts) posMap[a]={etapa:e,ts};
+      });
+
+    farmEtapa=new Map(Object.entries(posMap).map(([a,v])=>[a,v.etapa]));
     farmDisponivel=new Set(
-      rows.filter(r=>r['Etapa Atual']==='Disponível QT')
-          .map(r=>String(r['Nº Atendimento']||'').trim())
-    );
-    farmEtapa=new Map(
-      rows.filter(r=>r['Etapa Atual'] && r['Nº Atendimento'])
-          .map(r=>[String(r['Nº Atendimento']||'').trim(), String(r['Etapa Atual']||'').trim()])
+      Object.entries(posMap)
+        .filter(([,v])=>v.etapa==='Disponível QT')
+        .map(([a])=>a)
     );
   }catch(e){
     console.warn('Farm data unavailable:',e.message);
