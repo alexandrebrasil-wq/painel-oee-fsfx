@@ -214,7 +214,7 @@ function process(rows){
   const st={};
   for(let n=1;n<=47;n++){
     const fl=getFluxo(n);
-    st[String(n).padStart(2,'0')]={s:'livre',d:fl.tipo,ts:null,t:'',fi:fl.idx,paciente:false,atend:''};
+    st[String(n).padStart(2,'0')]={s:'livre',d:fl.tipo,mot:'',ts:null,t:'',fi:fl.idx,paciente:false,atend:''};
   }
 
   // ── ORDENAÇÃO POR TIMESTAMP ──────────────────────────────────
@@ -264,18 +264,18 @@ function process(rows){
 
     // processa evento normalmente
     if(ev==='Check In Paciente'){
-      const atendN=(r[5]||'').trim();st[num]={s:'ocupada',d:tipo||fl.tipo,ts,t:tipo||'',fi,paciente:true,atend:atendN};
+      const atendN=(r[5]||'').trim();st[num]={s:'ocupada',d:tipo||fl.tipo,mot:'',ts,t:tipo||'',fi,paciente:true,atend:atendN};
       // Rastreia vínculo poltrona → atendimento para integração com farmácia
       const atendQT=(r[5]||'').trim();
       if(atendQT) poltronaAtend[`Poltrona ${num.replace(/^0/,'')}`]=atendQT;
     } else if(ev==='Check Out Paciente'){
-      st[num]={s:'livre',d:fl.tipo,ts,t:'',fi,paciente:false,atend:''};
+      st[num]={s:'livre',d:fl.tipo,mot:'',ts,t:'',fi,paciente:false,atend:''};
     } else if(ev==='Início da Parada'){
-      st[num]={s:'parada',d:abrevMot(mot),ts,t:st[num].t,fi,paciente:st[num].paciente,atend:st[num].atend||''};
+      st[num]={s:'parada',d:abrevMot(mot),mot:mot||'',ts,t:st[num].t,fi,paciente:st[num].paciente,atend:st[num].atend||''};
     } else if(ev==='Fim da parada'){
       const pac=st[num].paciente;
       const t=st[num].t;
-      const atendFim=st[num].atend||'';st[num]={s:pac?'ocupada':'livre',d:pac?(t||fl.tipo):fl.tipo,ts,t:pac?t:'',fi,paciente:pac,atend:pac?atendFim:''};
+      const atendFim=st[num].atend||'';st[num]={s:pac?'ocupada':'livre',d:pac?(t||fl.tipo):fl.tipo,mot:'',ts,t:pac?t:'',fi,paciente:pac,atend:pac?atendFim:''};
     }
   });
   return st;
@@ -303,7 +303,7 @@ function render(st,fonte){
     // Badge de medicação — só relevante quando poltrona está em parada aguardando farmácia
     const pNome=`Poltrona ${num.replace(/^0/,'')}`;
     const atendNum=poltronaAtend[pNome]||'';
-    const estaAguardandoFarm = s.s==='parada' && s.d && s.d.indexOf('Manipul')>=0;
+    const estaAguardandoFarm = s.s==='parada' && (s.mot||'').indexOf('Manipul')>=0;
     const etapaFarm = estaAguardandoFarm && s.atend ? (farmEtapa.get(s.atend)||'') : '';
     const medicacaoDisp = etapaFarm === 'Disponível QT';
     const ETAPA_LABEL = {'Separação':'📦 Separação','Pré QT':'🔬 Pré QT','Capela QT':'⚗️ Capela QT','Disponível QT':'💊 Disponível'};
