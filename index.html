@@ -336,39 +336,19 @@ function render(st,fonte){
 
 async function loadFarmData(){
   try{
-    // Farmácia retorna rows como ARRAYS: [timestamp, numAtend, etapa, resp, just, disp, tipo]
-    // índices: 0=ts, 1=atendimento, 2=etapa, 6=tipo
-    const FARM_REG = FARM_URL.replace('?acao=posicao','') + '?acao=registros';
-    const r=await fetch(FARM_REG,{cache:'no-store'});
+    // ?acao=posicao retorna objetos com chaves nomeadas — mais simples e confiável
+    const r=await fetch(FARM_URL,{cache:'no-store'});
     if(!r.ok)return;
     const data=await r.json();
-    const regs=data.rows||[];
-    const hoje=new Date().toLocaleDateString('pt-BR'); // "11/06/2026"
-
-    const posMap={};
-    regs.forEach(function(reg){
-      // reg é array: [ts, atend, etapa, resp, just, disp, tipo]
-      const tsRaw = String(reg[0]||'').trim();
-      const atend = String(reg[1]||'').trim();
-      const etapa = String(reg[2]||'').trim();
-      const tipo  = String(reg[6]||'transicao').trim();
-      if(!atend||!etapa) return;
-      if(tipo==='parada'||tipo==='encerramento') return;
-      // Usa tsToDate para aceitar ISO ("2026-06-11T08:19:00.000Z") e pt-BR
-      const tsD = tsToDate(tsRaw);
-      if(!tsD) return;
-      // Compara datas usando pt-BR igual ao restante do código
-      if(tsD.toLocaleDateString('pt-BR')!==hoje) return;
-      if(!posMap[atend]||tsD>posMap[atend].ts) posMap[atend]={etapa:etapa,ts:tsD};
-    });
-
-    farmEtapa=new Map(Object.entries(posMap).map(([a,v])=>[a,v.etapa]));
+    const rows=data.rows||[];
     farmDisponivel=new Set(
-      Object.entries(posMap)
-        .filter(([,v])=>v.etapa==='Disponível QT')
-        .map(([a])=>a)
+      rows.filter(r=>r['Etapa Atual']==='Disponível QT')
+          .map(r=>String(r['Nº Atendimento']||'').trim())
     );
-    console.log('farmEtapa:', farmEtapa.size, 'entradas. hoje='+hoje);
+    farmEtapa=new Map(
+      rows.filter(r=>r['Etapa Atual']&&r['Nº Atendimento'])
+          .map(r=>[String(r['Nº Atendimento']||'').trim(), String(r['Etapa Atual']||'').trim()])
+    );
   }catch(e){
     console.warn('Farm data unavailable:',e.message);
   }
