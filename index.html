@@ -113,6 +113,7 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:22p
     <div class="leg"><div class="ld" style="background:#3b82f6"></div>Curta/Rápida</div>
     <div class="leg"><div class="ld" style="background:#555"></div>Convênio</div>
     <div class="leg"><div class="ld" style="background:#555"></div>Leito</div>
+    <div class="leg"><div class="ld" style="background:#555"></div>Maca</div>
   </div>
 </div>
 
@@ -141,7 +142,7 @@ const FLUXOS=[
   {idx:1,label:'Fluxo Média',              cor:'#f97316',fundo:'#3d2000',poltronas:Array.from({length:10},(_,i)=>i+15),tipo:'Média'},
   {idx:2,label:'Fluxo Curta / Rápida',     cor:'#3b82f6',fundo:'#0f2540',poltronas:Array.from({length:9}, (_,i)=>i+25),tipo:'Curta · Rápida'},
   {idx:3,label:'Convênio',                 cor:'#888',fundo:'#181818',poltronas:Array.from({length:10},(_,i)=>i+34),tipo:'Convênio'},
-  {idx:4,label:'Leito',                    cor:'#888',fundo:'#181818',poltronas:[44,45,46,47],tipo:'Leito'},
+  {idx:4,label:'Leito / Maca',              cor:'#888',fundo:'#181818',poltronas:[44,45,46,47,48,49],tipo:'Leito',macas:[48,49]},
 ];
 
 // ── DADOS LOCAIS (fallback) ──────────────────────────────────────────────────
@@ -162,17 +163,23 @@ function build(){
     const blk=document.createElement('div');blk.className='fb';
     const hdr=document.createElement('div');hdr.className='fh';
     hdr.style.cssText='background:'+fl.fundo+';border-left:3px solid '+fl.cor;
+    const subtitulo=fl.macas
+      ?(fl.poltronas.length-fl.macas.length)+' leitos · '+fl.macas.length+' macas'
+      :fl.tipo+'  ·  '+fl.poltronas.length+' poltronas';
     hdr.innerHTML='<span class="fl" style="color:'+fl.cor+'">'+fl.label+'</span>'
-      +'<span style="font-size:9px;color:rgba(255,255,255,.3)">'+fl.tipo+'  ·  '+fl.poltronas.length+' poltronas</span>';
+      +'<span style="font-size:9px;color:rgba(255,255,255,.3)">'+subtitulo+'</span>';
     const grid=document.createElement('div');grid.className='fg';
     fl.poltronas.forEach(n=>{
       const num=String(n).padStart(2,'0');
+      const isMaca=fl.macas&&fl.macas.includes(n);
+      const prefix=isMaca?'M':'P';
+      const tipoCard=isMaca?'Maca':fl.tipo;
       const c=document.createElement('div');
       c.className='card livre f'+fl.idx;c.id='c'+num;
-      c.innerHTML='<div class="cn">P'+num+'</div>'
+      c.innerHTML='<div class="cn">'+prefix+num+'</div>'
         +'<div class="cb">'
         +'<div class="cs">Disponível</div>'
-        +'<div class="cd">'+fl.tipo+'</div>'
+        +'<div class="cd">'+tipoCard+'</div>'
         +'<div class="ct"></div>'
         +'</div>';
       grid.appendChild(c);
