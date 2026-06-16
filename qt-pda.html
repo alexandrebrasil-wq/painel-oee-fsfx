@@ -165,7 +165,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 <script>
 var QT_API = 'https://script.google.com/macros/s/AKfycbz-wiMFjIy65nSK_n6ukvV-wZE5h_SqhOdLcztXh6DOSCqgnbZbzHSAqM5JURHhp5qf/exec';
 
-var FLUXO_PADRAO = {"01": "Longa", "02": "Longa", "03": "Longa", "04": "Longa", "05": "Longa", "06": "Longa", "07": "Longa", "08": "Longa", "09": "Longa", "10": "Longa", "11": "Longa", "12": "Longa", "13": "Longa", "14": "Longa", "15": "Média", "16": "Média", "17": "Média", "18": "Média", "19": "Média", "20": "Média", "21": "Média", "22": "Média", "23": "Média", "24": "Média", "25": "Curta", "26": "Curta", "27": "Curta", "28": "Curta", "29": "Curta", "30": "Curta", "31": "Curta", "32": "Curta", "33": "Curta", "34": "Convênio", "35": "Convênio", "36": "Convênio", "37": "Convênio", "38": "Convênio", "39": "Convênio", "40": "Convênio", "41": "Convênio", "42": "Convênio", "43": "Convênio", "44": "Leito", "45": "Leito", "46": "Leito", "47": "Leito"};
+var FLUXO_PADRAO = {"01": "Longa", "02": "Longa", "03": "Longa", "04": "Longa", "05": "Longa", "06": "Longa", "07": "Longa", "08": "Longa", "09": "Longa", "10": "Longa", "11": "Longa", "12": "Longa", "13": "Longa", "14": "Longa", "15": "Média", "16": "Média", "17": "Média", "18": "Média", "19": "Média", "20": "Média", "21": "Média", "22": "Média", "23": "Média", "24": "Média", "25": "Curta", "26": "Curta", "27": "Curta", "28": "Curta", "29": "Curta", "30": "Curta", "31": "Curta", "32": "Curta", "33": "Curta", "34": "Convênio", "35": "Convênio", "36": "Convênio", "37": "Convênio", "38": "Convênio", "39": "Convênio", "40": "Convênio", "41": "Convênio", "42": "Convênio", "43": "Convênio", "44": "Leito", "45": "Leito", "46": "Leito", "47": "Leito", "48": "Maca", "49": "Maca"};
 
 // Estado global
 var poltrona = '', tipoSel = '', estadoAtual = 'livre', motivoAtual = '';
@@ -174,15 +174,18 @@ var poltrona = '', tipoSel = '', estadoAtual = 'livre', motivoAtual = '';
 window.onload = function() {
   var params = new URLSearchParams(window.location.search);
   poltrona = (params.get('poltrona') || '').padStart(2,'0');
+  var MACAS = ['48','49'];
+  var prefixo = MACAS.includes(poltrona) ? 'M' : 'P';
+  var labelUnidade = MACAS.includes(poltrona) ? 'Maca' : 'Poltrona';
   if (!poltrona || poltrona === '00') {
     document.getElementById('hdr-pol').textContent = 'ERRO';
     document.getElementById('tela-loading').innerHTML = '<div style="color:var(--rt);text-align:center;padding:32px">URL inválida.<br>Use qt-pda.html?poltrona=01</div>';
     return;
   }
-  document.getElementById('hdr-pol').textContent = 'P' + poltrona;
-  document.getElementById('hdr-sub').textContent = 'Poltrona ' + parseInt(poltrona) + ' · QT';
-  document.getElementById('ci-pol').textContent = 'P' + poltrona;
-  document.getElementById('mot-pol').textContent = 'P' + poltrona;
+  document.getElementById('hdr-pol').textContent = prefixo + poltrona;
+  document.getElementById('hdr-sub').textContent = labelUnidade + ' ' + parseInt(poltrona) + ' · QT';
+  document.getElementById('ci-pol').textContent = prefixo + poltrona;
+  document.getElementById('mot-pol').textContent = prefixo + poltrona;
   carregarEstado();
 };
 
@@ -304,7 +307,7 @@ function confirmarCheckIn() {
 }
 
 function confirmarCheckOut() {
-  if (!confirm('Confirmar Check Out da P' + parseInt(poltrona) + '?')) return;
+  if (!confirm('Confirmar Check Out da ' + prefixo + parseInt(poltrona) + '?')) return;
   gravar('Check Out Paciente', '', '', '');
 }
 
@@ -313,7 +316,7 @@ function confirmarParada(motivo) {
 }
 
 function confirmarFimParada() {
-  if (!confirm('Confirmar Fim da Parada da P' + parseInt(poltrona) + '?')) return;
+  if (!confirm('Confirmar Fim da Parada da ' + prefixo + parseInt(poltrona) + '?')) return;
   gravar('Fim da parada', '', '', '');
 }
 
@@ -335,7 +338,7 @@ function gravar(evento, motivo, tipo, atendimento) {
         document.getElementById('res-icon').textContent = '✓';
         document.getElementById('res-icon').style.color = 'var(--gt)';
         document.getElementById('res-msg').textContent  = evento + ' registrado';
-        document.getElementById('res-sub').textContent  = 'P' + parseInt(poltrona) + ' · ' + (data.ts || '');
+        document.getElementById('res-sub').textContent  = prefixo + parseInt(poltrona) + ' · ' + (data.ts || '');
         mostrar('tela-result');
         setTimeout(voltarMain, 2500);
       } else {
