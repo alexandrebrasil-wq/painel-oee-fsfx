@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>i-OMT · Chamada de Medicamentos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#0a0a0a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+:root{--green:#1D9E75;--green-light:#0d1f18;--green-mid:#4db896;--border:#222;--card:#141414;--card2:#1a1a1a}
+
+/* HEADER */
+.hdr{background:#111;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.hdr-logo{display:flex;align-items:center;gap:8px}
+.hdr-mark{background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;letter-spacing:.05em}
+.hdr-title{font-size:13px;color:#888}
+.hdr-clock{font-family:monospace;font-size:14px;color:#555;letter-spacing:.08em}
+
+/* STEPS */
+.steps{display:flex;gap:0;border-bottom:1px solid var(--border);background:#0d0d0d}
+.step{flex:1;padding:10px 8px;text-align:center;font-size:11px;color:#444;border-bottom:2px solid transparent;position:relative;transition:color .15s}
+.step.done{color:var(--green-mid)}
+.step.active{color:#fff;border-bottom-color:var(--green)}
+.step-num{display:block;font-size:16px;font-weight:700;font-family:monospace;margin-bottom:2px}
+.step.done .step-num::after{content:'✓';font-size:13px}
+.step.active .step-num{color:var(--green)}
+
+/* TELAS */
+.tela{display:none;flex-direction:column;padding:16px;gap:14px;min-height:calc(100vh - 120px)}
+.tela.ativa{display:flex}
+
+/* ATENDIMENTO */
+.lbl{font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.inp-wrap{display:flex;gap:8px}
+.inp-wrap input{flex:1;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;color:#fff;font-size:18px;font-family:monospace;letter-spacing:.08em;padding:14px 16px;outline:none;transition:border-color .15s}
+.inp-wrap input:focus{border-color:var(--green)}
+.inp-wrap input::placeholder{color:#333;font-size:14px;font-family:-apple-system,sans-serif;letter-spacing:0}
+.btn-bipar{background:var(--green);color:#fff;border:none;border-radius:10px;padding:14px 18px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-bipar:active{opacity:.8}
+
+.atend-ok{display:none;align-items:center;gap:8px;background:var(--green-light);border:1px solid var(--green);border-radius:10px;padding:12px 14px}
+.atend-ok.vis{display:flex}
+.atend-ok-ico{width:28px;height:28px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.atend-ok-txt{font-size:14px;font-weight:600;color:var(--green-mid)}
+.atend-ok-sub{font-size:11px;color:#4a8a70;margin-top:1px}
+.atend-trocar{background:none;border:none;color:#4a8a70;font-size:11px;cursor:pointer;margin-left:auto;text-decoration:underline;padding:0}
+
+/* MEDICAMENTOS */
+.med-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.med-btn{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 10px;font-size:12px;text-align:left;cursor:pointer;color:#aaa;line-height:1.35;transition:all .12s;-webkit-tap-highlight-color:transparent}
+.med-btn:active{transform:scale(.97)}
+.med-btn.sel{background:var(--green-light);border-color:var(--green);color:var(--green-mid);font-weight:600}
+
+/* BOTÃO AVANÇAR */
+.btn-avancar{background:var(--green);color:#fff;border:none;border-radius:12px;padding:16px;font-size:15px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s}
+.btn-avancar:disabled{opacity:.3;cursor:not-allowed}
+.btn-avancar:not(:disabled):active{opacity:.85}
+
+/* CONFIRMAÇÃO */
+.confirm-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
+.confirm-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.confirm-row:last-child{border-bottom:none}
+.confirm-lbl{font-size:12px;color:#555}
+.confirm-val{font-size:14px;font-weight:600;color:#ddd;text-align:right;max-width:60%}
+.confirm-val.med{color:var(--green-mid)}
+
+.btn-confirmar{background:var(--green);color:#fff;border:none;border-radius:12px;padding:18px;font-size:16px;font-weight:700;cursor:pointer;width:100%;letter-spacing:.02em}
+.btn-confirmar:active{opacity:.85}
+.btn-voltar{background:none;border:1px solid #2a2a2a;border-radius:12px;padding:14px;font-size:14px;cursor:pointer;color:#555;width:100%}
+
+/* SUCESSO */
+.sucesso{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:32px}
+.sucesso-ico{width:72px;height:72px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;animation:pop .3s ease}
+.sucesso-titulo{font-size:20px;font-weight:700}
+.sucesso-sub{font-size:14px;color:#555;line-height:1.5}
+.sucesso-pos{font-size:48px;font-weight:800;color:var(--green);font-family:monospace;line-height:1}
+.sucesso-pos-lbl{font-size:12px;color:#555;margin-top:-8px}
+.btn-novo{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 32px;font-size:14px;font-weight:600;cursor:pointer;color:#aaa;margin-top:8px}
+
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">
+    <div class="hdr-mark">i-OMT</div>
+    <div class="hdr-title">Chamada de Medicamentos</div>
+  </div>
+  <div class="hdr-clock" id="hdr-clock">--:--</div>
+</div>
+
+<div class="steps" id="steps-bar">
+  <div class="step active" id="step1"><span class="step-num">1</span>Atendimento</div>
+  <div class="step" id="step2"><span class="step-num">2</span>Medicamento</div>
+  <div class="step" id="step3"><span class="step-num">3</span>Confirmar</div>
+</div>
+
+<!-- TELA 1: ATENDIMENTO -->
+<div class="tela ativa" id="tela-1">
+  <div>
+    <div class="lbl">Número do atendimento</div>
+    <div class="inp-wrap">
+      <input type="text" id="inp-atend" inputmode="numeric" placeholder="Digite ou bipe o número" maxlength="12" autofocus>
+      <button class="btn-bipar" onclick="confirmarAtend()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 5h2v14H3zM7 5h1v14H7zM10 5h2v14h-2zM14 5h1v14h-1zM17 5h3v14h-3z"/></svg>
+        Bipar
+      </button>
+    </div>
+  </div>
+  <div class="atend-ok" id="atend-ok">
+    <div class="atend-ok-ico">✓</div>
+    <div>
+      <div class="atend-ok-txt" id="atend-ok-txt">Atend. —</div>
+      <div class="atend-ok-sub">Atendimento confirmado</div>
+    </div>
+    <button class="atend-trocar" onclick="trocarAtend()">Trocar</button>
+  </div>
+  <button class="btn-avancar" id="btn-t1" disabled onclick="irParaTela(2)">
+    Selecionar medicamento →
+  </button>
+</div>
+
+<!-- TELA 2: MEDICAMENTO -->
+<div class="tela" id="tela-2">
+  <div>
+    <div class="lbl">Selecione o medicamento</div>
+    <div class="med-grid" id="med-grid"></div>
+  </div>
+  <button class="btn-avancar" id="btn-t2" disabled onclick="irParaTela(3)">
+    Confirmar →
+  </button>
+</div>
+
+<!-- TELA 3: CONFIRMAÇÃO -->
+<div class="tela" id="tela-3">
+  <div class="lbl">Revisão</div>
+  <div class="confirm-card">
+    <div class="confirm-row">
+      <span class="confirm-lbl">Atendimento</span>
+      <span class="confirm-val" id="conf-atend">—</span>
+    </div>
+    <div class="confirm-row">
+      <span class="confirm-lbl">Medicamento</span>
+      <span class="confirm-val med" id="conf-med">—</span>
+    </div>
+    <div class="confirm-row">
+      <span class="confirm-lbl">Horário</span>
+      <span class="confirm-val" id="conf-hora">—</span>
+    </div>
+  </div>
+  <button class="btn-confirmar" onclick="enviarFila()">✓ Adicionar à fila</button>
+  <button class="btn-voltar" onclick="irParaTela(2)">← Voltar</button>
+</div>
+
+<!-- TELA SUCESSO -->
+<div class="tela" id="tela-ok">
+  <div class="sucesso">
+    <div class="sucesso-ico">✓</div>
+    <div class="sucesso-titulo">Adicionado à fila!</div>
+    <div class="sucesso-pos" id="suc-pos">—</div>
+    <div class="sucesso-pos-lbl">posição na fila</div>
+    <div class="sucesso-sub" id="suc-sub">—</div>
+    <button class="btn-novo" onclick="novoApontamento()">+ Novo apontamento</button>
+  </div>
+</div>
+
+<script>
+var MEDS=['Atropina','BEVACIZUMABE','Bomba elastomérica','BRENTUXIMABE VEDOTINA','Ciclofosfamida','Dipirona','Doxorrubicina Lipossomal','Escopolamida c/dipirona','Escopolamina c/ brometo','Folinato de cálcio','Nab Paclitaxel','RITUXIMABE','SACITUZUMABE GOVITECANA','SILTUXIMABE'];
+
+var atend='', medSel='';
+
+// Fila compartilhada via localStorage (mesmo domínio que chamada-painel.html)
+function getFila(){try{return JSON.parse(localStorage.getItem('iomt_fila')||'[]')}catch(e){return[]}}
+function setFila(f){localStorage.setItem('iomt_fila',JSON.stringify(f))}
+
+function buildMedGrid(){
+  var g=document.getElementById('med-grid');
+  MEDS.forEach(function(m){
+    var b=document.createElement('button');
+    b.className='med-btn';b.textContent=m;
+    b.onclick=function(){selectMed(m)};
+    b.id='mb_'+m.replace(/\s/g,'_');
+    g.appendChild(b);
+  });
+}
+
+function selectMed(m){
+  medSel=m;
+  document.querySelectorAll('.med-btn').forEach(function(b){b.classList.remove('sel')});
+  var el=document.getElementById('mb_'+m.replace(/\s/g,'_'));
+  if(el)el.classList.add('sel');
+  document.getElementById('btn-t2').disabled=false;
+}
+
+function confirmarAtend(){
+  var v=document.getElementById('inp-atend').value.trim();
+  if(!v)return;
+  atend=v;
+  document.getElementById('atend-ok-txt').textContent='Atend. '+v;
+  document.getElementById('atend-ok').classList.add('vis');
+  document.getElementById('btn-t1').disabled=false;
+  document.getElementById('inp-atend').blur();
+}
+
+function trocarAtend(){
+  atend='';
+  document.getElementById('atend-ok').classList.remove('vis');
+  document.getElementById('btn-t1').disabled=true;
+  document.getElementById('inp-atend').value='';
+  document.getElementById('inp-atend').focus();
+}
+
+document.getElementById('inp-atend').addEventListener('keydown',function(e){
+  if(e.key==='Enter')confirmarAtend();
+});
+document.getElementById('inp-atend').addEventListener('input',function(){
+  if(atend){atend='';document.getElementById('atend-ok').classList.remove('vis');document.getElementById('btn-t1').disabled=true;}
+});
+
+function irParaTela(n){
+  document.querySelectorAll('.tela').forEach(function(t){t.classList.remove('ativa')});
+  document.getElementById('tela-'+n).classList.add('ativa');
+  ['step1','step2','step3'].forEach(function(id,i){
+    var el=document.getElementById(id);
+    el.className='step'+(i+1<n?' done':i+1===n?' active':'');
+  });
+  if(n===3){
+    var h=new Date();
+    document.getElementById('conf-atend').textContent=atend;
+    document.getElementById('conf-med').textContent=medSel;
+    document.getElementById('conf-hora').textContent=h.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+function enviarFila(){
+  var fila=getFila();
+  var item={id:Date.now(),atend:atend,med:medSel,ts:Date.now()};
+  fila.push(item);
+  setFila(fila);
+  var pos=fila.length;
+  document.getElementById('suc-pos').textContent=pos+'º';
+  document.getElementById('suc-sub').textContent=medSel+'\nAtend. '+atend;
+  document.querySelectorAll('.tela').forEach(function(t){t.classList.remove('ativa')});
+  document.getElementById('tela-ok').classList.add('ativa');
+  document.getElementById('steps-bar').style.display='none';
+}
+
+function novoApontamento(){
+  atend='';medSel='';
+  document.getElementById('inp-atend').value='';
+  document.getElementById('atend-ok').classList.remove('vis');
+  document.getElementById('btn-t1').disabled=true;
+  document.getElementById('btn-t2').disabled=true;
+  document.querySelectorAll('.med-btn').forEach(function(b){b.classList.remove('sel')});
+  document.getElementById('steps-bar').style.display='';
+  irParaTela(1);
+}
+
+function clock(){
+  var d=new Date();
+  var h=d.getHours(),m=d.getMinutes();
+  document.getElementById('hdr-clock').textContent=(h<10?'0'+h:h)+':'+(m<10?'0'+m:m);
+}
+setInterval(clock,1000);clock();
+
+buildMedGrid();
+</script>
+</body>
+</html>
