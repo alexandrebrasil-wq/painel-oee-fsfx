@@ -169,14 +169,16 @@ var FLUXO_PADRAO = {"01": "Longa", "02": "Longa", "03": "Longa", "04": "Longa", 
 
 // Estado global
 var poltrona = '', tipoSel = '', estadoAtual = 'livre', motivoAtual = '';
+var MACAS = ['48','49'];
+var prefixo = 'P';
+var labelUnidade = 'Poltrona';
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 window.onload = function() {
   var params = new URLSearchParams(window.location.search);
   poltrona = (params.get('poltrona') || '').padStart(2,'0');
-  var MACAS = ['48','49'];
-  var prefixo = MACAS.includes(poltrona) ? 'M' : 'P';
-  var labelUnidade = MACAS.includes(poltrona) ? 'Maca' : 'Poltrona';
+  prefixo = MACAS.includes(poltrona) ? 'M' : 'P';
+  labelUnidade = MACAS.includes(poltrona) ? 'Maca' : 'Poltrona';
   if (!poltrona || poltrona === '00') {
     document.getElementById('hdr-pol').textContent = 'ERRO';
     document.getElementById('tela-loading').innerHTML = '<div style="color:var(--rt);text-align:center;padding:32px">URL inválida.<br>Use qt-pda.html?poltrona=01</div>';
