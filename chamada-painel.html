@@ -7,19 +7,8 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
-:root{
-  --green:#1D9E75;
-  --green-mid:#4db896;
-  --green-dark:#0d1f18;
-  --green-border:#1D9E75;
-  --row-bg:#0e0e0e;
-  --row-alt:#111;
-  --border:#1c1c1c;
-  --muted:#333;
-  --sub:#555;
-}
+:root{--green:#1D9E75;--green-mid:#4db896;--green-dark:#0d1f18;--border:#1c1c1c}
 
-/* LAYOUT */
 .layout{display:grid;grid-template-rows:auto 1fr auto;height:100vh}
 
 /* HEADER */
@@ -38,62 +27,65 @@ html,body{height:100%;background:#000;color:#fff;font-family:-apple-system,Blink
 .hdr-date{font-size:11px;color:#333;margin-top:3px;letter-spacing:.04em}
 
 /* CORPO */
-.body{display:grid;grid-template-columns:1fr 340px;overflow:hidden}
+.body{display:grid;grid-template-columns:1fr 320px;overflow:hidden}
 
-/* FILA PRINCIPAL */
-.fila-wrap{overflow-y:auto;padding:20px 24px 20px 32px;display:flex;flex-direction:column;gap:0}
+/* FILA */
+.fila-wrap{overflow-y:auto;padding:20px 24px 20px 32px;display:flex;flex-direction:column}
 .fila-wrap::-webkit-scrollbar{width:4px}
-.fila-wrap::-webkit-scrollbar-track{background:#0a0a0a}
 .fila-wrap::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:2px}
 
-.col-header{display:grid;grid-template-columns:60px 1fr 160px 90px;gap:0;padding:0 0 10px 0;margin-bottom:4px}
+.col-header{display:grid;grid-template-columns:60px 1fr 160px 90px;padding:0 0 10px;margin-bottom:4px}
 .col-lbl{font-size:10px;color:#2a2a2a;text-transform:uppercase;letter-spacing:.1em;font-weight:600}
 .col-lbl.center{text-align:center}
 
 .fila-item{display:grid;grid-template-columns:60px 1fr 160px 90px;align-items:stretch;height:64px;border-radius:8px;overflow:hidden;margin-bottom:8px;animation:entrar .25s ease}
-.fila-item.destaque{height:88px;margin-bottom:12px}
+.fila-item.destaque{height:92px;margin-bottom:14px}
 
 .fi-num{display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;font-family:monospace}
 .fila-item:not(.destaque) .fi-num{background:#111;color:#2a2a2a}
-.fila-item.destaque .fi-num{background:var(--green);color:#fff;font-size:30px}
+.fila-item.destaque .fi-num{background:var(--green);color:#fff;font-size:32px}
 
 .fi-info{display:flex;flex-direction:column;justify-content:center;padding:0 18px;background:#0e0e0e;border-left:1px solid #161616}
 .fila-item.destaque .fi-info{background:#0d1a14;border-left:2px solid var(--green)}
-.fi-med{font-size:15px;font-weight:600;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2}
+.fi-med{font-size:14px;font-weight:600;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fila-item.destaque .fi-med{font-size:22px;color:#fff}
-.fi-atend{font-size:11px;color:#333;margin-top:4px;font-family:monospace;letter-spacing:.04em}
+.fi-atend{font-size:11px;color:#333;margin-top:4px;font-family:monospace}
 .fila-item.destaque .fi-atend{color:var(--green-mid);font-size:12px}
 
 .fi-status{display:flex;align-items:center;justify-content:center;background:#0e0e0e;border-left:1px solid #161616}
 .fila-item.destaque .fi-status{background:#0d1a14;border-left:2px solid var(--green)}
-.fi-pill{font-size:11px;padding:5px 12px;border-radius:999px;font-weight:600;letter-spacing:.03em}
+.fi-pill{font-size:11px;padding:5px 12px;border-radius:999px;font-weight:600}
 .fila-item:not(.destaque) .fi-pill{background:#1a1a1a;color:#333}
 .fila-item.destaque .fi-pill{background:var(--green);color:#fff;font-size:12px;animation:pulse 2s ease-in-out infinite}
 
 .fi-timer{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#080808;border-left:1px solid #141414}
-.fi-timer-val{font-family:monospace;font-size:15px;color:#2a2a2a;letter-spacing:.06em}
+.fi-timer-val{font-family:monospace;font-size:14px;color:#2a2a2a;letter-spacing:.06em}
 .fila-item.destaque .fi-timer-val{color:var(--green-mid);font-size:18px}
 .fi-timer-lbl{font-size:9px;color:#1e1e1e;text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
 
+/* botão remover — só no destaque */
+.fi-remover{display:none;position:absolute;top:6px;right:6px;background:rgba(255,255,255,.08);border:none;color:#aaa;font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer}
+.fi-remover:hover{background:rgba(255,255,255,.15)}
+.fila-item.destaque{position:relative}
+.fila-item.destaque .fi-remover{display:block}
+
 /* VAZIO */
-.fila-vazia{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#1e1e1e}
+.fila-vazia{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#1e1e1e;min-height:300px}
 .fila-vazia-ico{font-size:48px;opacity:.3}
 .fila-vazia-txt{font-size:14px;letter-spacing:.04em}
 
 /* SIDEBAR */
 .sidebar{border-left:1px solid #141414;display:flex;flex-direction:column;overflow:hidden}
-
 .sb-section{padding:20px 20px 16px;border-bottom:1px solid #141414}
 .sb-lbl{font-size:10px;color:#2a2a2a;text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:12px}
 
-/* QR */
 .qr-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
-.qr-box{background:#fff;border-radius:10px;padding:10px;width:140px;height:140px;display:flex;align-items:center;justify-content:center}
-.qr-url{font-size:10px;color:#2a2a2a;letter-spacing:.03em;text-align:center}
-.qr-instrucao{font-size:11px;color:#333;text-align:center;line-height:1.5}
+.qr-box{background:#fff;border-radius:10px;padding:10px;width:150px;height:150px;display:flex;align-items:center;justify-content:center}
+.qr-instrucao{font-size:11px;color:#333;text-align:center;line-height:1.6}
+.qr-url{font-size:10px;color:#2a2a2a;text-align:center}
 
-/* HISTÓRICO */
-.hist-wrap{flex:1;overflow-y:auto;padding:16px 20px}
+.hist-section{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:16px 20px 0}
+.hist-wrap{flex:1;overflow-y:auto;margin-top:8px}
 .hist-wrap::-webkit-scrollbar{width:3px}
 .hist-wrap::-webkit-scrollbar-thumb{background:#1e1e1e}
 .hist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #0e0e0e}
@@ -104,24 +96,23 @@ html,body{height:100%;background:#000;color:#fff;font-family:-apple-system,Blink
 .hist-med{font-size:12px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hist-atend{font-size:10px;color:#222;margin-top:1px;font-family:monospace}
 .hist-hora{font-size:10px;color:#222;font-family:monospace;flex-shrink:0}
-.hist-empty{font-size:12px;color:#1e1e1e;text-align:center;padding:20px 0}
+.hist-empty{font-size:12px;color:#1e1e1e;padding:20px 0}
 
 /* FOOTER */
 .ftr{background:#040404;border-top:1px solid #111;padding:8px 32px;display:flex;align-items:center;justify-content:space-between}
 .ftr-txt{font-size:10px;color:#1e1e1e;letter-spacing:.06em}
 .ftr-status{display:flex;align-items:center;gap:6px;font-size:10px;color:#2a2a2a}
-.ftr-dot{width:6px;height:6px;border-radius:50%;background:#1a1a1a;animation:pulse 2s infinite}
-.ftr-dot.live{background:var(--green)}
+.ftr-dot{width:6px;height:6px;border-radius:50%;background:#1a1a1a}
+.ftr-dot.live{background:var(--green);animation:pulse 2s infinite}
+.ftr-dot.erro{background:#E24B4A}
 
-@keyframes entrar{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes entrar{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 </style>
 </head>
 <body>
-
 <div class="layout">
 
-  <!-- HEADER -->
   <div class="hdr">
     <div class="hdr-logo">
       <div class="hdr-mark">i-OMT</div>
@@ -133,12 +124,12 @@ html,body{height:100%;background:#000;color:#fff;font-family:-apple-system,Blink
     </div>
     <div class="hdr-stats">
       <div class="hdr-stat">
-        <div class="hdr-stat-val" id="stat-fila">0</div>
+        <div class="hdr-stat-val" id="stat-fila">—</div>
         <div class="hdr-stat-lbl">Na fila</div>
       </div>
       <div class="hdr-divider"></div>
       <div class="hdr-stat">
-        <div class="hdr-stat-val" id="stat-hoje">0</div>
+        <div class="hdr-stat-val" id="stat-hoje">—</div>
         <div class="hdr-stat-lbl">Hoje</div>
       </div>
     </div>
@@ -148,11 +139,9 @@ html,body{height:100%;background:#000;color:#fff;font-family:-apple-system,Blink
     </div>
   </div>
 
-  <!-- CORPO -->
   <div class="body">
 
-    <!-- FILA -->
-    <div class="fila-wrap" id="fila-wrap">
+    <div class="fila-wrap">
       <div class="col-header">
         <div class="col-lbl center">#</div>
         <div class="col-lbl" style="padding-left:18px">Medicamento · Atendimento</div>
@@ -162,32 +151,30 @@ html,body{height:100%;background:#000;color:#fff;font-family:-apple-system,Blink
       <div id="fila-corpo"></div>
     </div>
 
-    <!-- SIDEBAR -->
     <div class="sidebar">
       <div class="sb-section">
         <div class="sb-lbl">Apontamento via QR</div>
         <div class="qr-wrap">
-          <div class="qr-box" id="qr-box">
-            <canvas id="qr-canvas" width="120" height="120"></canvas>
-          </div>
+          <div class="qr-box" id="qr-box"></div>
           <div class="qr-instrucao">Aponte a câmera para<br>registrar um medicamento</div>
-          <div class="qr-url" id="qr-url-txt">painel.i-omt.com/chamada.html</div>
+          <div class="qr-url">painel.i-omt.com/chamada.html</div>
         </div>
       </div>
-      <div class="sb-lbl" style="padding:16px 20px 0">Histórico do turno</div>
-      <div class="hist-wrap" id="hist-wrap">
-        <div class="hist-empty">Nenhum registro ainda</div>
+      <div class="hist-section">
+        <div class="sb-lbl">Histórico do turno</div>
+        <div class="hist-wrap" id="hist-wrap">
+          <div class="hist-empty">Nenhum registro ainda</div>
+        </div>
       </div>
     </div>
 
   </div>
 
-  <!-- FOOTER -->
   <div class="ftr">
     <div class="ftr-txt">Hospital Márcio Cunha · FSFX · Ipatinga/MG</div>
     <div class="ftr-status">
-      <div class="ftr-dot live" id="ftr-dot"></div>
-      <span id="ftr-status-txt">Ao vivo · atualizando</span>
+      <div class="ftr-dot" id="ftr-dot"></div>
+      <span id="ftr-txt">Conectando...</span>
     </div>
     <div class="ftr-txt" id="ftr-refresh">—</div>
   </div>
@@ -196,112 +183,60 @@ html,body{height:100%;background:#000;color:#fff;font-family:-apple-system,Blink
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
+var API = 'https://script.google.com/macros/s/AKfycbynRJx9tQ13rAtWMo8behDEbdQnOsU7mqKyOB77fcTZMZXsi8rX7PkZNt1q9J7h3fb3VA/exec';
 var URL_CHAMADA = 'https://painel.i-omt.com/chamada.html';
-var historico = [];
-var ultimaFila = [];
+var filaAtual = [];
+var erroCount = 0;
 
 /* ---- QR ---- */
 function gerarQR(){
   try{
     new QRCode(document.getElementById('qr-box'),{
-      text: URL_CHAMADA,
-      width: 120, height: 120,
+      text:URL_CHAMADA, width:130, height:130,
       colorDark:'#000', colorLight:'#fff',
-      correctLevel: QRCode.CorrectLevel.H
+      correctLevel:QRCode.CorrectLevel.H
     });
-    document.getElementById('qr-canvas').style.display='none';
-  }catch(e){
-    // fallback canvas simples
-    var c=document.getElementById('qr-canvas');
-    var ctx=c.getContext('2d');
-    ctx.fillStyle='#eee';ctx.fillRect(0,0,120,120);
-    ctx.fillStyle='#555';ctx.font='10px monospace';
-    ctx.fillText('QR indisponível',5,60);
-  }
-}
-
-/* ---- FILA ---- */
-function getFila(){
-  try{return JSON.parse(localStorage.getItem('iomt_fila')||'[]')}catch(e){return[]}
-}
-function setFila(f){localStorage.setItem('iomt_fila',JSON.stringify(f))}
-
-function getHistorico(){
-  var hoje=new Date().toDateString();
-  try{
-    var h=JSON.parse(localStorage.getItem('iomt_historico')||'[]');
-    return h.filter(function(i){return new Date(i.ts).toDateString()===hoje});
-  }catch(e){return[]}
-}
-function addHistorico(item){
-  try{
-    var h=JSON.parse(localStorage.getItem('iomt_historico')||'[]');
-    h.unshift(item);
-    if(h.length>100)h=h.slice(0,100);
-    localStorage.setItem('iomt_historico',JSON.stringify(h));
   }catch(e){}
 }
 
-function tempo(ts){
-  var s=Math.floor((Date.now()-ts)/1000);
-  var m=Math.floor(s/60);s=s%60;
+/* ---- TEMPO ---- */
+function tempo(tsStr){
+  var ts = new Date(tsStr).getTime();
+  var s  = Math.floor((Date.now() - ts) / 1000);
+  var m  = Math.floor(s / 60); s = s % 60;
   return (m<10?'0'+m:m)+':'+(s<10?'0'+s:s);
 }
-
-function horaStr(ts){
-  var d=new Date(ts);
-  var h=d.getHours(),m=d.getMinutes();
+function horaStr(tsStr){
+  var d = new Date(tsStr);
+  var h=d.getHours(), m=d.getMinutes();
   return (h<10?'0'+h:h)+':'+(m<10?'0'+m:m);
 }
 
-/* ---- RENDER FILA ---- */
-function renderFila(){
-  var fila=getFila();
-  var c=document.getElementById('fila-corpo');
+/* ---- REMOVER ---- */
+function removerItem(id){
+  if(!confirm('Marcar como entregue?')) return;
+  fetch(API + '?acao=fila_remover&id=' + encodeURIComponent(id), {cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(){ carregarFila(); })
+    .catch(function(){});
+}
 
-  // detectar itens removidos (concluídos) → mover para histórico
-  ultimaFila.forEach(function(old){
-    var ainda=fila.find(function(i){return i.id===old.id});
-    if(!ainda){
-      old.concluido=Date.now();
-      addHistorico(old);
-    }
-  });
-  ultimaFila=fila.slice();
+/* ---- RENDER ---- */
+function renderFila(fila, historico){
+  var c = document.getElementById('fila-corpo');
 
-  document.getElementById('stat-fila').textContent=fila.length;
+  document.getElementById('stat-fila').textContent = fila.length;
+  document.getElementById('stat-hoje').textContent = historico.length + fila.length;
 
-  var hist=getHistorico();
-  document.getElementById('stat-hoje').textContent=hist.length;
-
-  if(fila.length===0){
-    c.innerHTML='<div class="fila-vazia"><div class="fila-vazia-ico">◎</div><div class="fila-vazia-txt">Fila vazia</div></div>';
-    renderHistorico(hist);
-    return;
-  }
-
-  // manter elementos existentes para evitar flicker
-  var existingIds=Array.from(c.querySelectorAll('.fila-item')).map(function(el){return el.dataset.id});
-  var filaIds=fila.map(function(i){return String(i.id)});
-
-  // remover saídos
-  existingIds.forEach(function(id){
-    if(!filaIds.includes(id)){
-      var el=c.querySelector('[data-id="'+id+'"]');
-      if(el)el.remove();
-    }
-  });
-
-  fila.forEach(function(item,idx){
-    var id=String(item.id);
-    var dest=idx===0;
-    var existing=c.querySelector('[data-id="'+id+'"]');
-
-    if(!existing){
-      var el=document.createElement('div');
-      el.className='fila-item'+(dest?' destaque':'');
-      el.dataset.id=id;
-      el.innerHTML=
+  if(fila.length === 0){
+    c.innerHTML = '<div class="fila-vazia"><div class="fila-vazia-ico">◎</div><div class="fila-vazia-txt">Fila vazia</div></div>';
+  } else {
+    c.innerHTML = '';
+    fila.forEach(function(item, idx){
+      var dest = idx === 0;
+      var el = document.createElement('div');
+      el.className = 'fila-item' + (dest?' destaque':'');
+      el.innerHTML =
         '<div class="fi-num">'+(idx+1)+'</div>'+
         '<div class="fi-info">'+
           '<div class="fi-med">'+item.med+'</div>'+
@@ -311,79 +246,91 @@ function renderFila(){
           '<span class="fi-pill">'+(dest?'▶ Próximo':'Aguardando')+'</span>'+
         '</div>'+
         '<div class="fi-timer">'+
-          '<div class="fi-timer-val" data-ts="'+item.ts+'">00:00</div>'+
+          '<div class="fi-timer-val" data-ts="'+item.ts+'">'+tempo(item.ts)+'</div>'+
           '<div class="fi-timer-lbl">na fila</div>'+
-        '</div>';
-      // inserir na posição correta
-      var afterEl=c.querySelectorAll('.fila-item')[idx];
-      if(afterEl)c.insertBefore(el,afterEl);
-      else c.appendChild(el);
-    } else {
-      existing.className='fila-item'+(dest?' destaque':'');
-      existing.querySelector('.fi-num').textContent=idx+1;
-      existing.querySelector('.fi-pill').textContent=dest?'▶ Próximo':'Aguardando';
-    }
-  });
-
-  renderHistorico(hist);
-}
-
-function renderHistorico(hist){
-  var w=document.getElementById('hist-wrap');
-  if(!hist||hist.length===0){
-    w.innerHTML='<div class="hist-empty">Nenhum registro ainda</div>';
-    return;
+        '</div>'+
+        (dest?'<button class="fi-remover" onclick="removerItem(\''+item.id+'\')">✓ Entregar</button>':'');
+      c.appendChild(el);
+    });
   }
-  w.innerHTML='';
-  hist.slice(0,30).forEach(function(item,idx){
-    var el=document.createElement('div');
-    el.className='hist-item';
-    el.innerHTML=
-      '<div class="hist-dot'+(idx<3?' recente':'')+'"></div>'+
-      '<div class="hist-info">'+
-        '<div class="hist-med">'+item.med+'</div>'+
-        '<div class="hist-atend">Atend. '+item.atend+'</div>'+
-      '</div>'+
-      '<div class="hist-hora">'+horaStr(item.ts)+'</div>';
-    w.appendChild(el);
-  });
+
+  /* historico */
+  var w = document.getElementById('hist-wrap');
+  if(!historico || historico.length === 0){
+    w.innerHTML = '<div class="hist-empty">Nenhum registro ainda</div>';
+  } else {
+    w.innerHTML = '';
+    historico.slice(0,30).forEach(function(item, idx){
+      var el = document.createElement('div');
+      el.className = 'hist-item';
+      el.innerHTML =
+        '<div class="hist-dot'+(idx<3?' recente':'')+'"></div>'+
+        '<div class="hist-info">'+
+          '<div class="hist-med">'+item.med+'</div>'+
+          '<div class="hist-atend">Atend. '+item.atend+'</div>'+
+        '</div>'+
+        '<div class="hist-hora">'+horaStr(item.ts)+'</div>';
+      w.appendChild(el);
+    });
+  }
+
+  filaAtual = fila;
 }
 
-/* ---- TIMERS ---- */
+/* ---- CARREGAR ---- */
+function carregarFila(){
+  fetch(API + '?acao=fila_listar', {cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok){
+        renderFila(d.fila, d.historico);
+        erroCount = 0;
+        setStatus(true);
+        document.getElementById('ftr-refresh').textContent = 'Atualizado ' + horaStr(new Date().toISOString());
+      } else {
+        erroCount++;
+        setStatus(false, d.erro);
+      }
+    })
+    .catch(function(e){
+      erroCount++;
+      setStatus(false, 'Sem conexão');
+    });
+}
+
+function setStatus(ok, msg){
+  var dot = document.getElementById('ftr-dot');
+  var txt = document.getElementById('ftr-txt');
+  dot.className = 'ftr-dot ' + (ok ? 'live' : 'erro');
+  txt.textContent = ok ? 'Ao vivo · atualizando' : (msg || 'Erro de conexão');
+}
+
+/* ---- TIMERS locais ---- */
 function updateTimers(){
   document.querySelectorAll('[data-ts]').forEach(function(el){
-    el.textContent=tempo(parseInt(el.dataset.ts));
+    el.textContent = tempo(el.dataset.ts);
   });
 }
 
 /* ---- CLOCK ---- */
 function clock(){
-  var d=new Date();
-  var h=d.getHours(),m=d.getMinutes(),s=d.getSeconds();
-  document.getElementById('hdr-clock').textContent=
+  var d = new Date();
+  var h=d.getHours(), m=d.getMinutes(), s=d.getSeconds();
+  document.getElementById('hdr-clock').textContent =
     (h<10?'0'+h:h)+':'+(m<10?'0'+m:m)+':'+(s<10?'0'+s:s);
   var dias=['dom','seg','ter','qua','qui','sex','sáb'];
   var meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
-  document.getElementById('hdr-date').textContent=
+  document.getElementById('hdr-date').textContent =
     dias[d.getDay()]+', '+d.getDate()+' '+meses[d.getMonth()]+'. '+d.getFullYear();
-  document.getElementById('ftr-refresh').textContent=
-    'Última atualização '+horaStr(Date.now());
 }
-
-/* ---- STORAGE EVENT (cross-tab) ---- */
-window.addEventListener('storage',function(e){
-  if(e.key==='iomt_fila')renderFila();
-});
 
 /* ---- INIT ---- */
 gerarQR();
-renderFila();
+carregarFila();
 clock();
-setInterval(function(){
-  renderFila();
-  updateTimers();
-  clock();
-},2000);
+setInterval(updateTimers, 1000);
+setInterval(clock, 1000);
+setInterval(carregarFila, 5000);
 </script>
 </body>
 </html>
