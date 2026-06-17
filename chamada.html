@@ -69,6 +69,12 @@ html,body{height:100%;background:#0a0a0a;color:#fff;font-family:-apple-system,Bl
 .sucesso-pos-lbl{font-size:12px;color:#555;margin-top:-8px}
 .sucesso-med{font-size:14px;color:#666;margin-top:4px;line-height:1.5}
 .btn-novo{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 32px;font-size:14px;font-weight:600;cursor:pointer;color:#aaa;margin-top:8px}
+.alert-entregar{background:#1a0f00;border:1px solid #8a4f00;border-radius:10px;padding:14px;display:none;align-items:center;gap:10px}
+.alert-entregar.vis{display:flex}
+.alert-entregar-ico{width:32px;height:32px;background:#f97316;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.alert-entregar-txt{font-size:13px;color:#fdba74;flex:1;line-height:1.4}
+.btn-entregar{background:#f97316;color:#fff;border:none;border-radius:12px;padding:18px;font-size:16px;font-weight:700;cursor:pointer;width:100%}
+.btn-entregar:active{opacity:.85}
 
 .erro-box{background:#1a0a0a;border:1px solid #5a1a1a;border-radius:10px;padding:12px 14px;font-size:13px;color:#f09595;display:none}
 .erro-box.vis{display:block}
@@ -111,6 +117,11 @@ html,body{height:100%;background:#0a0a0a;color:#fff;font-family:-apple-system,Bl
     </div>
     <button class="atend-trocar" onclick="trocarAtend()">Trocar</button>
   </div>
+  <div class="alert-entregar" id="alert-entregar">
+    <div class="alert-entregar-ico">!</div>
+    <div class="alert-entregar-txt" id="alert-entregar-txt">Este atendimento já está na fila.</div>
+  </div>
+  <button class="btn-entregar" id="btn-entregar" style="display:none" onclick="entregarDaFila()">✓ Marcar como entregue</button>
   <button class="btn-avancar" id="btn-t1" disabled onclick="irParaTela(2)">
     Selecionar medicamento →
   </button>
@@ -153,7 +164,7 @@ html,body{height:100%;background:#0a0a0a;color:#fff;font-family:-apple-system,Bl
 <div class="tela" id="tela-ok">
   <div class="sucesso">
     <div class="sucesso-ico">✓</div>
-    <div class="sucesso-titulo">Adicionado à fila!</div>
+    <div class="sucesso-titulo" id="sucesso-titulo">Adicionado à fila!</div>
     <div class="sucesso-pos" id="suc-pos">—</div>
     <div class="sucesso-pos-lbl">posição na fila</div>
     <div class="sucesso-med" id="suc-med">—</div>
@@ -186,6 +197,8 @@ function selectMed(m){
   document.getElementById('btn-t2').disabled = false;
 }
 
+var itemNaFila = null;
+
 function confirmarAtend(){
   var v = document.getElementById('inp-atend').value.trim();
   if(!v) return;
@@ -194,12 +207,65 @@ function confirmarAtend(){
   document.getElementById('atend-ok').classList.add('vis');
   document.getElementById('btn-t1').disabled = false;
   document.getElementById('inp-atend').blur();
+  // verificar se já está na fila
+  verificarNaFila(v);
+}
+
+function verificarNaFila(atendNum){
+  itemNaFila = null;
+  document.getElementById('alert-entregar').classList.remove('vis');
+  document.getElementById('btn-entregar').style.display = 'none';
+  document.getElementById('btn-t1').style.display = '';
+  fetch(API + '?acao=fila_listar', {cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d.ok) return;
+      var encontrado = d.fila.find(function(i){ return String(i.atend) === String(atendNum); });
+      if(encontrado){
+        itemNaFila = encontrado;
+        document.getElementById('alert-entregar-txt').textContent =
+          encontrado.med + ' está aguardando na posição ' + (d.fila.indexOf(encontrado)+1) + 'ª da fila.';
+        document.getElementById('alert-entregar').classList.add('vis');
+        document.getElementById('btn-entregar').style.display = 'block';
+        document.getElementById('btn-t1').style.display = 'none';
+      }
+    })
+    .catch(function(){});
+}
+
+function entregarDaFila(){
+  if(!itemNaFila) return;
+  var btn = document.getElementById('btn-entregar');
+  btn.disabled = true;
+  btn.textContent = 'Registrando...';
+  fetch(API + '?acao=fila_remover&id=' + encodeURIComponent(itemNaFila.id), {cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok){
+        document.getElementById('suc-pos').textContent = '✓';
+        document.getElementById('suc-med').textContent = itemNaFila.med + '\nAtend. ' + atend + '\nMarcado como entregue';
+        document.getElementById('sucesso-titulo').textContent = 'Entregue!';
+        document.querySelectorAll('.tela').forEach(function(t){ t.classList.remove('ativa'); });
+        document.getElementById('tela-ok').classList.add('ativa');
+        document.getElementById('steps-bar').style.display = 'none';
+      } else {
+        btn.disabled = false;
+        btn.textContent = '✓ Tentar novamente';
+      }
+    })
+    .catch(function(){
+      btn.disabled = false;
+      btn.textContent = '✓ Tentar novamente';
+    });
 }
 
 function trocarAtend(){
-  atend = '';
+  atend = ''; itemNaFila = null;
   document.getElementById('atend-ok').classList.remove('vis');
   document.getElementById('btn-t1').disabled = true;
+  document.getElementById('btn-t1').style.display = '';
+  document.getElementById('alert-entregar').classList.remove('vis');
+  document.getElementById('btn-entregar').style.display = 'none';
   document.getElementById('inp-atend').value = '';
   document.getElementById('inp-atend').focus();
 }
@@ -262,11 +328,15 @@ function enviarFila(){
 }
 
 function novoApontamento(){
-  atend = ''; medSel = '';
+  atend = ''; medSel = ''; itemNaFila = null;
   document.getElementById('inp-atend').value = '';
   document.getElementById('atend-ok').classList.remove('vis');
   document.getElementById('btn-t1').disabled = true;
+  document.getElementById('btn-t1').style.display = '';
   document.getElementById('btn-t2').disabled = true;
+  document.getElementById('alert-entregar').classList.remove('vis');
+  document.getElementById('btn-entregar').style.display = 'none';
+  document.getElementById('sucesso-titulo').textContent = 'Adicionado à fila!';
   document.querySelectorAll('.med-btn').forEach(function(b){ b.classList.remove('sel'); });
   document.getElementById('steps-bar').style.display = '';
   irParaTela(1);
