@@ -63,10 +63,10 @@ html,body{height:100%;background:#000;color:#fff;font-family:-apple-system,Blink
 .fila-item.destaque .fi-timer-val{color:var(--green-mid);font-size:18px}
 .fi-timer-lbl{font-size:9px;color:#1e1e1e;text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
 
-/* botão remover — só no destaque */
-.fi-remover{display:none;position:absolute;top:6px;right:6px;background:rgba(255,255,255,.08);border:none;color:#aaa;font-size:11px;padding:4px 10px;border-radius:6px;cursor:pointer}
-.fi-remover:hover{background:rgba(255,255,255,.15)}
-.fila-item.destaque{position:relative}
+.fila-item{position:relative}
+.fi-remover{display:none;position:absolute;top:50%;right:12px;transform:translateY(-50%);background:var(--green);border:none;color:#fff;font-size:11px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer;letter-spacing:.02em}
+.fi-remover:hover{opacity:.85}
+.fila-item:hover .fi-remover{display:block}
 .fila-item.destaque .fi-remover{display:block}
 
 /* VAZIO */
@@ -214,7 +214,7 @@ function horaStr(tsStr){
 
 /* ---- REMOVER ---- */
 function removerItem(id){
-  if(!confirm('Marcar como entregue?')) return;
+  
   fetch(API + '?acao=fila_remover&id=' + encodeURIComponent(id), {cache:'no-store'})
     .then(function(r){ return r.json(); })
     .then(function(){ carregarFila(); })
