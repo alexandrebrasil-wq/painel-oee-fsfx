@@ -650,22 +650,19 @@ function processarXLSFile(f){
       if(!novos.length){ res.textContent='⚠ Nenhum dado reconhecido.'; res.className='upload-result err'; return; }
 
       setStatus('saving','importando');
-      // Fase 1: envia agregados sem tipos (lotes de 10 — payload mínimo)
+      // Envia lotes de 2 dias COM tipos incluídos (~1200 chars/lote — seguro para Apps Script)
       var inseridos=0, atualizados=0;
-      var agregados=novos.map(function(n){ return {data:n.data,maquina:n.maquina,programados:n.programados,atendidos:n.atendidos}; });
-      var tamLote=10;
-      for(var i=0;i<agregados.length;i+=tamLote){
-        var lote=agregados.slice(i,i+tamLote);
+      var tamLote=2;
+      for(var i=0;i<novos.length;i+=tamLote){
+        var lote=novos.slice(i,i+tamLote).map(function(n){
+          // Top 12 tipos por volume para manter payload curto
+          var tiposTop={};
+          Object.entries(n.tipos||{}).sort(function(a,b){return b[1]-a[1];}).slice(0,12).forEach(function(e){ tiposTop[e[0]]=e[1]; });
+          return {data:n.data,maquina:n.maquina,programados:n.programados,atendidos:n.atendidos,tipos:tiposTop};
+        });
         var r2=await api({acao:'importar_atendimentos',dados:JSON.stringify(lote)});
         inseridos+=(r2.inseridos||0);
         atualizados+=(r2.atualizados||0);
-      }
-      // Fase 2: envia tipos 1 por vez
-      for(var j=0;j<novos.length;j++){
-        var n=novos[j];
-        if(n.tipos&&Object.keys(n.tipos).length>0){
-          await api({acao:'gravar_tipos',data:n.data,maquina:n.maquina,tipos:JSON.stringify(n.tipos)});
-        }
       }
       var r={inseridos:inseridos,atualizados:atualizados};
 
