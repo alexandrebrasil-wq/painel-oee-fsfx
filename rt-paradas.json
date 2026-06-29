@@ -1,15 +1,1 @@
-[
-  {
-    "id": "mqzcfdaiq4x",
-    "data": "2026-06-25",
-    "maquina": "CXS",
-    "tipo": "HWFA (HardWare Fail/Alarm)",
-    "categoria": "Equipamento",
-    "horaInicio": "10:10",
-    "horaFim": "10:52",
-    "duracao": 42,
-    "obs": "",
-    "criadoEm": "2026-06-29T14:58:59.466Z",
-    "atualizadoEm": "2026-06-29T14:58:59.468Z"
-  }
-]
+[]
