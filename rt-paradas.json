@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "id": "mqzdtzi1fk0",
+    "data": "2026-06-24",
+    "maquina": "CXS",
+    "tipo": "Partida da máquina",
+    "categoria": "Equipamento",
+    "horaInicio": "10:12",
+    "horaFim": "12:12",
+    "duracao": 120,
+    "obs": "",
+    "criadoEm": "2026-06-29T15:38:21.050Z",
+    "atualizadoEm": "2026-06-29T15:38:21.050Z"
+  }
+]
