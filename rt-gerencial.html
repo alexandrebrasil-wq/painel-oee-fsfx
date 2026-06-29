@@ -235,7 +235,7 @@ select option{background:var(--s2)}
     <div class="panel-body"><div class="chart-wrap-lg"><canvas id="chart-tipos"></canvas></div></div>
   </div>
 
-  <div class="row13">
+  <div class="row13" style="grid-template-columns:1fr">
     <div class="panel">
       <div class="panel-hdr"><span class="panel-title">📥 Importar Programação</span></div>
       <div class="panel-body">
@@ -249,10 +249,7 @@ select option{background:var(--s2)}
         <div style="margin-top:10px;font-size:11px;color:var(--tx3)">Última importação: <span id="ultima-importacao" style="font-family:var(--fm)">—</span></div>
       </div>
     </div>
-    <div class="panel">
-      <div class="panel-hdr"><span class="panel-title">Paradas registradas</span><span class="panel-meta" id="meta-paradas-tbl"></span></div>
-      <div class="panel-body" style="padding:0"><div id="paradas-tbl-wrap"><div class="empty">sem paradas no período</div></div></div>
-    </div>
+
   </div>
 </main>
 
@@ -339,6 +336,43 @@ var APPS_URL = 'https://script.google.com/macros/s/AKfycbxpSDbJnHczI10429ySca9Zf
 var T_PROG   = 480; // min/dia/máquina (conforme planilha OEE)
 var META_OEE = 0.80;
 
+var TEMPO_PADRAO = {
+  'Tratamento - IMRT - CP':18,'Tratamento - IMRT - Prostata Hipofracionada':18,
+  'Tratamento - IMRT - Torax':18,'Tratamento - IMRT - Pelve':18,
+  'Tratamento - IMRT - SNC':18,'Tratamento - RTEF - SNC':33,
+  '1º dia - IMRT - Tratamento de CP':30,'1o dia - IMRT - Tratamento de CP':30,
+  '1º dia - IMRT - Tratamento de Torax':30,'1o dia - IMRT - Tratamento de Torax':30,
+  '1º dia - IMRT - Prostata Hipofracionada':30,'1o dia - IMRT - Prostata Hipofracionada':30,
+  '1º dia - IMRT - Tratamento de Pelve':30,'1o dia - IMRT - Tratamento de Pelve':30,
+  'ALTA - IMRT - Prostata Hipofracionada':21,'ALTA - IMRT - Tratamento de Pelve':18,'ALTA - IMRT - Tratamento Outros':18,
+  'Tratamento - 3D - Prostata Hipofracionada':12,'Tratamento - 3D - Pelve':12,
+  'Tratamento - 3D - Mama':18,'Tratamento - 3D - Mama Ultra-Hipo':18,
+  'Tratamento - 3D - Torax':12,'Tratamento - 3D - SNC':12,'Tratamento - 3D - Outros':12,
+  'Tratamento - 3D - Abdomen':18,'Tratamento - 3D - CP':12,'Tratamento - 2D - Outros':12,
+  'Tratamento com Eletrons':24,
+  'ALTA - 3D - Tratamento de Mama Ultra-Hipo':18,'ALTA - 3D - Tratamento de Prostata Hipofracionada':12,
+  'ALTA - 3D - Tratamento Outros':12,'ALTA - Tratamento com Eletrons':24,
+  '1º dia - 3D - Tratamento de Pelve':30,'1o dia - 3D - Tratamento de Pelve':30,
+  '1º dia - 3D - Tratamento de Mama':30,'1o dia - 3D - Tratamento de Mama':30,
+  '1º dia - 3D - Tratamento de Mama Ultra-Hipo':30,'1o dia - 3D - Tratamento de Mama Ultra-Hipo':30,
+  '1º dia - 3D - Tratamento Outros':30,'1o dia - 3D - Tratamento Outros':30,
+  '1º dia - 3D - Tratamento de Coluna':30,'1o dia - 3D - Tratamento de Coluna':30,
+  '1º dia - 3D - Tratamento de Abdomen':30,'1o dia - 3D - Tratamento de Abdomen':30,
+  '1º dia - 3D - Tratamento de CP':30,'1o dia - 3D - Tratamento de CP':30,
+  '1º dia - 3D - Tratamento de Torax':30,'1o dia - 3D - Tratamento de Torax':30,
+  'Consulta':0,'QA - Controle de Qualidade Diario':0
+};
+var TEMPO_PADRAO_DEFAULT=15;
+function getTempoPadrao(t){ return TEMPO_PADRAO.hasOwnProperty(t)?TEMPO_PADRAO[t]:TEMPO_PADRAO_DEFAULT; }
+function tAtendTotal(am,ader){
+  var base=am.reduce(function(s,a){
+    var tp2=a.tipos||{};
+    return s+Object.keys(tp2).reduce(function(st,t){ return st+getTempoPadrao(t)*(+tp2[t]||0); },0);
+  },0);
+  return base*(ader!==undefined?ader:1);
+}
+
+
 var paradas=[]; var atendimentos=[]; var filtrMaq='todas'; var editId=null; var charts={};
 
 // ── STATUS ───────────────────────────────────────────────────────
@@ -410,23 +444,27 @@ function analisar(){
   var pacAtend=aFilt.reduce((s,a)=>s+(+a.atendidos||0),0);
   var aderencia=pacProg>0?pacAtend/pacProg:0;
 
-  // OEE Geral = média das disponibilidades por máquina (cada máquina tem seu próprio T_PROG diário)
-  var oeeTotal=0, oeeCount=0;
+  // OEE = Σ(tempo previsto atendimentos) / (nd × T_PROG)
+  // Disponibilidade = (T_PROG - T_paradas) / T_PROG
+  var tParTotal=pFilt.reduce((s,p)=>s+(+p.duracao||0),0);
+  var dispSum=0,oeeGSum=0,maqN=0;
   maquinas.forEach(function(maq){
     var pm=paradas.filter(p=>{ var d=new Date(p.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&p.maquina===maq;});
     var am=atendimentos.filter(a=>{ var d=new Date(a.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&a.maquina===maq;});
     var nd=Array.from(new Set(am.map(a=>a.data))).filter(function(d){ var dow=new Date(d+'T12:00:00').getDay(); return dow>=1&&dow<=5; }).length||1;
-    var tp=nd*T_PROG, tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
+    var tp=nd*T_PROG,tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
     var d2=tp>0?Math.max(0,(tp-tpar)/tp):1;
-    oeeTotal+=d2; oeeCount++;
+    var pp=am.reduce((s,a)=>s+(+a.programados||0),0),pa=am.reduce((s,a)=>s+(+a.atendidos||0),0);
+    var ader=pp>0?Math.min(1,pa/pp):0;
+    var tPrev=tAtendTotal(am,ader);
+    dispSum+=d2; oeeGSum+=(tp>0?Math.min(1,tPrev/tp):0); maqN++;
   });
-  var oee=oeeCount>0?oeeTotal/oeeCount:1;
-  var disp=oee;
-  var tParTotal=pFilt.reduce((s,p)=>s+(+p.duracao||0),0);
+  var disp=maqN>0?dispSum/maqN:1;
+  var oee=maqN>0?oeeGSum/maqN:1;
 
   setKPI('k-oee',pct(oee),oeeColor(oee));
   setKPI('k-disp',pct(disp),oeeColor(disp,0.9));
-  
+
   document.getElementById('k-paradas').textContent=pFilt.length;
   document.getElementById('k-paradas-sub').textContent=fmtMin(tParTotal)+' de parada';
 
@@ -440,18 +478,20 @@ function analisar(){
     var pm=paradas.filter(p=>{ var d=new Date(p.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&p.maquina===maq;});
     var am=atendimentos.filter(a=>{ var d=new Date(a.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&a.maquina===maq;});
     var nd=Array.from(new Set(am.map(a=>a.data))).filter(function(d){ var dow=new Date(d+'T12:00:00').getDay(); return dow>=1&&dow<=5; }).length||1;
-    var tp=nd*T_PROG, tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
-    var pp=am.reduce((s,a)=>s+(+a.programados||0),0), pa=am.reduce((s,a)=>s+(+a.atendidos||0),0);
-    var d2=tp>0?Math.max(0,(tp-tpar)/tp):1, pf=pp>0?Math.min(1,pa/pp):0, ov=d2*pf;
+    var tp=nd*T_PROG,tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
+    var pp=am.reduce((s,a)=>s+(+a.programados||0),0),pa=am.reduce((s,a)=>s+(+a.atendidos||0),0);
+    var d2=tp>0?Math.max(0,(tp-tpar)/tp):1;
+    var ader=pp>0?Math.min(1,pa/pp):0;
+    var tPrev=tAtendTotal(am,ader);
+    var ov=tp>0?Math.min(1,tPrev/tp):0;
     var mk=maq.toLowerCase();
     var cor=ov>=META_OEE?'var(--gt)':ov>=META_OEE*0.85?'var(--at)':'var(--rt)';
     setValBar('oee-'+mk,pct(ov),ov*100,cor);
     setValBar('disp-'+mk,pct(d2),d2*100,'var(--bt)');
-    setValBar('perf-'+mk,pct(pf),pf*100,'var(--at)');
+    setValBar('perf-'+mk,pct(ader),ader*100,'var(--at)');
     setValBar('par-'+mk,pm.length+' ('+fmtMin(tpar)+')',Math.min(100,tpar/T_PROG*100),'var(--rt)');
     document.getElementById('oee-'+mk).className='oee-val '+(ov>=META_OEE?'green':ov>=META_OEE*0.85?'amber':'red');
   });
-
   renderPareto(pFilt);
   renderEvolucao(ini,fim);
   renderTipos(aFilt);
@@ -483,19 +523,18 @@ function renderEvolucao(ini,fim){
   if(dias.length>90) dias=dias.slice(-90);
   var maquinas=filtrMaq==='todas'?['CXS','CX']:[filtrMaq];
   var oeeData=dias.map(function(dia){
-    var temDados=false;
-    var dispTotal=0, dispCount=0;
+    var oeeDS=0,oeeDN=0;
     maquinas.forEach(function(maq){
       var am=atendimentos.filter(a=>a.data===dia&&a.maquina===maq);
       var pm=paradas.filter(p=>p.data===dia&&p.maquina===maq);
       if(!am.length&&!pm.length) return;
-      temDados=true;
-      var tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
-      var d2=T_PROG>0?Math.max(0,(T_PROG-tpar)/T_PROG):1;
-      dispTotal+=d2; dispCount++;
+      var pp=am.reduce((s,a)=>s+(+a.programados||0),0),pa=am.reduce((s,a)=>s+(+a.atendidos||0),0);
+      var ader=pp>0?Math.min(1,pa/pp):0;
+      var tPrev=tAtendTotal(am,ader);
+      oeeDS+=T_PROG>0?Math.min(1,tPrev/T_PROG):0; oeeDN++;
     });
-    if(!temDados) return null;
-    return Math.round((dispCount>0?dispTotal/dispCount:1)*100);
+    if(!oeeDN) return null;
+    return Math.round((oeeDS/oeeDN)*100);
   });
   document.getElementById('meta-evolucao').textContent=dias.length+' dias';
   var canvas=document.getElementById('chart-oee');
@@ -649,55 +688,4 @@ function processarXLSFile(f){
           var sn=parseFloat(serial);
           if(isNaN(sn)||sn<40000) continue;
           if(!String(row[1]||'').trim()&&atividade.startsWith('QA')) continue;
-          var data=excelSerialToISO(sn);
-          var chave=data+'|'+maq;
-          if(!resumo[chave]) resumo[chave]={data,maquina:maq,programados:0,atendidos:0,tipos:{}};
-          resumo[chave].programados++;
-          if(STATUS_ATEND.has(status)) resumo[chave].atendidos++;
-          if(atividade) resumo[chave].tipos[atividade]=(resumo[chave].tipos[atividade]||0)+1;
-        }
-      });
-
-      var novos=Object.values(resumo);
-      if(!novos.length){ res.textContent='⚠ Nenhum dado reconhecido.'; res.className='upload-result err'; return; }
-
-      setStatus('saving','importando');
-      // Envia lotes de 2 dias COM tipos incluídos (~1200 chars/lote — seguro para Apps Script)
-      var inseridos=0, atualizados=0;
-      var tamLote=2;
-      for(var i=0;i<novos.length;i+=tamLote){
-        var lote=novos.slice(i,i+tamLote).map(function(n){
-          // Top 12 tipos por volume para manter payload curto
-          var tiposTop={};
-          Object.entries(n.tipos||{}).sort(function(a,b){return b[1]-a[1];}).slice(0,12).forEach(function(e){ tiposTop[e[0]]=e[1]; });
-          return {data:n.data,maquina:n.maquina,programados:n.programados,atendidos:n.atendidos,tipos:tiposTop};
-        });
-        var r2=await api({acao:'importar_atendimentos',dados:JSON.stringify(lote)});
-        inseridos+=(r2.inseridos||0);
-        atualizados+=(r2.atualizados||0);
-      }
-      var r={inseridos:inseridos,atualizados:atualizados};
-
-      var ts=new Date().toLocaleString('pt-BR');
-      localStorage.setItem('rt_ultima_importacao',ts);
-      document.getElementById('ultima-importacao').textContent=ts;
-      var totalProg=novos.reduce((s,x)=>s+x.programados,0);
-      var totalAtend=novos.reduce((s,x)=>s+x.atendidos,0);
-      res.textContent='✓ '+novos.length+' dias · '+totalProg+' prog · '+totalAtend+' atend · '+r.inseridos+' novos '+r.atualizados+' atualizados';
-      res.className='upload-result ok';
-      setStatus('ok','importado');
-      // Recarrega atendimentos do servidor
-      var rA=await api({acao:'listar_atendimentos'});
-      atendimentos=rA.rows||[];
-      analisar();
-    } catch(ex){ res.textContent='✗ Erro: '+ex.message; res.className='upload-result err'; setStatus('err','erro'); console.error(ex); }
-  };
-  reader.readAsBinaryString(f);
-}
-
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-carregar();
-</script>
-</body>
-</html>
+          var data=excelSerialToISO(sn)
