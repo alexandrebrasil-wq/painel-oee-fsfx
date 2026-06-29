@@ -46,7 +46,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 .sep{width:1px;height:20px;background:var(--b2);margin:0 2px}
 .ml-auto{margin-left:auto}
 /* KPI */
-.kpi-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--b1);border-bottom:1px solid var(--b1)}
+.kpi-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--b1);border-bottom:1px solid var(--b1)}
 .kpi{background:var(--s1);padding:12px 18px}
 .kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px}
 .kpi-val{font-size:22px;font-weight:700;line-height:1;font-family:var(--fm)}
@@ -179,9 +179,8 @@ select option{background:var(--s2)}
 </div>
 
 <div class="kpi-bar">
-  <div class="kpi"><div class="kpi-label">OEE Geral</div><div class="kpi-val" id="k-oee">—</div><div class="kpi-sub">meta ≥ 80%</div></div>
+  <div class="kpi"><div class="kpi-label">OEE Geral</div><div class="kpi-val" id="k-oee">—</div><div class="kpi-sub">Disponib. × Qual. (meta ≥ 80%)</div></div>
   <div class="kpi"><div class="kpi-label">Disponibilidade</div><div class="kpi-val" id="k-disp">—</div><div class="kpi-sub">meta ≥ 90%</div></div>
-  <div class="kpi"><div class="kpi-label">Performance</div><div class="kpi-val" id="k-perf">—</div><div class="kpi-sub">agenda atendida</div></div>
   <div class="kpi"><div class="kpi-label">Paradas</div><div class="kpi-val red" id="k-paradas">—</div><div class="kpi-sub" id="k-paradas-sub">ocorrências</div></div>
 </div>
 
@@ -204,7 +203,7 @@ select option{background:var(--s2)}
     <div class="oee-grid">
       <div class="oee-item"><div class="oee-label">OEE</div><div class="oee-val" id="oee-cxs">—</div><div class="oee-bar"><div class="oee-fill" id="oee-cxs-bar" style="width:0%"></div></div></div>
       <div class="oee-item"><div class="oee-label">Disp.</div><div class="oee-val" id="disp-cxs">—</div><div class="oee-bar"><div class="oee-fill" id="disp-cxs-bar" style="width:0%;background:var(--bt)"></div></div></div>
-      <div class="oee-item"><div class="oee-label">Perf.</div><div class="oee-val" id="perf-cxs">—</div><div class="oee-bar"><div class="oee-fill" id="perf-cxs-bar" style="width:0%;background:var(--at)"></div></div></div>
+      <div class="oee-item"><div class="oee-label">Ader.</div><div class="oee-val" id="perf-cxs">—</div><div class="oee-bar"><div class="oee-fill" id="perf-cxs-bar" style="width:0%;background:var(--at)"></div></div></div>
       <div class="oee-item"><div class="oee-label">Paradas</div><div class="oee-val red" id="par-cxs">—</div><div class="oee-bar"><div class="oee-fill" id="par-cxs-bar" style="width:0%;background:var(--rt)"></div></div></div>
     </div>
   </div>
@@ -213,7 +212,7 @@ select option{background:var(--s2)}
     <div class="oee-grid">
       <div class="oee-item"><div class="oee-label">OEE</div><div class="oee-val" id="oee-cx">—</div><div class="oee-bar"><div class="oee-fill" id="oee-cx-bar" style="width:0%"></div></div></div>
       <div class="oee-item"><div class="oee-label">Disp.</div><div class="oee-val" id="disp-cx">—</div><div class="oee-bar"><div class="oee-fill" id="disp-cx-bar" style="width:0%;background:var(--bt)"></div></div></div>
-      <div class="oee-item"><div class="oee-label">Perf.</div><div class="oee-val" id="perf-cx">—</div><div class="oee-bar"><div class="oee-fill" id="perf-cx-bar" style="width:0%;background:var(--at)"></div></div></div>
+      <div class="oee-item"><div class="oee-label">Ader.</div><div class="oee-val" id="perf-cx">—</div><div class="oee-bar"><div class="oee-fill" id="perf-cx-bar" style="width:0%;background:var(--at)"></div></div></div>
       <div class="oee-item"><div class="oee-label">Paradas</div><div class="oee-val red" id="par-cx">—</div><div class="oee-bar"><div class="oee-fill" id="par-cx-bar" style="width:0%;background:var(--rt)"></div></div></div>
     </div>
   </div>
@@ -415,12 +414,12 @@ function analisar(){
 
   var disp=tProgTotal>0?Math.max(0,(tProgTotal-tParTotal)/tProgTotal):1;
   var perf=pacProg>0?Math.min(1,pacAtend/pacProg):0;
-  var oee=disp*perf;
+  var oee=disp; // OEE = Disponibilidade (Qualidade=1, Performance não aplicável)
   var aderencia=pacProg>0?pacAtend/pacProg:0;
 
   setKPI('k-oee',pct(oee),oeeColor(oee));
   setKPI('k-disp',pct(disp),oeeColor(disp,0.9));
-  setKPI('k-perf',pct(perf),oeeColor(perf,0.95)); document.querySelector('#k-perf').closest('.kpi').querySelector('.kpi-label').textContent='Aderência';
+  
   document.getElementById('k-paradas').textContent=pFilt.length;
   document.getElementById('k-paradas-sub').textContent=fmtMin(tParTotal)+' de parada';
 
@@ -482,8 +481,8 @@ function renderEvolucao(ini,fim){
     if(!am.length&&!pm.length) return null;
     var tp=maquinas.length*T_PROG, tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
     var pp=am.reduce((s,a)=>s+(+a.programados||0),0), pa=am.reduce((s,a)=>s+(+a.atendidos||0),0);
-    var disp=tp>0?Math.max(0,(tp-tpar)/tp):1, perf=pp>0?Math.min(1,pa/pp):0;
-    return Math.round(disp*perf*100);
+    var disp=tp>0?Math.max(0,(tp-tpar)/tp):1;
+    return Math.round(disp*100);
   });
   document.getElementById('meta-evolucao').textContent=dias.length+' dias';
   var canvas=document.getElementById('chart-oee');
