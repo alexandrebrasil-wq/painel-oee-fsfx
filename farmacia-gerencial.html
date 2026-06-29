@@ -187,8 +187,8 @@ var APPS_URL  = 'https://script.google.com/macros/s/AKfycbwulrdZyfww-3ejAoGIwrGe
 var QT_CSV    = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSap2eZ_RANJMRkRQg34TPyHmUO-KHrxO8hMazvmfampJkKpFBGtG3VKB76q3EdRwcDMJqOL30TQ1ZA/pub?gid=1304195408&single=true&output=csv';
 
 // SLA por etapa (minutos)
-var SLA = {'Separação':20,'Pré QT':45,'Capela QT':30,'Disponível QT':15};
-var ETAPAS = ['Separação','Pré QT','Capela QT','Disponível QT'];
+var SLA = {'Separação':10,'Pré QT':15,'Disponível pré QT':10,'Capela QT':20,'Disponível QT':15};
+var ETAPAS = ['Separação','Pré QT','Capela QT','Disponível QT','Disponível pré QT'];
 var FLUXOS = ['Longa/Longuissima','Media','Curta/Rapida','Convenio','Leito'];
 
 // Chart instances
@@ -374,7 +374,7 @@ function calcularAnalise(regs, paradas, qtRows, ini, fim){
 
   // Médias por etapa
   var medEtapa={};
-  ETAPAS.forEach(e=>{
+  ETAPAS.filter(e=>e!=='Disponível QT'&&e!=='Disponível pré QT').forEach(e=>{
     var arr=tpfPorEtapa[e];
     medEtapa[e] = arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
   });
@@ -515,8 +515,8 @@ function renderTudo(a, ini, fim){
   // KPIs
   var kTpf = document.getElementById('k-tpf');
   kTpf.textContent = fmtMin(a.tpfMed);
-  kTpf.className = 'kpi-val '+(a.tpfMed<=110?'green':a.tpfMed<=150?'amber':'red');
-  document.getElementById('k-tpf-meta').textContent = 'SLA total: '+fmtMin(Object.values(SLA).reduce((x,y)=>x+y,0));
+  kTpf.className = 'kpi-val '+(a.tpfMed<=45?'green':a.tpfMed<=60?'amber':'red');
+  document.getElementById('k-tpf-meta').textContent = 'meta TPF: 45min';
 
   var kSla = document.getElementById('k-sla');
   kSla.textContent = pct(a.pctSLA);
@@ -550,11 +550,10 @@ function renderTudo(a, ini, fim){
   // ─ Row 2: pico horas + integração QT
   var r2b=document.createElement('div'); r2b.className='row2';
   r2b.appendChild(buildPicoHoras(a));
-  r2b.appendChild(buildIntegracao(a));
-  main.appendChild(r2b);
+  // Integração QT removida
+  // painel r2b removido
 
-  // ─ Fluxo
-  main.appendChild(buildFluxo(a));
+  // Resultado por fluxo removido
 }
 
 function buildEtapas(a){
@@ -563,7 +562,7 @@ function buildEtapas(a){
   var body=document.createElement('div'); body.className='panel-body';
   var grid=document.createElement('div'); grid.className='etapas-grid';
 
-  ETAPAS.forEach(e=>{
+  ETAPAS.filter(e=>e!=='Disponível QT'&&e!=='Disponível pré QT').forEach(e=>{
     var med=a.medEtapa[e]||0;
     var sla=SLA[e];
     var pct=sla?Math.min(med/sla,1.5):0;
