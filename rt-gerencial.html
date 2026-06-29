@@ -722,13 +722,18 @@ function processarXLSFile(f){
       setStatus('saving','importando');
       // Envia lotes de 2 dias COM tipos incluídos (~1200 chars/lote — seguro para Apps Script)
       var inseridos=0, atualizados=0;
-      var tamLote=2;
+      var tamLote=1; // 1 dia por lote para manter URL dentro do limite
       for(var i=0;i<novos.length;i+=tamLote){
         var lote=novos.slice(i,i+tamLote).map(function(n){
           // Top 12 tipos por volume para manter payload curto
           var tiposTop={};
           Object.entries(n.tipos||{}).sort(function(a,b){return b[1]-a[1];}).slice(0,12).forEach(function(e){ tiposTop[e[0]]=e[1]; });
-          return {data:n.data,maquina:n.maquina,programados:n.programados,atendidos:n.atendidos,tipos:tiposTop};
+          // Calcula t_prog e t_atend com a tabela de tempo padrão
+          var tProg=0,tAtend=0;
+          Object.entries(n.tipos||{}).forEach(function(e){ tProg+=getTempoPadrao(e[0])*(+e[1]||0); });
+          var ader=n.programados>0?Math.min(1,n.atendidos/n.programados):0;
+          tAtend=Math.round(tProg*ader);
+          return {data:n.data,maquina:n.maquina,programados:n.programados,atendidos:n.atendidos,t_prog:Math.round(tProg),t_atend:tAtend,tipos:tiposTop};
         });
         var r2=await api({acao:'importar_atendimentos',dados:JSON.stringify(lote)});
         inseridos+=(r2.inseridos||0);
