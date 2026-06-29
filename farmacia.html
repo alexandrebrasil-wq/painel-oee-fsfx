@@ -40,7 +40,7 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
 .panel{background:var(--s1);border:1px solid var(--b1);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 .phdr{padding:10px 14px;border-bottom:1px solid var(--b1);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx2);display:flex;align-items:center;justify-content:space-between}
 .pbody{padding:10px 14px;flex:1;overflow:hidden}
-.kanban-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;grid-column:1/4;min-height:0}
+.kanban-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;grid-column:1/4;min-height:0}
 .kcol{background:var(--s1);border:1px solid var(--b1);border-radius:10px;overflow:hidden}
 .kcol-hdr{padding:7px 10px;border-bottom:1px solid var(--b1);display:flex;flex-direction:column;gap:3px}
 .kcol-name{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx2)}
@@ -49,7 +49,10 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
 .kcol-count.has-red{background:var(--rd);color:var(--rt);border-color:rgba(218,54,51,.3)}
 .kcol-count.has-items{background:var(--gd);color:var(--gt);border-color:rgba(29,158,117,.3)}
 .kcol-body{padding:5px;display:flex;flex-direction:column;gap:3px;min-height:20px;overflow:hidden}
-.kcard{background:var(--s2);border:1px solid var(--b2);border-radius:5px;padding:3px 6px;font-size:10px;min-width:0;display:flex;align-items:center;gap:5px;height:26px;overflow:hidden}
+.kcard{background:var(--s2);border:1px solid var(--b2);border-radius:5px;padding:3px 6px;font-size:10px;min-width:0;display:flex;align-items:center;gap:5px;height:26px;overflow:hidden;position:relative}
+.kcard-del{display:none;position:absolute;right:3px;top:50%;transform:translateY(-50%);background:var(--rd);border:none;border-radius:3px;color:var(--rt);font-size:9px;font-weight:700;padding:1px 4px;cursor:pointer;line-height:1}
+.kcard-del:hover{background:var(--rt);color:#fff}
+.kcard:hover .kcard-del{display:block}
 .kcard.red-card{border-color:rgba(218,54,51,.4);background:rgba(218,54,51,.06)}
 .kcard-id{font-weight:600;font-family:var(--fm);color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;flex-shrink:0}
 .kcard-time{font-size:9px;color:var(--tx3);white-space:nowrap;flex-shrink:0}
@@ -149,8 +152,8 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
 <script>
 var APPS_URL='https://script.google.com/macros/s/AKfycbwulrdZyfww-3ejAoGIwrGewM2eAmgCYFSY9SUKmJSU9uiGCtnTiGZT9EZxn8j3lgImhA/exec';
 var QT_CSV='https://docs.google.com/spreadsheets/d/e/2PACX-1vSap2eZ_RANJMRkRQg34TPyHmUO-KHrxO8hMazvmfampJkKpFBGtG3VKB76q3EdRwcDMJqOL30TQ1ZA/pub?gid=1304195408&single=true&output=csv';
-var STAGES=['Separação','Pré QT','Capela QT','Disponível QT'];
-var LIMITES={'Separação':10,'Pré QT':15,'Capela QT':20,'Disponível QT':15};
+var STAGES=['Separação','Pré QT','Capela QT','Disponível QT','Disponível pré QT'];
+var LIMITES={'Separação':10,'Pré QT':15,'Disponível pré QT':10,'Capela QT':20,'Disponível QT':15};
 var TURNO_INI=7,TURNO_FIM=19;
 var FLUXOS=[
   {idx:0,nome:'Longa/Longuissima',poltronas:[1,2,3,4,5,6,7,8,9,10,11,12,13,14]},
@@ -251,22 +254,35 @@ function processQT(rows){
 // Retorna Map: atendimento → motivo da parada ativa (sem encerramento)
 function calcFarmParadas(rows){
   var hoje=new Date().toISOString().slice(0,10);
-  var map={};
-  rows.filter(function(r){
+  var map={}; // atendimento -> {ts, just}
+
+  // Ordena tudo por timestamp para processar em ordem cronológica
+  var hojeRows=rows.filter(function(r){
     var ts=new Date(r['Timestamp']||r['timestamp']||0);
-    var tipo=r['Tipo']||r['tipo']||'';
-    return ts.toISOString().slice(0,10)===hoje && tipo==='parada';
-  }).forEach(function(r){
+    return ts.toISOString().slice(0,10)===hoje;
+  }).sort(function(a,b){
+    return new Date(a['Timestamp']||a['timestamp']||0)-new Date(b['Timestamp']||b['timestamp']||0);
+  });
+
+  hojeRows.forEach(function(r){
     var a=String(r['Nº Atendimento']||r['atendimento']||'').trim();
+    var tipo=String(r['Tipo']||r['tipo']||'').trim();
     var j=String(r['Justificativa']||r['justificativa']||'').trim();
     var fim=String(r['Encerramento']||r['encerramento']||'').trim();
+    var etapa=String(r['Etapa']||r['etapa']||'').trim();
     if(!a) return;
-    if(fim && fim!=='') {
-      // parada encerrada — remove
+
+    if(tipo==='parada'){
+      if(fim && fim!==''){
+        // parada explicitamente encerrada
+        delete map[a];
+      } else {
+        // abre parada
+        map[a]=j||'Parada';
+      }
+    } else if(tipo!=='encerramento' && etapa){
+      // Movimentação de etapa — fecha parada ativa do atendimento
       delete map[a];
-    } else {
-      // parada ativa
-      map[a]=j||'Parada';
     }
   });
   return map;
@@ -333,9 +349,11 @@ function renderKanban(pos){
       // Card linha única: ▍ id · hora · timer/badge
       var timerInline = isDisp ? qtBadge
         : '<span class="tbadge '+tc+'">⏱ '+fmtMin(mins)+'</span>'+(qtBadge?qtBadge:'');
+      var etapaLabel=etapa;
       card.innerHTML='<span class="kcard-id">▍ '+atend+'</span>'
         +'<span class="kcard-time">'+fmtHora(info.ts)+(justHtml?'<span style="color:var(--at);font-size:8px"> ⚠</span>':'')+'</span>'
-        +timerInline;
+        +timerInline
+        +'<button class="kcard-del" title="Excluir atendimento '+atend+'" onclick="event.stopPropagation();excluirAtendimento(\''+atend+'\',\''+etapaLabel+'\')">✕</button>';
       body.appendChild(card);
     });
   });
@@ -424,6 +442,28 @@ function renderQT(data,fonte){
 }
 
 // ── CICLO PRINCIPAL ─────────────────────────────────────────
+// ── EXCLUIR ATENDIMENTO ──────────────────────────────────────────
+function excluirAtendimento(atend, etapa){
+  if(!confirm('Excluir todos os registros do atendimento '+atend+' ('+etapa+') de hoje?
+
+Esta ação não pode ser desfeita.')) return;
+  var dot=document.getElementById('sdot'), stxt=document.getElementById('status-txt');
+  dot.className='sdot'; stxt.textContent='excluindo...';
+  fetch(APPS_URL+'?acao=excluir_atendimento&atendimento='+encodeURIComponent(atend),{cache:'no-store'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.status==='ok'){
+        stxt.textContent=d.removidos+' registros removidos · '+atend;
+        dot.className='sdot ok';
+        setTimeout(carregar, 600);
+      } else {
+        alert('Erro: '+(d.message||'falha ao excluir'));
+        dot.className='sdot err';
+      }
+    })
+    .catch(function(e){ alert('Erro de rede: '+e.message); dot.className='sdot err'; });
+}
+
 function carregar(){
   setStatus('loading','atualizando...');
   Promise.all([
