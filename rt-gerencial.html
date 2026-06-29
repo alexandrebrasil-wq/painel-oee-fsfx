@@ -354,16 +354,6 @@ async function api(params){
   return d;
 }
 
-async function apiPost(acao, dados){
-  var r=await fetch(APPS_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({acao:acao, dados:dados})
-  });
-  var d=await r.json();
-  if(d.status==='erro') throw new Error(d.message||'Erro Apps Script');
-  return d;
-}
 
 // ── DATAS ────────────────────────────────────────────────────────
 function fmtDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
@@ -660,7 +650,16 @@ function processarXLSFile(f){
       if(!novos.length){ res.textContent='⚠ Nenhum dado reconhecido.'; res.className='upload-result err'; return; }
 
       setStatus('saving','importando');
-      var r=await apiPost('importar_atendimentos', novos);
+      // Envia em lotes de 5 dias via GET (evita CORS do POST)
+      var inseridos=0, atualizados=0;
+      var tamLote=5;
+      for(var i=0;i<novos.length;i+=tamLote){
+        var lote=novos.slice(i,i+tamLote);
+        var r=await api({acao:'importar_atendimentos',dados:JSON.stringify(lote)});
+        inseridos+=(r.inseridos||0);
+        atualizados+=(r.atualizados||0);
+      }
+      var r={inseridos:inseridos,atualizados:atualizados};
 
       var ts=new Date().toLocaleString('pt-BR');
       localStorage.setItem('rt_ultima_importacao',ts);
