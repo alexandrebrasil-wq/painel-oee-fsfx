@@ -34,13 +34,6 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 .sdot.err{background:var(--rt)}
 .sdot.saving{background:var(--at);animation:pdot .5s ease-in-out infinite}
 @keyframes pdot{0%,100%{opacity:1}50%{opacity:.4}}
-.token-bar{background:var(--s2);border-bottom:1px solid var(--at);padding:8px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.token-bar.hidden{display:none}
-.token-bar span{font-size:12px;color:var(--at)}
-.token-bar input{background:var(--s3);border:1px solid var(--b2);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--tx);font-family:var(--fm);width:260px}
-.btn-sm{background:var(--amber);border:none;border-radius:5px;padding:4px 12px;font-size:12px;font-weight:600;color:#000;cursor:pointer}
-.btn-sm2{background:none;border:1px solid var(--b2);border-radius:5px;padding:4px 10px;font-size:11px;color:var(--tx3);cursor:pointer}
-.btn-sm2:hover{color:var(--tx);border-color:var(--b3)}
 .toolbar{background:var(--s1);border-bottom:1px solid var(--b1);padding:10px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .filter-label{font-size:11px;color:var(--tx2)}
 .btn-filter{background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .15s}
@@ -52,12 +45,24 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 .btn-primary:hover{opacity:.85}
 .sep{width:1px;height:20px;background:var(--b2);margin:0 2px}
 .ml-auto{margin-left:auto}
-.kpi-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--b1);border-bottom:1px solid var(--b1)}
+/* KPI */
+.kpi-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--b1);border-bottom:1px solid var(--b1)}
 .kpi{background:var(--s1);padding:12px 18px}
 .kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px}
 .kpi-val{font-size:22px;font-weight:700;line-height:1;font-family:var(--fm)}
 .kpi-val.green{color:var(--gt)}.kpi-val.amber{color:var(--at)}.kpi-val.red{color:var(--rt)}.kpi-val.blue{color:var(--bt)}
 .kpi-sub{font-size:10px;color:var(--tx2);margin-top:3px}
+/* KPI PAC destaque */
+.kpi-pac{background:var(--s1);border-bottom:1px solid var(--b1);padding:12px 18px;display:flex;align-items:center;gap:16px}
+.kpi-pac-main{flex:1}
+.kpi-pac-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px}
+.kpi-pac-atend{font-size:32px;font-weight:700;line-height:1;font-family:var(--fm);color:var(--gt)}
+.kpi-pac-prog{font-size:11px;color:var(--tx2);margin-top:4px}
+.kpi-aderencia{text-align:center;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:10px 16px;min-width:90px}
+.kpi-ader-label{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:4px}
+.kpi-ader-val{font-size:22px;font-weight:700;font-family:var(--fm)}
+.kpi-ader-sub{font-size:9px;color:var(--tx3);margin-top:3px;font-family:var(--fm)}
+/* MÁQUINAS */
 .maquinas-bar{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--b1);border-bottom:1px solid var(--b1)}
 .maq-card{background:var(--s1);padding:14px 20px}
 .maq-name{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx2);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
@@ -70,6 +75,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 .oee-val{font-size:18px;font-weight:700;font-family:var(--fm);line-height:1}
 .oee-bar{height:3px;border-radius:2px;margin-top:5px;background:var(--b2)}
 .oee-fill{height:3px;border-radius:2px;transition:width .6s}
+/* LAYOUT */
 .main{padding:16px 20px;display:flex;flex-direction:column;gap:14px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .row13{display:grid;grid-template-columns:1fr 3fr;gap:14px}
@@ -79,6 +85,8 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 .panel-meta{font-size:10px;font-family:var(--fm);color:var(--tx3)}
 .panel-body{padding:14px}
 .chart-wrap{position:relative;height:180px}
+.chart-wrap-lg{position:relative;height:220px}
+/* TABELAS */
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
 .tbl th{padding:6px 8px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);border-bottom:1px solid var(--b1);text-align:left;white-space:nowrap}
 .tbl td{padding:7px 8px;border-bottom:1px solid var(--b1);color:var(--tx);vertical-align:middle}
@@ -90,15 +98,17 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 .pill-cx{background:var(--pd);color:var(--pt)}.pill-cxs{background:var(--bd);color:var(--bt)}
 .btn-icon{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px}
 .btn-icon:hover{background:var(--b1);color:var(--tx)}
-.pareto-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--b1)}
+/* PARETO */
+.pareto-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--b1)}
 .pareto-row:last-child{border-bottom:none}
 .pareto-rank{font-size:10px;color:var(--tx3);font-family:var(--fm);min-width:18px}
-.pareto-label{font-size:12px;color:var(--tx);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pareto-cat{font-size:10px;color:var(--tx3);font-family:var(--fm);min-width:80px;text-align:right}
-.pareto-track{flex:0 0 70px;height:3px;background:var(--b2);border-radius:2px}
+.pareto-label{font-size:11px;color:var(--tx);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pareto-cat{font-size:10px;color:var(--tx3);font-family:var(--fm);min-width:70px;text-align:right}
+.pareto-track{flex:0 0 60px;height:3px;background:var(--b2);border-radius:2px}
 .pareto-fill{height:3px;border-radius:2px;background:var(--at)}
 .pareto-n{font-size:11px;color:var(--tx2);font-family:var(--fm);min-width:28px;text-align:right}
-.pareto-t{font-size:11px;color:var(--at);font-family:var(--fm);min-width:48px;text-align:right}
+.pareto-t{font-size:11px;color:var(--at);font-family:var(--fm);min-width:44px;text-align:right}
+/* UPLOAD */
 .upload-zone{border:2px dashed var(--b2);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s}
 .upload-zone:hover,.upload-zone.drag{border-color:var(--green)}
 .upload-zone p{font-size:12px;color:var(--tx2);margin-top:6px}
@@ -106,6 +116,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 .upload-icon{font-size:26px;color:var(--tx3)}
 .upload-result{font-size:11px;margin-top:8px;font-family:var(--fm)}
 .upload-result.ok{color:var(--gt)}.upload-result.err{color:var(--rt)}
+/* MODAL */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
 .overlay.hidden{display:none}
 .modal{background:var(--s1);border:1px solid var(--b2);border-radius:12px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
@@ -145,18 +156,9 @@ select option{background:var(--s2)}
   </div>
   <div class="hdr-right">
     <button class="btn-filter" onclick="carregar()" style="font-size:11px;padding:4px 10px">↻ Atualizar</button>
-    <button class="btn-filter" onclick="abrirToken()" style="font-size:11px;padding:4px 10px">🔑 Token</button>
     <div class="status-pill"><div class="sdot" id="sdot"></div><span id="status-txt">carregando</span></div>
   </div>
 </header>
-
-<div class="token-bar hidden" id="token-bar">
-  <span>🔑 Token GitHub:</span>
-  <input type="password" id="token-input" placeholder="github_pat_xxxx ou ghp_xxxx">
-  <button class="btn-sm" onclick="salvarToken()">Salvar</button>
-  <button class="btn-sm2" onclick="limparToken()">Remover</button>
-  <button class="btn-sm2" onclick="fecharToken()">✕</button>
-</div>
 
 <div class="toolbar">
   <span class="filter-label">De</span>
@@ -181,7 +183,19 @@ select option{background:var(--s2)}
   <div class="kpi"><div class="kpi-label">Disponibilidade</div><div class="kpi-val" id="k-disp">—</div><div class="kpi-sub">meta ≥ 90%</div></div>
   <div class="kpi"><div class="kpi-label">Performance</div><div class="kpi-val" id="k-perf">—</div><div class="kpi-sub">atendidos / programados</div></div>
   <div class="kpi"><div class="kpi-label">Paradas</div><div class="kpi-val red" id="k-paradas">—</div><div class="kpi-sub" id="k-paradas-sub">ocorrências</div></div>
-  <div class="kpi"><div class="kpi-label">Pac. Programados</div><div class="kpi-val blue" id="k-pac">—</div><div class="kpi-sub" id="k-pac-sub">no período</div></div>
+</div>
+
+<div class="kpi-pac">
+  <div class="kpi-pac-main">
+    <div class="kpi-pac-label">Atendimentos realizados</div>
+    <div class="kpi-pac-atend" id="k-atendidos">—</div>
+    <div class="kpi-pac-prog">de <span id="k-programados">—</span> programados no período</div>
+  </div>
+  <div class="kpi-aderencia">
+    <div class="kpi-ader-label">Aderência</div>
+    <div class="kpi-ader-val" id="k-aderencia">—</div>
+    <div class="kpi-ader-sub">atend / prog</div>
+  </div>
 </div>
 
 <div class="maquinas-bar">
@@ -215,6 +229,11 @@ select option{background:var(--s2)}
       <div class="panel-hdr"><span class="panel-title">Pareto de paradas</span><span class="panel-meta" id="meta-pareto"></span></div>
       <div class="panel-body" id="pareto-body"><div class="empty">sem paradas no período</div></div>
     </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-hdr"><span class="panel-title">Atendimentos por tipo</span><span class="panel-meta" id="meta-tipos"></span></div>
+    <div class="panel-body"><div class="chart-wrap-lg"><canvas id="chart-tipos"></canvas></div></div>
   </div>
 
   <div class="row13">
@@ -315,27 +334,25 @@ select option{background:var(--s2)}
 </div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────
-var GH_OWNER  = 'alexandrebrasil-wq';
-var GH_REPO   = 'painel-oee-fsfx';
-var GH_BRANCH = 'main';
-var F_PARADAS = 'rt-paradas.json';
-var F_ATEND   = 'rt-atendimentos.json';
-var T_PROG    = 540; // min/dia/máquina
-var META_OEE  = 0.80;
+// ── CONFIG — cole aqui a URL do Web App após implantar ───────────
+var APPS_URL = 'https://script.google.com/macros/s/AKfycbxpSDbJnHczI10429ySca9Zf4xcZ1Ry9H0lKsQveGS6nQH9JunpKmezBIE2qC8XlTML/exec';
 
-// Estado
-var paradas=[]; var atendimentos=[]; var shas={}; var filtrMaq='todas'; var editId=null; var charts={};
+var T_PROG   = 540;
+var META_OEE = 0.80;
 
-// ── TOKEN ────────────────────────────────────────────────────────
-function getToken(){ return localStorage.getItem('iomt_gh_token')||''; }
-function abrirToken(){ document.getElementById('token-bar').classList.toggle('hidden'); if(!document.getElementById('token-bar').classList.contains('hidden')) document.getElementById('token-input').value=getToken(); }
-function fecharToken(){ document.getElementById('token-bar').classList.add('hidden'); }
-function salvarToken(){ var t=document.getElementById('token-input').value.trim(); if(!t){alert('Cole o token.');return;} localStorage.setItem('iomt_gh_token',t); fecharToken(); setStatus('ok','token salvo'); carregar(); }
-function limparToken(){ if(confirm('Remover?')){ localStorage.removeItem('iomt_gh_token'); document.getElementById('token-input').value=''; setStatus('','sem token'); } }
+var paradas=[]; var atendimentos=[]; var filtrMaq='todas'; var editId=null; var charts={};
 
 // ── STATUS ───────────────────────────────────────────────────────
 function setStatus(t,txt){ var d=document.getElementById('sdot'),s=document.getElementById('status-txt'); d.className='sdot'+(t==='ok'?' ok':t==='err'?' err':t==='saving'?' saving':''); s.textContent=txt; }
+
+// ── API ──────────────────────────────────────────────────────────
+async function api(params){
+  var qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v||'')).join('&');
+  var r=await fetch(APPS_URL+'?'+qs+'&t='+Date.now());
+  var d=await r.json();
+  if(d.status==='erro') throw new Error(d.message||'Erro Apps Script');
+  return d;
+}
 
 // ── DATAS ────────────────────────────────────────────────────────
 function fmtDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
@@ -359,39 +376,17 @@ function setPreset(p){
   document.getElementById('p-data').value=fmtDate(hoje);
 })();
 
-// ── GITHUB ───────────────────────────────────────────────────────
-function rawURL(f){ return 'https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/'+GH_BRANCH+'/'+f; }
-function apiURL(f){ return 'https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+f; }
-
-async function ghRead(f){
-  var r=await fetch(rawURL(f)+'?t='+Date.now());
-  if(r.status===404) return [];
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  var d=await r.json(); return Array.isArray(d)?d:[];
-}
-async function ghSHA(f){
-  try{ var h={'Accept':'application/vnd.github+json'}; if(getToken()) h['Authorization']='Bearer '+getToken(); var r=await fetch(apiURL(f)+'?ref='+GH_BRANCH,{headers:h}); if(r.ok){ var d=await r.json(); return d.sha||null; } } catch(e){} return null;
-}
-async function ghWrite(f,data,sha){
-  if(!getToken()){ abrirToken(); throw new Error('Configure o token GitHub primeiro.'); }
-  var b64=btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
-  var body={message:'Atualiza '+f+' — '+new Date().toLocaleString('pt-BR'),content:b64,branch:GH_BRANCH};
-  if(sha) body.sha=sha;
-  var r=await fetch(apiURL(f),{method:'PUT',headers:{'Authorization':'Bearer '+getToken(),'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify(body)});
-  if(!r.ok){ var e=await r.json().catch(()=>({})); throw new Error(e.message||'HTTP '+r.status); }
-  var d=await r.json(); return d.content&&d.content.sha?d.content.sha:sha;
-}
-
 // ── CARREGAR ─────────────────────────────────────────────────────
 async function carregar(){
   setStatus('','carregando');
   try{
-    [paradas,atendimentos]=await Promise.all([ghRead(F_PARADAS),ghRead(F_ATEND)]);
-    [shas[F_PARADAS],shas[F_ATEND]]=await Promise.all([ghSHA(F_PARADAS),ghSHA(F_ATEND)]);
-    setStatus('ok',paradas.length+' paradas · '+atendimentos.length+' dias importados');
+    var [rP,rA]=await Promise.all([api({acao:'listar_paradas'}),api({acao:'listar_atendimentos'})]);
+    paradas=rP.rows||[];
+    atendimentos=rA.rows||[];
+    setStatus('ok',paradas.length+' paradas · '+atendimentos.length+' dias');
     var ul=localStorage.getItem('rt_ultima_importacao');
     document.getElementById('ultima-importacao').textContent=ul||'—';
-  } catch(e){ setStatus('err','erro ao carregar'); console.error(e); }
+  } catch(e){ setStatus('err','erro: '+e.message); console.error(e); }
   analisar();
 }
 
@@ -402,7 +397,6 @@ function filtrarMaq(btn){
 }
 
 // ── ANÁLISE ──────────────────────────────────────────────────────
-// atendimentos = [{data, maquina, programados, atendidos}]
 function analisar(){
   var ini=new Date(document.getElementById('dt-ini').value); ini.setHours(0,0,0,0);
   var fim=new Date(document.getElementById('dt-fim').value); fim.setHours(23,59,59);
@@ -421,26 +415,27 @@ function analisar(){
   var disp=tProgTotal>0?Math.max(0,(tProgTotal-tParTotal)/tProgTotal):1;
   var perf=pacProg>0?Math.min(1,pacAtend/pacProg):0;
   var oee=disp*perf;
+  var aderencia=pacProg>0?pacAtend/pacProg:0;
 
   setKPI('k-oee',pct(oee),oeeColor(oee));
   setKPI('k-disp',pct(disp),oeeColor(disp,0.9));
   setKPI('k-perf',pct(perf),oeeColor(perf,0.95));
   document.getElementById('k-paradas').textContent=pFilt.length;
   document.getElementById('k-paradas-sub').textContent=fmtMin(tParTotal)+' de parada';
-  document.getElementById('k-pac').textContent=pacProg;
-  document.getElementById('k-pac-sub').textContent=pacAtend+' atendidos';
+
+  document.getElementById('k-atendidos').textContent=pacAtend;
+  document.getElementById('k-programados').textContent=pacProg;
+  var adEl=document.getElementById('k-aderencia');
+  adEl.textContent=pct(aderencia);
+  adEl.style.color=aderencia>=0.95?'var(--gt)':aderencia>=0.85?'var(--at)':'var(--rt)';
 
   ['CXS','CX'].forEach(maq=>{
     var pm=paradas.filter(p=>{ var d=new Date(p.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&p.maquina===maq;});
     var am=atendimentos.filter(a=>{ var d=new Date(a.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&a.maquina===maq;});
     var nd=new Set(am.map(a=>a.data)).size||1;
-    var tp=nd*T_PROG;
-    var tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
-    var pp=am.reduce((s,a)=>s+(+a.programados||0),0);
-    var pa=am.reduce((s,a)=>s+(+a.atendidos||0),0);
-    var d2=tp>0?Math.max(0,(tp-tpar)/tp):1;
-    var pf=pp>0?Math.min(1,pa/pp):0;
-    var ov=d2*pf;
+    var tp=nd*T_PROG, tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
+    var pp=am.reduce((s,a)=>s+(+a.programados||0),0), pa=am.reduce((s,a)=>s+(+a.atendidos||0),0);
+    var d2=tp>0?Math.max(0,(tp-tpar)/tp):1, pf=pp>0?Math.min(1,pa/pp):0, ov=d2*pf;
     var mk=maq.toLowerCase();
     var cor=ov>=META_OEE?'var(--gt)':ov>=META_OEE*0.85?'var(--at)':'var(--rt)';
     setValBar('oee-'+mk,pct(ov),ov*100,cor);
@@ -452,6 +447,7 @@ function analisar(){
 
   renderPareto(pFilt);
   renderEvolucao(ini,fim);
+  renderTipos(aFilt);
   renderTabelaParadas(pFilt);
 }
 
@@ -478,25 +474,37 @@ function renderEvolucao(ini,fim){
   var dias=[]; var d=new Date(ini);
   while(d<=fim){ dias.push(fmtDate(new Date(d))); d.setDate(d.getDate()+1); }
   if(dias.length>45) dias=dias.slice(-45);
-
   var maquinas=filtrMaq==='todas'?['CXS','CX']:[filtrMaq];
   var oeeData=dias.map(dia=>{
     var am=atendimentos.filter(a=>a.data===dia&&(filtrMaq==='todas'||a.maquina===filtrMaq));
     var pm=paradas.filter(p=>p.data===dia&&(filtrMaq==='todas'||p.maquina===filtrMaq));
     if(!am.length&&!pm.length) return null;
-    var tp=maquinas.length*T_PROG;
-    var tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
-    var pp=am.reduce((s,a)=>s+(+a.programados||0),0);
-    var pa=am.reduce((s,a)=>s+(+a.atendidos||0),0);
-    var disp=tp>0?Math.max(0,(tp-tpar)/tp):1;
-    var perf=pp>0?Math.min(1,pa/pp):0;
+    var tp=maquinas.length*T_PROG, tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
+    var pp=am.reduce((s,a)=>s+(+a.programados||0),0), pa=am.reduce((s,a)=>s+(+a.atendidos||0),0);
+    var disp=tp>0?Math.max(0,(tp-tpar)/tp):1, perf=pp>0?Math.min(1,pa/pp):0;
     return Math.round(disp*perf*100);
   });
-
   document.getElementById('meta-evolucao').textContent=dias.length+' dias';
   var canvas=document.getElementById('chart-oee');
   if(charts['oee']) charts['oee'].destroy();
   charts['oee']=new Chart(canvas,{type:'line',data:{labels:dias.map(d=>{var p=d.split('-');return p[2]+'/'+p[1];}),datasets:[{label:'OEE (%)',data:oeeData,borderColor:'#3dd68c',backgroundColor:'rgba(29,158,117,.08)',pointRadius:2,tension:.3,spanGaps:true},{label:'Meta 80%',data:dias.map(()=>80),borderColor:'rgba(218,54,51,.4)',borderDash:[4,4],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b949e',font:{size:10},boxWidth:12}}},scales:{x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#8b949e',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.04)'},min:0,max:100}}}});
+}
+
+// ── GRÁFICO TIPOS ────────────────────────────────────────────────
+function renderTipos(aFilt){
+  var mapa={};
+  aFilt.forEach(a=>{
+    if(!a.tipos) return;
+    Object.entries(a.tipos).forEach(([tipo,n])=>{ mapa[tipo]=(mapa[tipo]||0)+n; });
+  });
+  var entries=Object.entries(mapa).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  var total=entries.reduce((s,e)=>s+e[1],0);
+  document.getElementById('meta-tipos').textContent=total+' atendimentos · '+entries.length+' tipos';
+  var canvas=document.getElementById('chart-tipos');
+  if(charts['tipos']) charts['tipos'].destroy();
+  if(!entries.length) return;
+  var cores=['#388bfd','#3dd68c','#e3b341','#f85149','#d2a8ff','#79c0ff','#ff9a6c','#56d364','#ffa657','#ff7b72','#a5d6ff','#7ee787','#f2cc60','#ff6e40','#c9b1ff'];
+  charts['tipos']=new Chart(canvas,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Atendimentos',data:entries.map(e=>e[1]),backgroundColor:entries.map((_,i)=>cores[i%cores.length]+'99'),borderColor:entries.map((_,i)=>cores[i%cores.length]),borderWidth:1,borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){ return ' '+c.raw+' ('+Math.round(c.raw/total*100)+'%)'; }}}},scales:{x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#e6edf3',font:{size:10}},grid:{display:false}}}}});
 }
 
 // ── TABELA PARADAS ───────────────────────────────────────────────
@@ -549,23 +557,40 @@ async function salvarParada(){
   var btn=document.getElementById('btn-save-parada');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Salvando...';
   setStatus('saving','salvando');
-  if(editId){
-    var idx=paradas.findIndex(x=>x.id===editId);
-    if(idx>=0) paradas[idx]={...paradas[idx],data:document.getElementById('p-data').value,maquina:document.getElementById('p-maq').value,tipo,categoria:CATS[tipo]||'',horaInicio:document.getElementById('p-inicio').value,horaFim:document.getElementById('p-fim').value,duracao:dur,obs:document.getElementById('p-obs').value.trim(),atualizadoEm:new Date().toISOString()};
-  } else {
-    paradas.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),data:document.getElementById('p-data').value,maquina:document.getElementById('p-maq').value,tipo,categoria:CATS[tipo]||'',horaInicio:document.getElementById('p-inicio').value,horaFim:document.getElementById('p-fim').value,duracao:dur,obs:document.getElementById('p-obs').value.trim(),criadoEm:new Date().toISOString(),atualizadoEm:new Date().toISOString()});
-  }
-  try{ shas[F_PARADAS]=await ghWrite(F_PARADAS,paradas,shas[F_PARADAS]); setStatus('ok','parada salva'); fecharModalParada(); analisar(); }
-  catch(e){ setStatus('err','erro ao salvar'); alert('Erro: '+e.message); }
+  try{
+    var params={
+      data:        document.getElementById('p-data').value,
+      maquina:     document.getElementById('p-maq').value,
+      tipo:        tipo,
+      categoria:   CATS[tipo]||'',
+      horaInicio:  document.getElementById('p-inicio').value,
+      horaFim:     document.getElementById('p-fim').value,
+      duracao:     dur,
+      obs:         document.getElementById('p-obs').value.trim()
+    };
+    if(editId){
+      params.acao='atualizar_parada'; params.id=editId;
+      await api(params);
+      var idx=paradas.findIndex(x=>x.id===editId);
+      if(idx>=0) paradas[idx]={...paradas[idx],...params};
+    } else {
+      params.acao='gravar_parada';
+      var r=await api(params);
+      paradas.push({...params, id:r.id, criadoEm:new Date().toISOString()});
+    }
+    setStatus('ok','parada salva'); fecharModalParada(); analisar();
+  } catch(e){ setStatus('err','erro ao salvar'); alert('Erro: '+e.message); }
   btn.disabled=false; btn.textContent='Salvar parada';
 }
 
 async function excluirParada(){
   if(!editId||!confirm('Excluir esta parada?')) return;
-  paradas=paradas.filter(x=>x.id!==editId);
   setStatus('saving','removendo');
-  try{ shas[F_PARADAS]=await ghWrite(F_PARADAS,paradas,shas[F_PARADAS]); setStatus('ok','removida'); fecharModalParada(); analisar(); }
-  catch(e){ setStatus('err','erro'); alert('Erro: '+e.message); }
+  try{
+    await api({acao:'excluir_parada',id:editId});
+    paradas=paradas.filter(x=>x.id!==editId);
+    setStatus('ok','removida'); fecharModalParada(); analisar();
+  } catch(e){ setStatus('err','erro'); alert('Erro: '+e.message); }
 }
 
 // ── UPLOAD XLS ───────────────────────────────────────────────────
@@ -588,10 +613,9 @@ function processarXLSFile(f){
   res.textContent='Lendo arquivo...'; res.className='upload-result ok'; res.classList.remove('hidden');
 
   var reader=new FileReader();
-  reader.onload=function(e){
+  reader.onload=async function(e){
     try{
       var wb=XLSX.read(e.target.result,{type:'binary'});
-      // Acumula por dia+máquina: {prog, atend}
       var resumo={};
 
       wb.SheetNames.forEach(function(sname){
@@ -599,55 +623,47 @@ function processarXLSFile(f){
         var ws=wb.Sheets[sname];
         var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
         if(rows.length<7) return;
-
         var maqRaw=String(rows[5][1]||'').trim();
         if(!MAQ_MAP[maqRaw]) return;
         var maq=MAQ_MAP[maqRaw];
 
         for(var i=7;i<rows.length;i++){
           var row=rows[i];
-          var serial=row[0];
-          var atividade=String(row[3]||'').trim();
-          var status=String(row[6]||'').trim();
-
+          var serial=row[0], atividade=String(row[3]||'').trim(), status=String(row[6]||'').trim();
           if(String(row[4]||'').includes('Total diário')) break;
           if(SKIP_ATIV.has(atividade)) continue;
-          if(!serial||typeof serial==='string'&&!serial.trim()) continue;
+          if(!serial) continue;
           var sn=parseFloat(serial);
           if(isNaN(sn)||sn<40000) continue;
-          // Ignora QA sem paciente
           if(!String(row[1]||'').trim()&&atividade.startsWith('QA')) continue;
-
           var data=excelSerialToISO(sn);
           var chave=data+'|'+maq;
-          if(!resumo[chave]) resumo[chave]={data:data,maquina:maq,programados:0,atendidos:0};
+          if(!resumo[chave]) resumo[chave]={data,maquina:maq,programados:0,atendidos:0,tipos:{}};
           resumo[chave].programados++;
           if(STATUS_ATEND.has(status)) resumo[chave].atendidos++;
+          if(atividade) resumo[chave].tipos[atividade]=(resumo[chave].tipos[atividade]||0)+1;
         }
       });
 
       var novos=Object.values(resumo);
-      if(!novos.length){ res.textContent='⚠ Nenhum dado reconhecido. Verifique o arquivo.'; res.className='upload-result err'; return; }
-
-      // Mescla: remove dias/máquinas presentes no arquivo e substitui
-      var novasChaves=new Set(novos.map(x=>x.data+'|'+x.maquina));
-      var mantidos=atendimentos.filter(x=>!novasChaves.has(x.data+'|'+x.maquina));
-      atendimentos=[...mantidos,...novos];
+      if(!novos.length){ res.textContent='⚠ Nenhum dado reconhecido.'; res.className='upload-result err'; return; }
 
       setStatus('saving','importando');
-      ghWrite(F_ATEND,atendimentos,shas[F_ATEND]).then(sha=>{
-        shas[F_ATEND]=sha;
-        var ts=new Date().toLocaleString('pt-BR');
-        localStorage.setItem('rt_ultima_importacao',ts);
-        document.getElementById('ultima-importacao').textContent=ts;
-        var totalProg=novos.reduce((s,x)=>s+x.programados,0);
-        var totalAtend=novos.reduce((s,x)=>s+x.atendidos,0);
-        res.textContent='✓ '+novos.length+' dias · '+totalProg+' programados · '+totalAtend+' atendidos';
-        res.className='upload-result ok';
-        setStatus('ok','importado');
-        analisar();
-      }).catch(e=>{ res.textContent='✗ Erro ao salvar: '+e.message; res.className='upload-result err'; setStatus('err','erro ao salvar'); });
-    } catch(ex){ res.textContent='✗ Erro ao ler: '+ex.message; res.className='upload-result err'; console.error(ex); }
+      var r=await api({acao:'importar_atendimentos', dados:encodeURIComponent(JSON.stringify(novos))});
+
+      var ts=new Date().toLocaleString('pt-BR');
+      localStorage.setItem('rt_ultima_importacao',ts);
+      document.getElementById('ultima-importacao').textContent=ts;
+      var totalProg=novos.reduce((s,x)=>s+x.programados,0);
+      var totalAtend=novos.reduce((s,x)=>s+x.atendidos,0);
+      res.textContent='✓ '+novos.length+' dias · '+totalProg+' prog · '+totalAtend+' atend · '+r.inseridos+' novos '+r.atualizados+' atualizados';
+      res.className='upload-result ok';
+      setStatus('ok','importado');
+      // Recarrega atendimentos do servidor
+      var rA=await api({acao:'listar_atendimentos'});
+      atendimentos=rA.rows||[];
+      analisar();
+    } catch(ex){ res.textContent='✗ Erro: '+ex.message; res.className='upload-result err'; setStatus('err','erro'); console.error(ex); }
   };
   reader.readAsBinaryString(f);
 }
