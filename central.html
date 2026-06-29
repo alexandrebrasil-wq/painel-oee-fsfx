@@ -147,20 +147,15 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 
 <div class="shell">
   <nav class="sidebar">
-    <div class="sidebar-section">Tempo Real</div>
+    <div class="sidebar-section">Gerencial</div>
     <a class="nav-item" data-id="resumo" onclick="navTo('resumo',this)">
       <span class="nav-icon">📊</span>
-      <span class="nav-label">Resumo QT</span>
-      <span class="nav-badge">RT</span>
+      <span class="nav-label">QT Gerencial</span>
     </a>
 
     <div class="nav-divider"></div>
     <div class="sidebar-section">Gerencial</div>
 
-    <a class="nav-item" data-id="qt" onclick="navTo('qt',this)">
-      <span class="nav-icon">💉</span>
-      <span class="nav-label">QT — Quimioterapia</span>
-    </a>
     <a class="nav-item" data-id="farmacia" onclick="navTo('farmacia',this)">
       <span class="nav-icon">⚗️</span>
       <span class="nav-label">Farmácia</span>
@@ -192,9 +187,9 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
       <div class="cards">
         <div class="card" onclick="navTo('resumo',null)">
           <div class="card-icon">📊</div>
-          <div class="card-title">Resumo QT</div>
-          <div class="card-desc">Visão em tempo real das poltronas e fila de farmácia</div>
-          <span class="card-tag tag-green">Tempo real</span>
+          <div class="card-title">QT Gerencial</div>
+          <div class="card-desc">Indicadores gerenciais do Centro de Infusão QT</div>
+          <span class="card-tag tag-blue">Gerencial</span>
         </div>
         <div class="card" onclick="navTo('farmacia',null)">
           <div class="card-icon">⚗️</div>
@@ -228,8 +223,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 
 <script>
 var PAINEIS = {
-  resumo:   { url: 'https://painel.i-omt.com/resumo.html',            label: 'Resumo QT' },
-  qt:       { url: 'https://painel.i-omt.com/farmacia-gerencial.html',label: 'QT Gerencial' },
+  resumo:   { url: 'https://painel.i-omt.com/resumo.html',            label: 'QT Gerencial' },
   farmacia: { url: 'https://painel.i-omt.com/farmacia-gerencial.html',label: 'Farmácia Gerencial' },
   rt:       { url: 'https://painel.i-omt.com/rt-gerencial.html',      label: 'Radioterapia' },
   acoes:    { url: 'https://painel.i-omt.com/acoes.html',             label: 'Plano de Ação' }
