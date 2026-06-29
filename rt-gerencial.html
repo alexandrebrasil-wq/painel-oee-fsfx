@@ -85,7 +85,7 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 .panel-meta{font-size:10px;font-family:var(--fm);color:var(--tx3)}
 .panel-body{padding:14px}
 .chart-wrap{position:relative;height:180px}
-.chart-wrap-lg{position:relative;height:220px}
+.chart-wrap-lg{position:relative;height:360px}
 /* TABELAS */
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
 .tbl th{padding:6px 8px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);border-bottom:1px solid var(--b1);text-align:left;white-space:nowrap}
@@ -181,7 +181,7 @@ select option{background:var(--s2)}
 <div class="kpi-bar">
   <div class="kpi"><div class="kpi-label">OEE Geral</div><div class="kpi-val" id="k-oee">—</div><div class="kpi-sub">meta ≥ 80%</div></div>
   <div class="kpi"><div class="kpi-label">Disponibilidade</div><div class="kpi-val" id="k-disp">—</div><div class="kpi-sub">meta ≥ 90%</div></div>
-  <div class="kpi"><div class="kpi-label">Performance</div><div class="kpi-val" id="k-perf">—</div><div class="kpi-sub">atendidos / programados</div></div>
+  <div class="kpi"><div class="kpi-label">Performance</div><div class="kpi-val" id="k-perf">—</div><div class="kpi-sub">agenda atendida</div></div>
   <div class="kpi"><div class="kpi-label">Paradas</div><div class="kpi-val red" id="k-paradas">—</div><div class="kpi-sub" id="k-paradas-sub">ocorrências</div></div>
 </div>
 
@@ -406,7 +406,7 @@ function analisar(){
   var pFilt=paradas.filter(p=>{ var d=new Date(p.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&(filtrMaq==='todas'||p.maquina===filtrMaq); });
   var aFilt=atendimentos.filter(a=>{ var d=new Date(a.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&(filtrMaq==='todas'||a.maquina===filtrMaq); });
 
-  var nDias=new Set(aFilt.map(a=>a.data)).size||1;
+  var nDias=Array.from(new Set(aFilt.map(a=>a.data))).filter(function(d){ var dow=new Date(d+'T12:00:00').getDay(); return dow>=1&&dow<=5; }).length||1;
   var maquinas=filtrMaq==='todas'?['CXS','CX']:[filtrMaq];
   var tProgTotal=nDias*maquinas.length*T_PROG;
   var tParTotal=pFilt.reduce((s,p)=>s+(+p.duracao||0),0);
@@ -420,7 +420,7 @@ function analisar(){
 
   setKPI('k-oee',pct(oee),oeeColor(oee));
   setKPI('k-disp',pct(disp),oeeColor(disp,0.9));
-  setKPI('k-perf',pct(perf),oeeColor(perf,0.95));
+  setKPI('k-perf',pct(perf),oeeColor(perf,0.95)); document.querySelector('#k-perf').closest('.kpi').querySelector('.kpi-label').textContent='Aderência';
   document.getElementById('k-paradas').textContent=pFilt.length;
   document.getElementById('k-paradas-sub').textContent=fmtMin(tParTotal)+' de parada';
 
@@ -433,7 +433,7 @@ function analisar(){
   ['CXS','CX'].forEach(maq=>{
     var pm=paradas.filter(p=>{ var d=new Date(p.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&p.maquina===maq;});
     var am=atendimentos.filter(a=>{ var d=new Date(a.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&a.maquina===maq;});
-    var nd=new Set(am.map(a=>a.data)).size||1;
+    var nd=Array.from(new Set(am.map(a=>a.data))).filter(function(d){ var dow=new Date(d+'T12:00:00').getDay(); return dow>=1&&dow<=5; }).length||1;
     var tp=nd*T_PROG, tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
     var pp=am.reduce((s,a)=>s+(+a.programados||0),0), pa=am.reduce((s,a)=>s+(+a.atendidos||0),0);
     var d2=tp>0?Math.max(0,(tp-tpar)/tp):1, pf=pp>0?Math.min(1,pa/pp):0, ov=d2*pf;
@@ -473,7 +473,7 @@ function renderPareto(pFilt){
 // ── EVOLUÇÃO OEE ─────────────────────────────────────────────────
 function renderEvolucao(ini,fim){
   var dias=[]; var d=new Date(ini);
-  while(d<=fim){ dias.push(fmtDate(new Date(d))); d.setDate(d.getDate()+1); }
+  while(d<=fim){ var dow=d.getDay(); if(dow>=1&&dow<=5) dias.push(fmtDate(new Date(d))); d.setDate(d.getDate()+1); }
   if(dias.length>45) dias=dias.slice(-45);
   var maquinas=filtrMaq==='todas'?['CXS','CX']:[filtrMaq];
   var oeeData=dias.map(dia=>{
