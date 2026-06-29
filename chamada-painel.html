@@ -14,7 +14,7 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
   --b1:#1a1a1a;--b2:#222;--s1:#111;--s2:#161616;
 }
 
-.layout{display:grid;grid-template-rows:60px 1fr 34px;height:100vh}
+.layout{display:grid;grid-template-rows:60px 1fr 130px 34px;height:100vh}
 
 /* ── HEADER ── */
 .hdr{
@@ -32,7 +32,7 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
 .date{font-size:10px;color:var(--tx3);text-align:right;margin-top:2px}
 
 /* ── BODY ── */
-.body{display:grid;grid-template-columns:1fr 260px;overflow:hidden}
+.body{display:grid;grid-template-columns:1fr 220px;overflow:hidden}
 
 /* ── FILA ── */
 .fila-area{overflow-y:auto;padding:14px 16px 14px 24px;display:flex;flex-direction:column}
@@ -131,6 +131,13 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
 .hi-hora{font-size:10px;color:var(--tx3);font-family:monospace;flex-shrink:0}
 .hist-empty{font-size:12px;color:var(--tx4);padding:20px 0;text-align:center}
 
+/* ── GRÁFICO ── */
+.chart-panel{border-top:1px solid #1c1c1c;background:#080808;padding:10px 24px 8px;height:130px;flex-shrink:0}
+.chart-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.chart-title{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+.chart-meta{font-size:9px;color:var(--tx4);font-family:monospace}
+.chart-wrap{position:relative;height:86px}
+
 /* ── FOOTER ── */
 .ftr{background:#080808;border-top:1px solid #1c1c1c;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
 .ftr-txt{font-size:9px;color:var(--tx4);letter-spacing:.05em}
@@ -146,6 +153,7 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes piscaR{0%,100%{opacity:1}50%{opacity:.25}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 <body>
 <div class="layout">
@@ -193,6 +201,11 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
       <div class="hist-empty">Nenhum registro ainda</div>
     </div>
   </div>
+</div>
+
+<div class="chart-panel">
+  <div class="chart-hdr"><span class="chart-title">Atendimentos por hora</span><span class="chart-meta" id="chart-meta">—</span></div>
+  <div class="chart-wrap"><canvas id="chart-hora"></canvas></div>
 </div>
 
 <footer class="ftr">
@@ -256,6 +269,8 @@ function render(fila,hist){
     });
   }
 
+  renderGrafico(hist);
+
   var w=document.getElementById('hist-list');
   if(!hist||!hist.length){
     w.innerHTML='<div class="hist-empty">Nenhum registro ainda</div>';
@@ -270,6 +285,58 @@ function render(fila,hist){
       w.appendChild(d);
     });
   }
+}
+
+var _chart = null;
+function renderGrafico(hist){
+  // Agrega por hora usando os timestamps do histórico
+  var contagem = {};
+  (hist||[]).forEach(function(item){
+    var h = new Date(item.ts).getHours();
+    contagem[h] = (contagem[h]||0) + 1;
+  });
+
+  // Range de horas do turno: 07h–19h
+  var horas = [];
+  for(var h=7;h<=19;h++) horas.push(h);
+
+  var labels = horas.map(function(h){ return ('0'+h).slice(-2)+'h'; });
+  var dados  = horas.map(function(h){ return contagem[h]||0; });
+  var total  = dados.reduce(function(s,v){ return s+v; },0);
+  document.getElementById('chart-meta').textContent = total + ' entregues no turno';
+
+  // Cor das barras: verde se dentro da média, âmbar se acima
+  var media = total / horas.filter(function(h){ return (contagem[h]||0)>0; }).length || 0;
+  var cores = dados.map(function(v){
+    if(v===0) return 'rgba(255,255,255,.04)';
+    return v >= media*1.3 ? 'rgba(227,179,65,.7)' : 'rgba(61,214,140,.65)';
+  });
+
+  var canvas = document.getElementById('chart-hora');
+  if(_chart) _chart.destroy();
+  _chart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets:[{
+        data: dados,
+        backgroundColor: cores,
+        borderRadius: 3,
+        borderSkipped: false
+      }]
+    },
+    options:{
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins:{ legend:{display:false}, tooltip:{
+        callbacks:{ label:function(c){ return ' '+c.raw+' entregue'+(c.raw!==1?'s':''); } }
+      }},
+      scales:{
+        x:{ ticks:{color:'#444',font:{size:9}}, grid:{color:'rgba(255,255,255,.03)'} },
+        y:{ ticks:{color:'#444',font:{size:9},stepSize:1}, grid:{color:'rgba(255,255,255,.04)'}, beginAtZero:true }
+      }
+    }
+  });
 }
 
 function carregar(){
