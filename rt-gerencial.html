@@ -336,7 +336,7 @@ select option{background:var(--s2)}
 // ── CONFIG — cole aqui a URL do Web App após implantar ───────────
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbxpSDbJnHczI10429ySca9Zf4xcZ1Ry9H0lKsQveGS6nQH9JunpKmezBIE2qC8XlTML/exec';
 
-var T_PROG   = 540;
+var T_PROG   = 480; // min/dia/máquina (conforme planilha OEE)
 var META_OEE = 0.80;
 
 var paradas=[]; var atendimentos=[]; var filtrMaq='todas'; var editId=null; var charts={};
@@ -405,17 +405,24 @@ function analisar(){
   var pFilt=paradas.filter(p=>{ var d=new Date(p.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&(filtrMaq==='todas'||p.maquina===filtrMaq); });
   var aFilt=atendimentos.filter(a=>{ var d=new Date(a.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&(filtrMaq==='todas'||a.maquina===filtrMaq); });
 
-  var nDias=Array.from(new Set(aFilt.map(a=>a.data))).filter(function(d){ var dow=new Date(d+'T12:00:00').getDay(); return dow>=1&&dow<=5; }).length||1;
   var maquinas=filtrMaq==='todas'?['CXS','CX']:[filtrMaq];
-  var tProgTotal=nDias*maquinas.length*T_PROG;
-  var tParTotal=pFilt.reduce((s,p)=>s+(+p.duracao||0),0);
   var pacProg=aFilt.reduce((s,a)=>s+(+a.programados||0),0);
   var pacAtend=aFilt.reduce((s,a)=>s+(+a.atendidos||0),0);
-
-  var disp=tProgTotal>0?Math.max(0,(tProgTotal-tParTotal)/tProgTotal):1;
-  var perf=pacProg>0?Math.min(1,pacAtend/pacProg):0;
-  var oee=disp; // OEE = Disponibilidade (Qualidade=1, Performance não aplicável)
   var aderencia=pacProg>0?pacAtend/pacProg:0;
+
+  // OEE Geral = média das disponibilidades por máquina (cada máquina tem seu próprio T_PROG diário)
+  var oeeTotal=0, oeeCount=0;
+  maquinas.forEach(function(maq){
+    var pm=paradas.filter(p=>{ var d=new Date(p.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&p.maquina===maq;});
+    var am=atendimentos.filter(a=>{ var d=new Date(a.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&a.maquina===maq;});
+    var nd=Array.from(new Set(am.map(a=>a.data))).filter(function(d){ var dow=new Date(d+'T12:00:00').getDay(); return dow>=1&&dow<=5; }).length||1;
+    var tp=nd*T_PROG, tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
+    var d2=tp>0?Math.max(0,(tp-tpar)/tp):1;
+    oeeTotal+=d2; oeeCount++;
+  });
+  var oee=oeeCount>0?oeeTotal/oeeCount:1;
+  var disp=oee;
+  var tParTotal=pFilt.reduce((s,p)=>s+(+p.duracao||0),0);
 
   setKPI('k-oee',pct(oee),oeeColor(oee));
   setKPI('k-disp',pct(disp),oeeColor(disp,0.9));
@@ -473,16 +480,22 @@ function renderPareto(pFilt){
 function renderEvolucao(ini,fim){
   var dias=[]; var d=new Date(ini);
   while(d<=fim){ var dow=d.getDay(); if(dow>=1&&dow<=5) dias.push(fmtDate(new Date(d))); d.setDate(d.getDate()+1); }
-  if(dias.length>45) dias=dias.slice(-45);
+  if(dias.length>90) dias=dias.slice(-90);
   var maquinas=filtrMaq==='todas'?['CXS','CX']:[filtrMaq];
-  var oeeData=dias.map(dia=>{
-    var am=atendimentos.filter(a=>a.data===dia&&(filtrMaq==='todas'||a.maquina===filtrMaq));
-    var pm=paradas.filter(p=>p.data===dia&&(filtrMaq==='todas'||p.maquina===filtrMaq));
-    if(!am.length&&!pm.length) return null;
-    var tp=maquinas.length*T_PROG, tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
-    var pp=am.reduce((s,a)=>s+(+a.programados||0),0), pa=am.reduce((s,a)=>s+(+a.atendidos||0),0);
-    var disp=tp>0?Math.max(0,(tp-tpar)/tp):1;
-    return Math.round(disp*100);
+  var oeeData=dias.map(function(dia){
+    var temDados=false;
+    var dispTotal=0, dispCount=0;
+    maquinas.forEach(function(maq){
+      var am=atendimentos.filter(a=>a.data===dia&&a.maquina===maq);
+      var pm=paradas.filter(p=>p.data===dia&&p.maquina===maq);
+      if(!am.length&&!pm.length) return;
+      temDados=true;
+      var tpar=pm.reduce((s,p)=>s+(+p.duracao||0),0);
+      var d2=T_PROG>0?Math.max(0,(T_PROG-tpar)/T_PROG):1;
+      dispTotal+=d2; dispCount++;
+    });
+    if(!temDados) return null;
+    return Math.round((dispCount>0?dispTotal/dispCount:1)*100);
   });
   document.getElementById('meta-evolucao').textContent=dias.length+' dias';
   var canvas=document.getElementById('chart-oee');
