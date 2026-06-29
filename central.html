@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>i-OMT — Central de Painéis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--s1:#161b22;--s2:#1c2128;
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.13);
+  --tx:#e6edf3;--tx2:#8b949e;--tx3:#484f58;
+  --green:#1D9E75;--gt:#3dd68c;--gd:rgba(29,158,117,.12);
+  --blue:#388bfd;--bt:#79c0ff;--bd:rgba(56,139,253,.10);
+  --purple:#8957e5;--pt:#d2a8ff;--pd:rgba(137,87,229,.10);
+  --amber:#d29922;--at:#e3b341;--ad:rgba(210,153,34,.10);
+  --red:#da3633;--rt:#f85149;--rd:rgba(218,54,51,.10);
+  --ff:'Syne',sans-serif;--fm:'DM Mono',monospace;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(--ff)}
+
+/* HEADER */
+.hdr{
+  padding:20px 32px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  border-bottom:1px solid var(--b1);
+}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.logo{height:32px}
+.hdr-title{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.hdr-sub{font-size:11px;color:var(--tx2);margin-top:2px;font-family:var(--fm)}
+.hdr-time{font-family:var(--fm);font-size:12px;color:var(--tx3)}
+
+/* IFRAME WRAPPER */
+.shell{display:flex;height:calc(100vh - 65px)}
+
+/* SIDEBAR */
+.sidebar{
+  width:220px;flex-shrink:0;
+  background:var(--s1);border-right:1px solid var(--b1);
+  display:flex;flex-direction:column;gap:0;
+  overflow-y:auto;
+}
+.sidebar-section{
+  padding:16px 14px 8px;
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--tx3);
+}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;
+  cursor:pointer;border:none;background:none;width:100%;text-align:left;
+  font-family:var(--ff);font-size:13px;font-weight:500;color:var(--tx2);
+  border-left:3px solid transparent;
+  transition:background .12s,color .12s,border-color .12s;
+  text-decoration:none;
+}
+.nav-item:hover{background:var(--b1);color:var(--tx)}
+.nav-item.active{color:var(--tx);border-left-color:var(--green);background:rgba(29,158,117,.06)}
+.nav-item.active .nav-icon{opacity:1}
+.nav-icon{font-size:16px;opacity:.5;transition:opacity .12s;width:20px;text-align:center}
+.nav-label{flex:1}
+.nav-badge{
+  font-size:9px;font-family:var(--fm);
+  background:var(--s2);border:1px solid var(--b2);
+  border-radius:20px;padding:1px 6px;color:var(--tx3);
+}
+.nav-divider{height:1px;background:var(--b1);margin:6px 0}
+
+/* CONTENT */
+.content{flex:1;position:relative;overflow:hidden}
+.frame{
+  position:absolute;inset:0;width:100%;height:100%;
+  border:none;display:none;
+  background:var(--bg);
+}
+.frame.active{display:block}
+
+/* SPLASH */
+.splash{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;
+}
+.splash-logo{height:48px;opacity:.15;margin-bottom:8px}
+.splash-title{font-size:22px;font-weight:700;color:var(--tx2)}
+.splash-sub{font-size:12px;color:var(--tx3);font-family:var(--fm)}
+
+/* CARDS GRID na splash */
+.cards{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:14px;
+  margin-top:32px;width:100%;max-width:640px;padding:0 24px;
+}
+.card{
+  background:var(--s1);border:1px solid var(--b1);border-radius:12px;
+  padding:20px;cursor:pointer;transition:border-color .15s,transform .12s;
+  text-decoration:none;color:var(--tx);display:block;
+}
+.card:hover{border-color:var(--b2);transform:translateY(-2px)}
+.card-icon{font-size:28px;margin-bottom:10px}
+.card-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.card-desc{font-size:11px;color:var(--tx2)}
+.card-tag{
+  display:inline-block;margin-top:10px;
+  font-size:9px;font-family:var(--fm);font-weight:600;
+  text-transform:uppercase;letter-spacing:.07em;
+  border-radius:20px;padding:2px 8px;
+}
+.tag-green{background:var(--gd);color:var(--gt)}
+.tag-blue{background:var(--bd);color:var(--bt)}
+.tag-purple{background:var(--pd);color:var(--pt)}
+.tag-amber{background:var(--ad);color:var(--at)}
+
+/* OPEN EXTERNAL BTN */
+.btn-ext{
+  position:absolute;top:10px;right:12px;z-index:10;
+  background:var(--s2);border:1px solid var(--b2);border-radius:6px;
+  padding:5px 10px;font-size:11px;color:var(--tx2);cursor:pointer;
+  font-family:var(--fm);text-decoration:none;display:none;
+  transition:color .12s,border-color .12s;
+}
+.btn-ext:hover{color:var(--tx);border-color:var(--b3)}
+.btn-ext.visible{display:flex;align-items:center;gap:5px}
+
+@media(max-width:700px){
+  .sidebar{width:56px}
+  .nav-label,.nav-badge,.sidebar-section{display:none}
+  .nav-item{padding:12px;justify-content:center}
+  .cards{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-brand">
+    <img src="https://painel.i-omt.com/logo_iomt_branco.png" class="logo" alt="i-OMT">
+    <div>
+      <div class="hdr-title">Central de Painéis</div>
+      <div class="hdr-sub">Hospital Márcio Cunha — FSFX · Ipatinga MG</div>
+    </div>
+  </div>
+  <div class="hdr-time" id="clock">—</div>
+</header>
+
+<div class="shell">
+  <nav class="sidebar">
+    <div class="sidebar-section">Tempo Real</div>
+    <a class="nav-item" data-id="resumo" onclick="navTo('resumo',this)">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Resumo QT</span>
+      <span class="nav-badge">RT</span>
+    </a>
+
+    <div class="nav-divider"></div>
+    <div class="sidebar-section">Gerencial</div>
+
+    <a class="nav-item" data-id="qt" onclick="navTo('qt',this)">
+      <span class="nav-icon">💉</span>
+      <span class="nav-label">QT — Quimioterapia</span>
+    </a>
+    <a class="nav-item" data-id="farmacia" onclick="navTo('farmacia',this)">
+      <span class="nav-icon">⚗️</span>
+      <span class="nav-label">Farmácia</span>
+    </a>
+    <a class="nav-item" data-id="rt" onclick="navTo('rt',this)">
+      <span class="nav-icon">☢️</span>
+      <span class="nav-label">Radioterapia</span>
+    </a>
+
+    <div class="nav-divider"></div>
+    <div class="sidebar-section">Gestão</div>
+
+    <a class="nav-item" data-id="acoes" onclick="navTo('acoes',this)">
+      <span class="nav-icon">✅</span>
+      <span class="nav-label">Plano de Ação</span>
+    </a>
+  </nav>
+
+  <div class="content">
+    <a class="btn-ext" id="btn-ext" target="_blank" title="Abrir em nova aba">
+      ↗ Abrir em nova aba
+    </a>
+
+    <!-- SPLASH -->
+    <div class="splash" id="splash">
+      <img src="https://painel.i-omt.com/logo_iomt_branco.png" class="splash-logo" alt="">
+      <div class="splash-title">Selecione um painel</div>
+      <div class="splash-sub">ou clique em um dos atalhos abaixo</div>
+      <div class="cards">
+        <div class="card" onclick="navTo('resumo',null)">
+          <div class="card-icon">📊</div>
+          <div class="card-title">Resumo QT</div>
+          <div class="card-desc">Visão em tempo real das poltronas e fila de farmácia</div>
+          <span class="card-tag tag-green">Tempo real</span>
+        </div>
+        <div class="card" onclick="navTo('farmacia',null)">
+          <div class="card-icon">⚗️</div>
+          <div class="card-title">Farmácia</div>
+          <div class="card-desc">Kanban de manipulação, tempos e metas por etapa</div>
+          <span class="card-tag tag-blue">Gerencial</span>
+        </div>
+        <div class="card" onclick="navTo('rt',null)">
+          <div class="card-icon">☢️</div>
+          <div class="card-title">Radioterapia</div>
+          <div class="card-desc">OEE, paradas e atendimentos por máquina CXS e CX</div>
+          <span class="card-tag tag-purple">Gerencial</span>
+        </div>
+        <div class="card" onclick="navTo('acoes',null)">
+          <div class="card-icon">✅</div>
+          <div class="card-title">Plano de Ação</div>
+          <div class="card-desc">Kanban de ações abertas, em andamento e concluídas</div>
+          <span class="card-tag tag-amber">Gestão</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- IFRAMES -->
+    <iframe id="frame-resumo"   class="frame" src="" title="Resumo QT"></iframe>
+    <iframe id="frame-qt"       class="frame" src="" title="QT Gerencial"></iframe>
+    <iframe id="frame-farmacia" class="frame" src="" title="Farmácia Gerencial"></iframe>
+    <iframe id="frame-rt"       class="frame" src="" title="Radioterapia Gerencial"></iframe>
+    <iframe id="frame-acoes"    class="frame" src="" title="Plano de Ação"></iframe>
+  </div>
+</div>
+
+<script>
+var PAINEIS = {
+  resumo:   { url: 'https://painel.i-omt.com/resumo.html',            label: 'Resumo QT' },
+  qt:       { url: 'https://painel.i-omt.com/farmacia-gerencial.html',label: 'QT Gerencial' },
+  farmacia: { url: 'https://painel.i-omt.com/farmacia-gerencial.html',label: 'Farmácia Gerencial' },
+  rt:       { url: 'https://painel.i-omt.com/rt-gerencial.html',      label: 'Radioterapia' },
+  acoes:    { url: 'https://painel.i-omt.com/acoes.html',             label: 'Plano de Ação' }
+};
+
+var current = null;
+
+function navTo(id, navEl) {
+  // Atualiza nav
+  document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
+  if(navEl) navEl.classList.add('active');
+  else {
+    var match = document.querySelector('[data-id="'+id+'"]');
+    if(match) match.classList.add('active');
+  }
+
+  // Esconde splash
+  document.getElementById('splash').style.display = 'none';
+
+  // Esconde todos os frames
+  document.querySelectorAll('.frame').forEach(function(f){ f.classList.remove('active'); });
+
+  // Ativa o frame alvo
+  var frame = document.getElementById('frame-'+id);
+  if(!frame) return;
+  frame.classList.add('active');
+
+  // Carrega URL só na primeira vez
+  if(!frame.src || frame.src === window.location.href || frame.getAttribute('data-loaded') !== '1') {
+    frame.src = PAINEIS[id].url;
+    frame.setAttribute('data-loaded','1');
+  }
+
+  // Botão de abrir em nova aba
+  var btn = document.getElementById('btn-ext');
+  btn.href = PAINEIS[id].url;
+  btn.classList.add('visible');
+
+  current = id;
+}
+
+// Relógio
+function tick(){
+  var now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}) +
+    ' · ' +
+    now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+tick(); setInterval(tick, 1000);
+
+// Atalho de teclado: 1-5 para navegar
+document.addEventListener('keydown', function(e){
+  var map = {'1':'resumo','2':'qt','3':'farmacia','4':'rt','5':'acoes'};
+  if(map[e.key]) navTo(map[e.key], null);
+});
+</script>
+</body>
+</html>
