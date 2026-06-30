@@ -50,12 +50,16 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 .kpi-val.green{color:var(--gt)}.kpi-val.amber{color:var(--at)}.kpi-val.red{color:var(--rt)}.kpi-val.blue{color:var(--bt)}
 .kpi-sub{font-size:10px;color:var(--tx2);margin-top:3px}
 /* KANBAN */
-.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:16px 20px;align-items:start}
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:16px 20px;align-items:start}
 .col{background:var(--s1);border:1px solid var(--b1);border-radius:10px;overflow:hidden}
 .col-hdr{padding:10px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between}
 .col-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;display:flex;align-items:center;gap:8px}
 .col-dot{width:8px;height:8px;border-radius:50%}
-.dot-aberta{background:var(--rt)}.dot-andamento{background:var(--at)}.dot-concluida{background:var(--gt)}
+.dot-aberta{background:var(--rt)}.dot-andamento{background:var(--at)}.dot-concluida{background:var(--gt)}.dot-vencida{background:#ff4d4d;animation:pdot 1.2s ease-in-out infinite}
+.card{user-select:none}
+.card[draggable="true"]{cursor:grab}
+.card.dragging{opacity:.4}
+.col-body.drag-over{background:rgba(255,255,255,.03);outline:2px dashed var(--b3);outline-offset:-4px;border-radius:8px}
 .col-count{font-size:11px;font-family:var(--fm);color:var(--tx3)}
 .col-body{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:80px}
 /* CARD */
@@ -100,6 +104,7 @@ select option{background:var(--s2)}
 .btn-delete:hover{background:var(--rt);color:#fff}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:1100px){.kanban{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:820px){.kanban{grid-template-columns:1fr}.kpi-bar{grid-template-columns:1fr 1fr}.field-row{grid-template-columns:1fr}}
 </style>
 </head>
@@ -147,16 +152,20 @@ select option{background:var(--s2)}
 
 <div class="kanban">
   <div class="col">
+    <div class="col-hdr"><span class="col-title"><span class="col-dot dot-vencida"></span>Vencida</span><span class="col-count" id="cnt-vencida">0</span></div>
+    <div class="col-body" id="col-vencida" data-status="Vencida"></div>
+  </div>
+  <div class="col">
     <div class="col-hdr"><span class="col-title"><span class="col-dot dot-aberta"></span>Aberta</span><span class="col-count" id="cnt-aberta">0</span></div>
-    <div class="col-body" id="col-aberta"></div>
+    <div class="col-body" id="col-aberta" data-status="Aberta"></div>
   </div>
   <div class="col">
     <div class="col-hdr"><span class="col-title"><span class="col-dot dot-andamento"></span>Em andamento</span><span class="col-count" id="cnt-andamento">0</span></div>
-    <div class="col-body" id="col-andamento"></div>
+    <div class="col-body" id="col-andamento" data-status="Em andamento"></div>
   </div>
   <div class="col">
     <div class="col-hdr"><span class="col-title"><span class="col-dot dot-concluida"></span>Concluída</span><span class="col-count" id="cnt-concluida">0</span></div>
-    <div class="col-body" id="col-concluida"></div>
+    <div class="col-body" id="col-concluida" data-status="Concluída"></div>
   </div>
 </div>
 
@@ -275,18 +284,24 @@ function aplicarFiltros(lista){
 }
 
 // ── RENDER ──────────────────────────────────────────────────────
+function isVencida(a, hoje){
+  return a.status!=='Concluída' && a.prazo && new Date(a.prazo)<hoje;
+}
+
 function renderTudo(){
   var lista=aplicarFiltros(acoes);
   var hoje=new Date(); hoje.setHours(0,0,0,0);
-  var vencidas=acoes.filter(a=>a.status!=='Concluída'&&a.prazo&&new Date(a.prazo)<hoje).length;
+  var vencidas=acoes.filter(a=>isVencida(a,hoje)).length;
   document.getElementById('k-total').textContent      = acoes.length;
   document.getElementById('k-abertas').textContent    = acoes.filter(a=>a.status==='Aberta').length;
   document.getElementById('k-andamento').textContent  = acoes.filter(a=>a.status==='Em andamento').length;
   document.getElementById('k-concluidas').textContent = acoes.filter(a=>a.status==='Concluída').length;
   document.getElementById('k-vencidas').textContent   = vencidas;
-  renderCol('aberta',   lista.filter(a=>a.status==='Aberta'),       hoje);
-  renderCol('andamento',lista.filter(a=>a.status==='Em andamento'), hoje);
-  renderCol('concluida',lista.filter(a=>a.status==='Concluída'),    hoje);
+  // Vencida tem coluna própria — ações vencidas saem de Aberta/Em andamento e vão para Vencida
+  renderCol('vencida',   lista.filter(a=>isVencida(a,hoje)), hoje);
+  renderCol('aberta',    lista.filter(a=>a.status==='Aberta'       && !isVencida(a,hoje)), hoje);
+  renderCol('andamento', lista.filter(a=>a.status==='Em andamento' && !isVencida(a,hoje)), hoje);
+  renderCol('concluida', lista.filter(a=>a.status==='Concluída'), hoje);
 }
 
 function renderCol(id,lista,hoje){
@@ -303,6 +318,13 @@ function renderCol(id,lista,hoje){
 
 function buildCard(a,hoje){
   var div=document.createElement('div'); div.className='card'; div.onclick=()=>abrirModal(a.id);
+  div.draggable=true; div.dataset.id=a.id;
+  div.addEventListener('dragstart',function(e){
+    div.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', a.id);
+    e.dataTransfer.effectAllowed='move';
+  });
+  div.addEventListener('dragend',function(){ div.classList.remove('dragging'); });
   var prazoHtml='<span class="card-prazo prazo-sem">sem prazo</span>';
   if(a.prazo){
     var dp=new Date(a.prazo); dp.setHours(0,0,0,0);
@@ -415,7 +437,49 @@ function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace
 function fmtData(iso){if(!iso)return'';var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
 function fmtDH(iso){if(!iso)return'';var d=new Date(iso);return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
 
+// ── DRAG AND DROP ────────────────────────────────────────────────
+function setupDragDrop(){
+  document.querySelectorAll('.col-body').forEach(function(col){
+    col.addEventListener('dragover', function(e){
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
+      col.classList.add('drag-over');
+    });
+    col.addEventListener('dragleave', function(){ col.classList.remove('drag-over'); });
+    col.addEventListener('drop', async function(e){
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      var id = e.dataTransfer.getData('text/plain');
+      var novoStatus = col.dataset.status;
+      if(!id || !novoStatus) return;
+
+      var a = acoes.find(x=>x.id===id);
+      if(!a) return;
+
+      // "Vencida" não é status real — soltar ali não altera status, só visual (ação permanece vencida pela data)
+      if(novoStatus==='Vencida'){ renderTudo(); return; }
+      if(a.status===novoStatus){ return; }
+
+      var statusAnterior = a.status;
+      a.status = novoStatus; // otimista
+      renderTudo();
+
+      setStatus('saving','movendo');
+      try{
+        await api({acao:'gravar', id:id, status:novoStatus});
+        setStatus('ok','movido para '+novoStatus);
+      } catch(err){
+        a.status = statusAnterior; // reverte em caso de erro
+        renderTudo();
+        setStatus('err','erro ao mover');
+        alert('Erro ao mover ação: '+err.message);
+      }
+    });
+  });
+}
+
 carregar();
+setupDragDrop();
 </script>
 </body>
 </html>
