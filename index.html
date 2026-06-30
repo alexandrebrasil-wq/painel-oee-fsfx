@@ -309,9 +309,9 @@ function render(st,fonte){
     const atendNum=poltronaAtend[pNome]||'';
     const estaAguardandoFarm = s.s==='parada' && (s.mot||'').indexOf('Manipul')>=0;
     const etapaFarm = estaAguardandoFarm && s.atend ? (farmEtapa.get(s.atend)||'') : '';
-    const medicacaoDisp = etapaFarm === 'Disponível QT';
-    const ETAPA_LABEL = {'Separação':'📦 Separação','Pré QT':'🔬 Pré QT','Capela QT':'⚗️ Capela QT','Disponível QT':'💊 Disponível'};
-    const ETAPA_COR   = {'Separação':'#79c0ff','Pré QT':'#e3b341','Capela QT':'#f97316','Disponível QT':'#3dd68c'};
+    const medicacaoDisp = etapaFarm === 'Disponível QT' || etapaFarm === 'Disponível pré QT';
+    const ETAPA_LABEL = {'Separação':'📦 Separação','Pré QT':'🔬 Pré QT','Capela QT':'⚗️ Capela QT','Disponível QT':'💊 Disponível','Disponível pré QT':'💊 Disponível (pré)'};
+    const ETAPA_COR   = {'Separação':'#79c0ff','Pré QT':'#e3b341','Capela QT':'#f97316','Disponível QT':'#3dd68c','Disponível pré QT':'#3dd68c'};
     const etapaLabel = ETAPA_LABEL[etapaFarm] || '';
     const etapaCor   = ETAPA_COR[etapaFarm] || '#8b949e';
     const medBadge = estaAguardandoFarm
@@ -345,7 +345,7 @@ async function loadFarmData(){
     const data=await r.json();
     const rows=data.rows||[];
     farmDisponivel=new Set(
-      rows.filter(r=>r['Etapa Atual']==='Disponível QT')
+      rows.filter(r=>r['Etapa Atual']==='Disponível QT'||r['Etapa Atual']==='Disponível pré QT')
           .map(r=>String(r['Nº Atendimento']||'').trim())
     );
     farmEtapa=new Map(
