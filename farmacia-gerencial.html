@@ -295,10 +295,32 @@ function analisar(){
   });
 
   // Filtra paradas do período
-  var paradas = dadosRegistros.filter(r=>{
+  var paradasRaw = dadosRegistros.filter(r=>{
     var ts = new Date(r['Timestamp']||r['timestamp']||0);
-    var tipo = r['Tipo']||r['tipo']||'';
+    var tipo = (r['Tipo']||r['tipo']||'').trim();
     return ts>=ini && ts<=fim && tipo==='parada';
+  });
+
+  // Mapa de encerramentos manuais: atendimento → timestamp de encerramento
+  var encMapG={};
+  dadosRegistros.filter(r=>{
+    var ts = new Date(r['Timestamp']||r['timestamp']||0);
+    var tipo = (r['Tipo']||r['tipo']||'').trim();
+    return ts>=ini && ts<=fim && tipo==='encerramento';
+  }).forEach(r=>{
+    var a = (r['Nº Atendimento']||r['atendimento']||'').trim();
+    var ts = new Date(r['Timestamp']||r['timestamp']||0);
+    if(a && (!encMapG[a] || ts > encMapG[a])) encMapG[a]=ts;
+  });
+
+  // Enriquece cada parada com duração calculada
+  var paradas = paradasRaw.map(r=>{
+    var a = (r['Nº Atendimento']||r['atendimento']||'').trim();
+    var tsIni = new Date(r['Timestamp']||r['timestamp']||0);
+    var tsEndRaw = r['Encerramento']||r['encerramento']||'';
+    var tsEnd = tsEndRaw ? new Date(tsEndRaw) : (encMapG[a]||null);
+    var dur = tsEnd ? Math.max(0,(tsEnd-tsIni)/60000) : null; // null = parada em aberto
+    return Object.assign({}, r, {_dur: dur, _tsIni: tsIni, _tsEnd: tsEnd});
   });
 
   // Filtra QT do período
@@ -384,12 +406,15 @@ function calcularAnalise(regs, paradas, qtRows, ini, fim){
   var comParada   = atendComParada.size;
   var pctParada   = totalAtends ? comParada/totalAtends : 0;
 
-  // Pareto de motivos
+  // Pareto de motivos com duração
   var motivos={};
   paradas.forEach(r=>{
-    var j=r['Justificativa']||r['justificativa']||'Sem motivo';
+    var j=(r['Justificativa']||r['justificativa']||'Sem motivo').trim();
+    if(j==='Encerramento manual de parada') return;
     if(!motivos[j]) motivos[j]={n:0,tot:0};
     motivos[j].n++;
+    var dur=r._dur!=null ? r._dur : 0;
+    if(dur>0 && dur<=480) motivos[j].tot+=dur;
   });
 
   // Evolução diária
@@ -617,19 +642,21 @@ function buildPareto(a){
   var p=document.createElement('div'); p.className='panel';
   var entries=Object.entries(a.motivos).sort((x,y)=>y[1].n-x[1].n);
   var total=entries.reduce((s,e)=>s+e[1].n,0)||1;
-  p.innerHTML='<div class="panel-hdr"><span class="panel-title">Pareto de paradas</span><span class="panel-meta">'+total+' ocorrências no período</span></div>';
+  var totalMin=entries.reduce((s,e)=>s+e[1].tot,0);
+  p.innerHTML='<div class="panel-hdr"><span class="panel-title">Pareto de paradas</span><span class="panel-meta">'+total+' ocorrências · '+fmtMin(totalMin)+' acumulado</span></div>';
   var body=document.createElement('div'); body.className='panel-body';
   if(!entries.length){body.innerHTML='<div class="empty">sem paradas no período</div>';}
   else{
     var maxN=entries[0][1].n;
     entries.forEach((e,i)=>{
       var row=document.createElement('div'); row.className='pareto-row';
+      var temDur=e[1].tot>0;
       row.innerHTML=`
         <span class="pareto-rank">${i+1}.</span>
         <span class="pareto-label" title="${e[0]}">${e[0]}</span>
         <div class="pareto-track"><div class="pareto-fill" style="width:${Math.round(e[1].n/maxN*100)}%"></div></div>
         <span class="pareto-n">${e[1].n}x</span>
-        <span class="pareto-t">${Math.round(e[1].n/total*100)}%</span>`;
+        <span class="pareto-t">${temDur?fmtMin(e[1].tot):Math.round(e[1].n/total*100)+'%'}</span>`;
       body.appendChild(row);
     });
   }
