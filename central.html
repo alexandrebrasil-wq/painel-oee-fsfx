@@ -3,283 +3,336 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>i-OMT — Central de Painéis</title>
+<title>i-OMT — Central de Operações</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500;600&family=Syne:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0d1117;--s1:#161b22;--s2:#1c2128;
-  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.13);
-  --tx:#e6edf3;--tx2:#8b949e;--tx3:#484f58;
-  --green:#1D9E75;--gt:#3dd68c;--gd:rgba(29,158,117,.12);
-  --blue:#388bfd;--bt:#79c0ff;--bd:rgba(56,139,253,.10);
-  --purple:#8957e5;--pt:#d2a8ff;--pd:rgba(137,87,229,.10);
-  --amber:#d29922;--at:#e3b341;--ad:rgba(210,153,34,.10);
-  --red:#da3633;--rt:#f85149;--rd:rgba(218,54,51,.10);
+  --bg:#0a0e12;--s1:#10161b;--s2:#161e24;--s3:#1b242b;
+  --b1:rgba(255,255,255,.06);--b2:rgba(255,255,255,.11);--b3:rgba(255,255,255,.18);
+  --tx:#e8edf0;--tx2:#7d8b94;--tx3:#46545c;
+
+  /* Sinalização hospitalar: verde=ok/tempo-real, âmbar=atenção/farmácia, azul=gestão, vermelho=ação/alerta */
+  --live:#2dd4a8;--live-d:rgba(45,212,168,.10);
+  --farm:#e0a73e;--farm-d:rgba(224,167,62,.10);
+  --mgmt:#5b9fd9;--mgmt-d:rgba(91,159,217,.10);
+  --action:#e8654f;--action-d:rgba(232,101,79,.10);
+
   --ff:'Syne',sans-serif;--fm:'DM Mono',monospace;
 }
-html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(--ff)}
+html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(--ff);overflow-x:hidden}
 
-/* HEADER */
-.hdr{
-  padding:20px 32px;
-  display:flex;align-items:center;justify-content:space-between;gap:16px;
-  border-bottom:1px solid var(--b1);
-}
-.hdr-brand{display:flex;align-items:center;gap:14px}
-.logo{height:32px}
-.hdr-title{font-size:18px;font-weight:700;letter-spacing:-.01em}
-.hdr-sub{font-size:11px;color:var(--tx2);margin-top:2px;font-family:var(--fm)}
-.hdr-time{font-family:var(--fm);font-size:12px;color:var(--tx3)}
+/* ── PULSE de fundo ambiente — sinal de "sistema vivo" ── */
+.pulse-bg{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5}
+.pulse-bg svg{width:100%;height:100%}
 
-/* IFRAME WRAPPER */
-.shell{display:flex;height:calc(100vh - 65px)}
+/* ── TOPBAR ── */
+.topbar{
+  position:relative;z-index:2;
+  display:flex;align-items:center;gap:18px;
+  padding:18px 28px;border-bottom:1px solid var(--b1);
+  background:rgba(10,14,18,.7);backdrop-filter:blur(10px);
+}
+.tb-logo{height:30px}
+.tb-id{font-family:var(--fm);font-size:10px;color:var(--tx3);letter-spacing:.08em}
+.tb-spacer{flex:1}
+.tb-clock{font-family:var(--fm);font-size:15px;color:var(--tx2);letter-spacing:.04em}
+.tb-date{font-size:11px;color:var(--tx3);text-align:right;margin-top:1px}
+.tb-pulse{display:flex;align-items:center;gap:7px;background:var(--s2);border:1px solid var(--b2);border-radius:20px;padding:5px 13px;font-family:var(--fm);font-size:10px;color:var(--live);letter-spacing:.05em}
+.tb-pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--live);animation:bpm 1.8s ease-in-out infinite}
+@keyframes bpm{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
 
-/* SIDEBAR */
-.sidebar{
-  width:220px;flex-shrink:0;
-  background:var(--s1);border-right:1px solid var(--b1);
-  display:flex;flex-direction:column;gap:0;
-  overflow-y:auto;
-}
-.sidebar-section{
-  padding:16px 14px 8px;
-  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;
-  color:var(--tx3);
-}
-.nav-item{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 14px;
-  cursor:pointer;border:none;background:none;width:100%;text-align:left;
-  font-family:var(--ff);font-size:13px;font-weight:500;color:var(--tx2);
-  border-left:3px solid transparent;
-  transition:background .12s,color .12s,border-color .12s;
-  text-decoration:none;
-}
-.nav-item:hover{background:var(--b1);color:var(--tx)}
-.nav-item.active{color:var(--tx);border-left-color:var(--green);background:rgba(29,158,117,.06)}
-.nav-item.active .nav-icon{opacity:1}
-.nav-icon{font-size:16px;opacity:.5;transition:opacity .12s;width:20px;text-align:center}
-.nav-label{flex:1}
-.nav-badge{
-  font-size:9px;font-family:var(--fm);
-  background:var(--s2);border:1px solid var(--b2);
-  border-radius:20px;padding:1px 6px;color:var(--tx3);
-}
-.nav-divider{height:1px;background:var(--b1);margin:6px 0}
+/* ── HERO — vital-sign strip do hospital inteiro ── */
+.hero{position:relative;z-index:2;padding:34px 28px 18px}
+.hero-eyebrow{font-family:var(--fm);font-size:11px;color:var(--tx3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.hero-title{font-size:clamp(22px,2.6vw,32px);font-weight:600;letter-spacing:-.01em;line-height:1.3;max-width:680px;color:#c8d2d8}
+.hero-title em{font-style:normal;color:var(--live)}
+.hero-sub{font-size:13px;color:var(--tx2);margin-top:10px;max-width:560px;line-height:1.5}
 
-/* CONTENT */
-.content{flex:1;position:relative;overflow:hidden}
-.frame{
-  position:absolute;inset:0;width:100%;height:100%;
-  border:none;display:none;
-  background:var(--bg);
+/* ── VITALS STRIP ── */
+.vitals{
+  position:relative;z-index:2;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:1px;background:var(--b1);
+  margin:22px 28px 8px;border:1px solid var(--b1);border-radius:12px;overflow:hidden;
 }
-.frame.active{display:block}
+.vital{background:var(--s1);padding:16px 18px;position:relative}
+.vital-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:var(--tx3);font-weight:600;margin-bottom:6px}
+.vital-val{font-family:var(--fm);font-size:24px;font-weight:600;line-height:1}
+.vital-val.green{color:var(--live)}.vital-val.amber{color:var(--farm)}.vital-val.blue{color:var(--mgmt)}.vital-val.red{color:var(--action)}.vital-val.dim{color:var(--tx2)}
+.vital-sub{font-size:10px;color:var(--tx3);margin-top:5px;font-family:var(--fm)}
 
-/* SPLASH */
-.splash{
-  position:absolute;inset:0;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:8px;
-}
-.splash-logo{height:48px;opacity:.15;margin-bottom:8px}
-.splash-title{font-size:22px;font-weight:700;color:var(--tx2)}
-.splash-sub{font-size:12px;color:var(--tx3);font-family:var(--fm)}
+/* ── SECTIONS ── */
+.section{position:relative;z-index:2;padding:8px 28px 6px}
+.section-hdr{display:flex;align-items:baseline;gap:12px;margin:30px 0 14px}
+.section-num{font-family:var(--fm);font-size:11px;color:var(--tx3)}
+.section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx)}
+.section-line{flex:1;height:1px;background:var(--b1)}
+.section-desc{font-size:11px;color:var(--tx3);font-family:var(--fm)}
 
-/* CARDS GRID na splash */
-.cards{
-  display:grid;grid-template-columns:repeat(2,1fr);gap:14px;
-  margin-top:32px;width:100%;max-width:640px;padding:0 24px;
-}
-.card{
-  background:var(--s1);border:1px solid var(--b1);border-radius:12px;
-  padding:20px;cursor:pointer;transition:border-color .15s,transform .12s;
-  text-decoration:none;color:var(--tx);display:block;
-}
-.card:hover{border-color:var(--b2);transform:translateY(-2px)}
-.card-icon{font-size:28px;margin-bottom:10px}
-.card-title{font-size:14px;font-weight:600;margin-bottom:4px}
-.card-desc{font-size:11px;color:var(--tx2)}
-.card-tag{
-  display:inline-block;margin-top:10px;
-  font-size:9px;font-family:var(--fm);font-weight:600;
-  text-transform:uppercase;letter-spacing:.07em;
-  border-radius:20px;padding:2px 8px;
-}
-.tag-green{background:var(--gd);color:var(--gt)}
-.tag-blue{background:var(--bd);color:var(--bt)}
-.tag-purple{background:var(--pd);color:var(--pt)}
-.tag-amber{background:var(--ad);color:var(--at)}
+/* ── GRID DE PAINÉIS ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:6px}
 
-/* OPEN EXTERNAL BTN */
-.btn-ext{
-  position:absolute;top:10px;right:12px;z-index:10;
-  background:var(--s2);border:1px solid var(--b2);border-radius:6px;
-  padding:5px 10px;font-size:11px;color:var(--tx2);cursor:pointer;
-  font-family:var(--fm);text-decoration:none;display:none;
-  transition:color .12s,border-color .12s;
+.tile{
+  position:relative;background:var(--s1);border:1px solid var(--b1);border-radius:14px;
+  padding:20px;cursor:pointer;text-decoration:none;color:var(--tx);
+  display:flex;flex-direction:column;gap:0;overflow:hidden;
+  transition:border-color .18s,transform .15s,background .18s;
+  min-height:148px;
 }
-.btn-ext:hover{color:var(--tx);border-color:var(--b3)}
-.btn-ext.visible{display:flex;align-items:center;gap:5px}
+.tile:hover{transform:translateY(-3px);border-color:var(--b3);background:var(--s2)}
+.tile::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;opacity:0;transition:opacity .18s}
+.tile:hover::before{opacity:1}
+.tile.c-live::before{background:var(--live)}
+.tile.c-farm::before{background:var(--farm)}
+.tile.c-mgmt::before{background:var(--mgmt)}
+.tile.c-action::before{background:var(--action)}
 
-@media(max-width:700px){
-  .sidebar{width:56px}
-  .nav-label,.nav-badge,.sidebar-section{display:none}
-  .nav-item{padding:12px;justify-content:center}
-  .cards{grid-template-columns:1fr}
+.tile-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.tile-icon{font-size:22px;line-height:1}
+.tile-tag{font-family:var(--fm);font-size:9px;padding:3px 8px;border-radius:20px;letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+.tag-live{background:var(--live-d);color:var(--live)}
+.tag-farm{background:var(--farm-d);color:var(--farm)}
+.tag-mgmt{background:var(--mgmt-d);color:var(--mgmt)}
+.tag-action{background:var(--action-d);color:var(--action)}
+
+.tile-title{font-size:16px;font-weight:700;margin-top:14px;letter-spacing:-.01em}
+.tile-desc{font-size:11.5px;color:var(--tx2);margin-top:6px;line-height:1.45;flex:1}
+.tile-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--b1)}
+.tile-meta{font-family:var(--fm);font-size:10px;color:var(--tx3)}
+.tile-arrow{font-size:14px;color:var(--tx3);transition:transform .18s,color .18s}
+.tile:hover .tile-arrow{transform:translateX(3px);color:var(--tx)}
+
+/* live indicator dot for real-time tiles */
+.tile-live-dot{width:6px;height:6px;border-radius:50%;background:var(--live);animation:bpm 1.8s ease-in-out infinite;display:inline-block;margin-right:5px}
+
+/* ── FOOTER ── */
+.ftr{
+  position:relative;z-index:2;
+  margin-top:40px;padding:20px 28px;border-top:1px solid var(--b1);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.ftr-l{font-size:10px;color:var(--tx3);font-family:var(--fm)}
+.ftr-r{display:flex;gap:18px;font-size:10px;color:var(--tx3);font-family:var(--fm)}
+.kbd{background:var(--s2);border:1px solid var(--b2);border-radius:4px;padding:1px 6px;font-family:var(--fm);font-size:9px;color:var(--tx2)}
+
+@media(max-width:680px){
+  .grid{grid-template-columns:1fr}
+  .vitals{grid-template-columns:repeat(2,1fr);margin:18px 16px}
+  .topbar,.hero,.section,.ftr{padding-left:16px;padding-right:16px}
 }
 </style>
 </head>
 <body>
 
-<header class="hdr">
-  <div class="hdr-brand">
-    <img src="https://painel.i-omt.com/logo_iomt_branco.png" class="logo" alt="i-OMT">
-    <div>
-      <div class="hdr-title">Central de Painéis</div>
-      <div class="hdr-sub">Hospital Márcio Cunha — FSFX · Ipatinga MG</div>
-    </div>
+<div class="pulse-bg" id="pulse-bg"></div>
+
+<header class="topbar">
+  <img src="https://painel.i-omt.com/logo_iomt_branco.png" class="tb-logo" alt="i-OMT">
+  <div class="tb-id">CENTRO DE INFUSÃO QT · HOSPITAL MÁRCIO CUNHA · FSFX</div>
+  <div class="tb-spacer"></div>
+  <div class="tb-pulse"><span class="tb-pulse-dot"></span>SISTEMA ATIVO</div>
+  <div style="text-align:right">
+    <div class="tb-clock" id="clock">00:00:00</div>
+    <div class="tb-date" id="date-lbl">—</div>
   </div>
-  <div class="hdr-time" id="clock">—</div>
 </header>
 
-<div class="shell">
-  <nav class="sidebar">
-    <div class="sidebar-section">Gerencial</div>
-    <a class="nav-item" data-id="resumo" onclick="navTo('resumo',this)">
-      <span class="nav-icon">📊</span>
-      <span class="nav-label">QT Gerencial</span>
-    </a>
+<section class="hero">
+  <div class="hero-eyebrow">i-OMT Smart Infusion Manager</div>
+  <h1 class="hero-title">Tudo o que o centro de infusão<br>está fazendo <em>agora</em>, num só lugar.</h1>
+  <p class="hero-sub">Acesso direto aos painéis de poltronas, farmácia, radioterapia e gestão de ações — sem login, sem token, sem fricção entre o que acontece na linha de frente e quem decide.</p>
+</section>
 
-    <div class="nav-divider"></div>
-    <div class="sidebar-section">Gerencial</div>
-
-    <a class="nav-item" data-id="farmacia" onclick="navTo('farmacia',this)">
-      <span class="nav-icon">⚗️</span>
-      <span class="nav-label">Farmácia</span>
-    </a>
-    <a class="nav-item" data-id="rt" onclick="navTo('rt',this)">
-      <span class="nav-icon">☢️</span>
-      <span class="nav-label">Radioterapia</span>
-    </a>
-
-    <div class="nav-divider"></div>
-    <div class="sidebar-section">Gestão</div>
-
-    <a class="nav-item" data-id="acoes" onclick="navTo('acoes',this)">
-      <span class="nav-icon">✅</span>
-      <span class="nav-label">Plano de Ação</span>
-    </a>
-  </nav>
-
-  <div class="content">
-    <a class="btn-ext" id="btn-ext" target="_blank" title="Abrir em nova aba">
-      ↗ Abrir em nova aba
-    </a>
-
-    <!-- SPLASH -->
-    <div class="splash" id="splash">
-      <img src="https://painel.i-omt.com/logo_iomt_branco.png" class="splash-logo" alt="">
-      <div class="splash-title">Selecione um painel</div>
-      <div class="splash-sub">ou clique em um dos atalhos abaixo</div>
-      <div class="cards">
-        <div class="card" onclick="navTo('resumo',null)">
-          <div class="card-icon">📊</div>
-          <div class="card-title">QT Gerencial</div>
-          <div class="card-desc">Indicadores gerenciais do Centro de Infusão QT</div>
-          <span class="card-tag tag-blue">Gerencial</span>
-        </div>
-        <div class="card" onclick="navTo('farmacia',null)">
-          <div class="card-icon">⚗️</div>
-          <div class="card-title">Farmácia</div>
-          <div class="card-desc">Kanban de manipulação, tempos e metas por etapa</div>
-          <span class="card-tag tag-blue">Gerencial</span>
-        </div>
-        <div class="card" onclick="navTo('rt',null)">
-          <div class="card-icon">☢️</div>
-          <div class="card-title">Radioterapia</div>
-          <div class="card-desc">OEE, paradas e atendimentos por máquina CXS e CX</div>
-          <span class="card-tag tag-purple">Gerencial</span>
-        </div>
-        <div class="card" onclick="navTo('acoes',null)">
-          <div class="card-icon">✅</div>
-          <div class="card-title">Plano de Ação</div>
-          <div class="card-desc">Kanban de ações abertas, em andamento e concluídas</div>
-          <span class="card-tag tag-amber">Gestão</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- IFRAMES -->
-    <iframe id="frame-resumo"   class="frame" src="" title="Resumo QT"></iframe>
-    <iframe id="frame-qt"       class="frame" src="" title="QT Gerencial"></iframe>
-    <iframe id="frame-farmacia" class="frame" src="" title="Farmácia Gerencial"></iframe>
-    <iframe id="frame-rt"       class="frame" src="" title="Radioterapia Gerencial"></iframe>
-    <iframe id="frame-acoes"    class="frame" src="" title="Plano de Ação"></iframe>
+<div class="vitals">
+  <div class="vital">
+    <div class="vital-lbl">Poltronas</div>
+    <div class="vital-val green">47</div>
+    <div class="vital-sub">total monitoradas</div>
+  </div>
+  <div class="vital">
+    <div class="vital-lbl">Fluxos ativos</div>
+    <div class="vital-val blue">7</div>
+    <div class="vital-sub">painéis operando</div>
+  </div>
+  <div class="vital">
+    <div class="vital-lbl">Etapas farmácia</div>
+    <div class="vital-val amber">5</div>
+    <div class="vital-sub">Separação → Disp. pré QT</div>
+  </div>
+  <div class="vital">
+    <div class="vital-lbl">Atualização</div>
+    <div class="vital-val dim">Tempo real</div>
+    <div class="vital-sub">5–30s · sem refresh manual</div>
   </div>
 </div>
 
+<!-- ───────────────────── TEMPO REAL ───────────────────── -->
+<section class="section">
+  <div class="section-hdr">
+    <span class="section-num">01</span>
+    <span class="section-title">Tempo real</span>
+    <span class="section-line"></span>
+    <span class="section-desc">o que está acontecendo agora</span>
+  </div>
+  <div class="grid">
+
+    <a class="tile c-live" href="index.html">
+      <div class="tile-top">
+        <span class="tile-icon">🪑</span>
+        <span class="tile-tag tag-live"><span class="tile-live-dot"></span>Ao vivo</span>
+      </div>
+      <div class="tile-title">Painel de Poltronas</div>
+      <div class="tile-desc">Status das 47 poltronas — em atendimento, em parada ou disponível. Badge de medicação integrado com a farmácia.</div>
+      <div class="tile-foot">
+        <span class="tile-meta">index.html</span>
+        <span class="tile-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="tile c-live" href="farmacia.html">
+      <div class="tile-top">
+        <span class="tile-icon">🧪</span>
+        <span class="tile-tag tag-live"><span class="tile-live-dot"></span>Ao vivo</span>
+      </div>
+      <div class="tile-title">Fluxo de Medicações</div>
+      <div class="tile-desc">Kanban da farmácia: Separação, Pré QT, Capela QT, Disponível QT e Disponível pré QT. Edição direta de lançamentos.</div>
+      <div class="tile-foot">
+        <span class="tile-meta">farmacia.html</span>
+        <span class="tile-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="tile c-live" href="chamada-painel.html">
+      <div class="tile-top">
+        <span class="tile-icon">📣</span>
+        <span class="tile-tag tag-live"><span class="tile-live-dot"></span>Ao vivo</span>
+      </div>
+      <div class="tile-title">Painel de Chamada</div>
+      <div class="tile-desc">Fila de entrega de medicamentos, tempo de espera com alerta acima de 5 minutos e atendimentos por hora.</div>
+      <div class="tile-foot">
+        <span class="tile-meta">chamada-painel.html</span>
+        <span class="tile-arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- ───────────────────── GERENCIAL ───────────────────── -->
+<section class="section">
+  <div class="section-hdr">
+    <span class="section-num">02</span>
+    <span class="section-title">Gerencial</span>
+    <span class="section-line"></span>
+    <span class="section-desc">indicadores, tendências e metas</span>
+  </div>
+  <div class="grid">
+
+    <a class="tile c-mgmt" href="resumo.html">
+      <div class="tile-top">
+        <span class="tile-icon">📊</span>
+        <span class="tile-tag tag-mgmt">Gerencial</span>
+      </div>
+      <div class="tile-title">QT Gerencial</div>
+      <div class="tile-desc">Indicadores consolidados do Centro de Infusão: ocupação, tempos médios e desempenho por poltrona.</div>
+      <div class="tile-foot">
+        <span class="tile-meta">resumo.html</span>
+        <span class="tile-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="tile c-farm" href="farmacia-gerencial.html">
+      <div class="tile-top">
+        <span class="tile-icon">⚗️</span>
+        <span class="tile-tag tag-farm">Gerencial</span>
+      </div>
+      <div class="tile-title">Farmácia Gerencial</div>
+      <div class="tile-desc">Tempo médio por etapa, metas de SLA (Separação 10min · Pré QT 15min · Capela 20min · TPF 45min).</div>
+      <div class="tile-foot">
+        <span class="tile-meta">farmacia-gerencial.html</span>
+        <span class="tile-arrow">→</span>
+      </div>
+    </a>
+
+    <a class="tile c-mgmt" href="rt-gerencial.html">
+      <div class="tile-top">
+        <span class="tile-icon">☢️</span>
+        <span class="tile-tag tag-mgmt">Gerencial</span>
+      </div>
+      <div class="tile-title">Radioterapia</div>
+      <div class="tile-desc">OEE, disponibilidade e aderência das máquinas CXS (IMRT) e CX (3D/2D), com pareto de paradas.</div>
+      <div class="tile-foot">
+        <span class="tile-meta">rt-gerencial.html</span>
+        <span class="tile-arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- ───────────────────── GESTÃO ───────────────────── -->
+<section class="section">
+  <div class="section-hdr">
+    <span class="section-num">03</span>
+    <span class="section-title">Gestão</span>
+    <span class="section-line"></span>
+    <span class="section-desc">desvios, ações e responsáveis</span>
+  </div>
+  <div class="grid">
+
+    <a class="tile c-action" href="acoes.html">
+      <div class="tile-top">
+        <span class="tile-icon">✅</span>
+        <span class="tile-tag tag-action">Plano de Ação</span>
+      </div>
+      <div class="tile-title">Plano de Ação</div>
+      <div class="tile-desc">Kanban de desvios identificados, ação corretiva, responsável e prazo — aberta, em andamento, concluída.</div>
+      <div class="tile-foot">
+        <span class="tile-meta">acoes.html</span>
+        <span class="tile-arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<footer class="ftr">
+  <div class="ftr-l">i-OMT · Intelligence Operations Management Technology · Hospital Márcio Cunha</div>
+  <div class="ftr-r">
+    <span>© 2026 i-OMT</span>
+  </div>
+</footer>
+
 <script>
-var PAINEIS = {
-  resumo:   { url: 'https://painel.i-omt.com/resumo.html',            label: 'QT Gerencial' },
-  farmacia: { url: 'https://painel.i-omt.com/farmacia-gerencial.html',label: 'Farmácia Gerencial' },
-  rt:       { url: 'https://painel.i-omt.com/rt-gerencial.html',      label: 'Radioterapia' },
-  acoes:    { url: 'https://painel.i-omt.com/acoes.html',             label: 'Plano de Ação' }
-};
-
-var current = null;
-
-function navTo(id, navEl) {
-  // Atualiza nav
-  document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
-  if(navEl) navEl.classList.add('active');
-  else {
-    var match = document.querySelector('[data-id="'+id+'"]');
-    if(match) match.classList.add('active');
-  }
-
-  // Esconde splash
-  document.getElementById('splash').style.display = 'none';
-
-  // Esconde todos os frames
-  document.querySelectorAll('.frame').forEach(function(f){ f.classList.remove('active'); });
-
-  // Ativa o frame alvo
-  var frame = document.getElementById('frame-'+id);
-  if(!frame) return;
-  frame.classList.add('active');
-
-  // Carrega URL só na primeira vez
-  if(!frame.src || frame.src === window.location.href || frame.getAttribute('data-loaded') !== '1') {
-    frame.src = PAINEIS[id].url;
-    frame.setAttribute('data-loaded','1');
-  }
-
-  // Botão de abrir em nova aba
-  var btn = document.getElementById('btn-ext');
-  btn.href = PAINEIS[id].url;
-  btn.classList.add('visible');
-
-  current = id;
-}
-
 // Relógio
-function tick(){
-  var now = new Date();
-  document.getElementById('clock').textContent =
-    now.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'}) +
-    ' · ' +
-    now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+function clock(){
+  var d=new Date();
+  document.getElementById('clock').textContent=
+    ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2);
+  var dias=['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+  var meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  document.getElementById('date-lbl').textContent=
+    dias[d.getDay()]+', '+d.getDate()+' de '+meses[d.getMonth()]+' de '+d.getFullYear();
 }
-tick(); setInterval(tick, 1000);
+clock(); setInterval(clock,1000);
 
-// Atalho de teclado: 1-5 para navegar
-document.addEventListener('keydown', function(e){
-  var map = {'1':'resumo','2':'qt','3':'farmacia','4':'rt','5':'acoes'};
-  if(map[e.key]) navTo(map[e.key], null);
-});
+// Pulso ambiente — linha de "batimento" sutil cruzando o topo, sinal de sistema vivo
+(function(){
+  var svg = document.getElementById('pulse-bg');
+  var W = window.innerWidth, H = 220;
+  var pts = [];
+  var n = 60;
+  for(var i=0;i<=n;i++){
+    var x = (i/n)*W;
+    var spike = (i===Math.floor(n*0.42)||i===Math.floor(n*0.44)) ? (i===Math.floor(n*0.42)?-38:24) : (Math.sin(i*0.5)*1.5);
+    pts.push(x+','+(40+spike));
+  }
+  svg.innerHTML = '<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">'+
+    '<polyline points="'+pts.join(' ')+'" fill="none" stroke="#2dd4a8" stroke-width="1" opacity="0.12"/>'+
+    '</svg>';
+})();
 </script>
 </body>
 </html>
