@@ -366,19 +366,33 @@ function renderPareto(farmRegs){
   var hoje=new Date().toISOString().slice(0,10);
   var now=new Date();
   var motivos={};
+
+  // Constrói mapa de encerramentos manuais: atendimento → timestamp mais recente de encerramento
+  var encMap={};
+  farmRegs.forEach(function(r){
+    var ts=new Date(r['Timestamp']||r['timestamp']||0);
+    var tipo=String(r['Tipo']||r['tipo']||'').trim();
+    var a=String(r['Nº Atendimento']||r['atendimento']||'').trim();
+    if(tipo==='encerramento' && a && ts.toISOString().slice(0,10)===hoje){
+      if(!encMap[a] || ts > encMap[a]) encMap[a]=ts;
+    }
+  });
+
   farmRegs.filter(function(r){
     var ts=new Date(r['Timestamp']||r['timestamp']||0);
-    var tipo=r['Tipo']||r['tipo']||'';
-    var just=r['Justificativa']||r['justificativa']||'';
+    var tipo=String(r['Tipo']||r['tipo']||'').trim();
+    var just=String(r['Justificativa']||r['justificativa']||'').trim();
     var isParada=tipo==='parada'||(tipo===''&&just&&just!=='Encerramento manual de parada');
     return ts.toISOString().slice(0,10)===hoje && isParada;
   }).forEach(function(r){
-    var j=r['Justificativa']||r['justificativa']||'Sem motivo';
+    var j=String(r['Justificativa']||r['justificativa']||'Sem motivo').trim();
     if(j==='Encerramento manual de parada') return;
-    // Calcula duração: usa campo Encerramento se existir, senão conta até agora
+    var a=String(r['Nº Atendimento']||r['atendimento']||'').trim();
     var tsIni=new Date(r['Timestamp']||r['timestamp']||0);
-    var tsEnd=r['Encerramento']||r['encerramento']||'';
-    var dur=tsEnd?((new Date(tsEnd)-tsIni)/60000):((now-tsIni)/60000);
+    // Prioridade: coluna Encerramento → linha de encerramento manual → agora
+    var tsEndRaw=r['Encerramento']||r['encerramento']||'';
+    var tsEnd=tsEndRaw ? new Date(tsEndRaw) : (encMap[a]||null);
+    var dur=tsEnd ? ((tsEnd-tsIni)/60000) : ((now-tsIni)/60000);
     if(dur<0||dur>480) dur=0; // ignora valores absurdos
     if(!motivos[j]) motivos[j]={n:0,tot:0};
     motivos[j].n++;
