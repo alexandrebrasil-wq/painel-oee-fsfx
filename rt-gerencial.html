@@ -148,7 +148,7 @@ select option{background:var(--s2)}
 
 <header class="hdr">
   <div class="hdr-left">
-    <img src="https://painel.i-omt.com/logo_iomt_branco.png" class="logo" alt="i-OMT">
+    <a href="central.html" title="Voltar para a Central"><img src="https://painel.i-omt.com/logo_iomt_branco.png" class="logo" alt="i-OMT"></a>
     <div>
       <div class="hdr-title">Painel Gerencial — Radioterapia</div>
       <div class="hdr-sub">CXS (Clinac iX IMRT) · CX (CX1052 3D)</div>
@@ -506,7 +506,7 @@ function analisar(){
   renderPareto(pFilt);
   renderEvolucao(ini,fim);
   renderTipos(aFilt);
-  renderTabelaParadas(pFilt);
+
 }
 
 function setKPI(id,val,cls){ var el=document.getElementById(id); el.textContent=val; el.className='kpi-val '+(cls||''); }
@@ -573,23 +573,6 @@ function renderTipos(aFilt){
 }
 
 // ── TABELA PARADAS ───────────────────────────────────────────────
-function renderTabelaParadas(pFilt){
-  var wrap=document.getElementById('paradas-tbl-wrap');
-  document.getElementById('meta-paradas-tbl').textContent=pFilt.length+' registros';
-  if(!pFilt.length){wrap.innerHTML='<div class="empty">sem paradas no período</div>';return;}
-  var sorted=pFilt.slice().sort((a,b)=>b.data.localeCompare(a.data));
-  var tbl=document.createElement('table');tbl.className='tbl';
-  tbl.innerHTML=`<thead><tr><th>Data</th><th>Equip.</th><th>Tipo</th><th>Categoria</th><th>Início</th><th>Fim</th><th>Dur.</th><th>Obs.</th><th></th></tr></thead>`;
-  var tbody=document.createElement('tbody');
-  sorted.slice(0,50).forEach(p=>{
-    var maqCls=p.maquina==='CXS'?'pill-cx':'pill-cxs';
-    var tr=document.createElement('tr');
-    tr.innerHTML=`<td>${fmtBR(p.data)}</td><td><span class="pill ${maqCls}">${esc(p.maquina)}</span></td><td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(p.tipo)}">${esc(p.tipo)}</td><td style="color:var(--tx2)">${esc(p.categoria||'')}</td><td>${p.horaInicio||'—'}</td><td>${p.horaFim||'—'}</td><td>${fmtMin(+p.duracao||0)}</td><td style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tx2)" title="${esc(p.obs)}">${esc(p.obs||'')}</td><td><button class="btn-icon" onclick="abrirModalParada('${p.id}')">✏️</button></td>`;
-    tbody.appendChild(tr);
-  });
-  tbl.appendChild(tbody); wrap.innerHTML=''; wrap.appendChild(tbl);
-}
-
 // ── MODAL PARADA ─────────────────────────────────────────────────
 var CATS={'Falha na lâmina (MLC/Colimador)':'Equipamento','HWFA (HardWare Fail/Alarm)':'Equipamento','Manutenção corretiva':'Equipamento','Partida da máquina':'Equipamento','Equipamento fora de parâmetro':'Equipamento','Interferência 4D':'Equipamento','Desconforto do paciente':'Paciente','Falta paciente (Absenteísmo)':'Paciente','Posicionamento do paciente':'Processo / Setup','Bólos (Ajuste/Colocação)':'Processo / Setup','Paciente não liberado':'Processo / Administrativo','Erro no plano':'Processo / Planejamento','Identificação do paciente':'Processo / Segurança','Teste de elétrons':'Processo / Segurança','Técnico de imagem':'Processo / Humano','Aguardando Físico':'Processo / Humano','Parada para refeição':'Processo / Humano','Outros':'Processo / Humano','Oscilação de temperatura (Chiller/Sala)':'Infraestrutura','Umidade':'Infraestrutura','Sistema (Software/Rede)':'Infraestrutura IT','Licença estação':'Administrativo'};
 
