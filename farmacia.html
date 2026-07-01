@@ -137,8 +137,8 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
     <div class="pbody" id="pareto-list"></div>
   </div>
   <div class="panel">
-    <div class="phdr" style="color:var(--at)">Ranking — Maior espera hoje<span style="font-weight:400;color:var(--tx3);font-size:10px;text-transform:none">top 6</span></div>
-    <div class="pbody" id="rank-list"></div>
+    <div class="phdr" style="color:var(--rt)">⏸ Paradas abertas — Farmácia<span id="farmparadas-count" style="font-weight:400;color:var(--tx3);font-size:10px;text-transform:none"></span></div>
+    <div class="pbody" id="farmparadas-list"></div>
   </div>
 </div>
 
@@ -278,7 +278,7 @@ function calcFarmParadas(rows){
         delete map[a];
       } else {
         // abre parada
-        map[a]=j||'Parada';
+        map[a]={just:j||'Parada',ts:r['Timestamp']||r['timestamp']||'',etapa:etapa};
       }
     } else if(tipo!=='encerramento' && etapa){
       // Movimentação de etapa — fecha parada ativa do atendimento
@@ -338,7 +338,7 @@ function renderKanban(pos){
       var tc=isDisp?'green':(mins<=LIMITES[etapa]*.6?'green':mins<=LIMITES[etapa]?'yellow':'red');
       var na=String(atend);
       var qtBadge='';
-      var farmStop=farmParadas[na]||'';
+      var farmStop=farmParadas[na]?farmParadas[na].just:'';
       if(qtAguardando.has(na))qtBadge='<div class="kbadge kbadge-wait">⚠ Parada na QT</div>';
       else if(farmStop)qtBadge='<div class="kbadge kbadge-farm-stop">⏸ '+farmStop+'</div>';
       else if(isDisp)qtBadge='<div class="kbadge kbadge-ok">✓ Entregue</div>';
@@ -358,6 +358,35 @@ function renderKanban(pos){
     });
   });
   document.getElementById('k-preparo').textContent=prepaTotal;
+}
+
+// ── RENDER PARADAS ABERTAS NA FARMÁCIA ──────────────────────
+// Lista atendimentos com parada ainda sem encerramento (calcFarmParadas),
+// ordenados pela mais antiga primeiro — ajuda a priorizar o encerramento.
+function renderFarmParadasAbertas(map){
+  var lista=Object.entries(map).map(function(e){
+    return{atend:e[0],just:e[1].just,etapa:e[1].etapa,mins:minutosDesde(e[1].ts)};
+  }).sort(function(a,b){return b.mins-a.mins;});
+
+  var cEl=document.getElementById('farmparadas-count'),lEl=document.getElementById('farmparadas-list');
+  cEl.textContent=lista.length?lista.length+' aberta'+(lista.length>1?'s':''):'';
+
+  if(!lista.length){
+    lEl.innerHTML='<div style="padding:24px;text-align:center;color:var(--tx3);font-size:12px;font-family:var(--fm)">Nenhuma parada aberta na farmácia</div>';
+    return;
+  }
+  lEl.innerHTML=lista.slice(0,8).map(function(p){
+    var tc=p.mins<=15?'green':p.mins<=30?'yellow':'red';
+    var cor=tc==='green'?'var(--gt)':tc==='yellow'?'var(--at)':'var(--rt)';
+    return'<div style="padding:7px 0;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:8px">'
+      +'<span style="font-size:12px;font-weight:700;flex-shrink:0">▍ '+p.atend+'</span>'
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:11px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.just+'</div>'
+        +'<div style="font-size:9px;color:var(--tx3);font-family:var(--fm)">'+p.etapa+'</div>'
+      +'</div>'
+      +'<span style="font-size:12px;font-family:var(--fm);font-weight:700;color:'+cor+';flex-shrink:0">'+fmtMin(p.mins)+'</span>'
+    +'</div>';
+  }).join('');
 }
 
 // ── RENDER QT (fila, historico, ranking, KPIs) ─────────────
@@ -446,13 +475,6 @@ function renderQT(data,fonte){
       return'<tr><td><span class="badge-pol">P'+f.num+'</span></td><td>'+na+'</td><td><span class="bf f'+f.fi+'">'+f.fnome+'</span></td><td class="'+tc+'" style="font-weight:600">'+fmtMin(f.dur)+motSuf+'</td><td style="color:var(--tx3);font-size:10px">'+fmtHora(f.ini)+'</td></tr>';
     }).join('');
   }
-
-  // Ranking
-  var maxTot=data.ranking[0]?data.ranking[0].tot:1;
-  document.getElementById('rank-list').innerHTML=data.ranking.slice(0,5).map(function(r,i){
-    var pc=i===0?'gold':i===1?'silver':i===2?'bronze':'',pct=Math.round(r.tot/maxTot*100);
-    return'<div class="rank-item"><span class="rank-pos '+pc+'">'+(i+1)+'</span><div style="flex:1"><div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><span style="font-weight:700;font-size:12px">P'+r.num+'</span><span class="bf f'+r.fi+'">'+r.fnome+'</span></div><div class="rank-bar-wrap"><div class="rank-bar" style="width:'+pct+'%"></div></div></div><span class="rank-val '+tClass(r.tot)+'">'+fmtMin(r.tot)+'</span></div>';
-  }).join('');
 }
 
 // ── CICLO PRINCIPAL ─────────────────────────────────────────
@@ -488,6 +510,7 @@ function carregar(){
     renderKanban(pos);
     renderQT(qtData,'Ao vivo - Sheets');
     renderPareto(farmRegs);
+    renderFarmParadasAbertas(farmParadas);
     setStatus('ok','ao vivo');
     document.getElementById('fmsg').textContent=farmRegs.length+' reg. farm. · '+qtRowsArr.length+' reg. QT · '+new Date().toLocaleTimeString('pt-BR');
     document.getElementById('hdr-sub').textContent='Centro de Infusão QT · '+new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
