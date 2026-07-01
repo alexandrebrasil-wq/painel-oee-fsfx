@@ -367,30 +367,29 @@ function calcularAnalise(regs, paradas, qtRows, ini, fim){
 
   Object.entries(porAtend).forEach(([atend,info])=>{
     var rr = info.regs.sort((a,b)=>a.ts-b.ts);
-    var temDisp = rr.some(r=>r.etapa==='Disponível QT');
+    var temDisp = rr.some(r=>r.etapa==='Disponível QT'||r.etapa==='Disponível pré QT');
     if(temDisp) liberados++;
 
-    // TPF: diff entre primeira transição e "Disponível QT"
-    var tsSep  = rr.find(r=>r.etapa==='Separação');
-    var tsDisp = [...rr].reverse().find(r=>r.etapa==='Disponível QT');
-    if(tsSep && tsDisp && tsDisp.ts > tsSep.ts){
-      var delta=(tsDisp.ts-tsSep.ts)/60000;
-      if(delta>0&&delta<600) tpfList.push(delta);
-    }
-
-    // Tempo por etapa (diff entre transições consecutivas)
+    // TPF = soma das durações de Separação + Pré QT + Capela QT (tempo de fluxo produtivo,
+    // exclui filas/esperas em Disponível QT e Disponível pré QT)
+    var tpfAtend=0, temEtapaFluxo=false;
     for(var i=0;i<rr.length-1;i++){
       var e=rr[i].etapa, delta2=(rr[i+1].ts-rr[i].ts)/60000;
-      if(tpfPorEtapa[e]!==undefined && delta2>0&&delta2<600){
-        tpfPorEtapa[e].push(delta2);
+      if(delta2>0 && delta2<600){
+        if(tpfPorEtapa[e]!==undefined) tpfPorEtapa[e].push(delta2);
+        if(e==='Separação'||e==='Pré QT'||e==='Capela QT'){
+          tpfAtend+=delta2;
+          temEtapaFluxo=true;
+        }
       }
     }
+    if(temEtapaFluxo && tpfAtend>0) tpfList.push(tpfAtend);
   });
 
   var tpfMed = tpfList.length ? tpfList.reduce((a,b)=>a+b,0)/tpfList.length : 0;
 
-  // SLA: atendimentos liberados dentro do SLA total (≤ soma dos SLAs das etapas)
-  var slaTotal = Object.values(SLA).reduce((a,b)=>a+b,0); // 110min
+  // SLA: atendimentos liberados dentro do SLA total (soma dos SLAs das etapas de fluxo)
+  var slaTotal = SLA['Separação']+SLA['Pré QT']+SLA['Capela QT']; // 45min
   var dentroSLA = tpfList.filter(t=>t<=slaTotal).length;
   var pctSLA = tpfList.length ? dentroSLA/tpfList.length : 0;
 
@@ -436,12 +435,17 @@ function calcularAnalise(regs, paradas, qtRows, ini, fim){
     var tpfsD=[];
     Object.values(pAtD).forEach(rr=>{
       rr.sort((a,b)=>a.ts-b.ts);
-      var s=rr.find(r=>r.etapa==='Separação');
-      var v=[...rr].reverse().find(r=>r.etapa==='Disponível QT');
-      if(s&&v&&v.ts>s.ts){var dt=(v.ts-s.ts)/60000;if(dt>0&&dt<600)tpfsD.push(dt);}
+      var tpfAt=0, tem=false;
+      for(var i=0;i<rr.length-1;i++){
+        var e=rr[i].etapa, dt=(rr[i+1].ts-rr[i].ts)/60000;
+        if(dt>0&&dt<600 && (e==='Separação'||e==='Pré QT'||e==='Capela QT')){
+          tpfAt+=dt; tem=true;
+        }
+      }
+      if(tem && tpfAt>0) tpfsD.push(tpfAt);
     });
 
-    var libD=Object.values(pAtD).filter(rr=>rr.some(r=>r.etapa==='Disponível QT')).length;
+    var libD=Object.values(pAtD).filter(rr=>rr.some(r=>r.etapa==='Disponível QT'||r.etapa==='Disponível pré QT')).length;
     var tpfD=tpfsD.length?tpfsD.reduce((a,b)=>a+b,0)/tpfsD.length:0;
 
     dias.push({
@@ -455,7 +459,7 @@ function calcularAnalise(regs, paradas, qtRows, ini, fim){
 
   // Pico por hora
   var horasLib=Array(12).fill(0);
-  regs.filter(r=>(r['Etapa']||r['etapa']==='Disponível QT')).forEach(r=>{
+  regs.filter(r=>{var e=r['Etapa']||r['etapa']||''; return e==='Disponível QT'||e==='Disponível pré QT';}).forEach(r=>{
     var h=new Date(r['Timestamp']||r['timestamp']||0).getHours();
     var idx=h-7; if(idx>=0&&idx<12) horasLib[idx]++;
   });
