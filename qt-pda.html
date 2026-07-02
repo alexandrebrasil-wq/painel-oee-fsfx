@@ -192,11 +192,23 @@ window.onload = function() {
 };
 
 // ── CARREGA ESTADO ATUAL ──────────────────────────────────────────────────────
-function carregarEstado() {
+function carregarEstado(tentativa) {
+  tentativa = tentativa || 1;
   mostrar('tela-loading');
   fetch(QT_API + '?acao=estado&poltrona=' + poltrona, {cache:'no-store'})
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
+    .then(function(r) { return r.text(); })
+    .then(function(txt) {
+      var data;
+      try {
+        data = JSON.parse(txt);
+      } catch (parseErr) {
+        // Resposta não é JSON (ex: página de erro/login do Google) — tenta de novo
+        if (tentativa < 3) {
+          setTimeout(function(){ carregarEstado(tentativa + 1); }, 1200);
+          return;
+        }
+        throw new Error('Resposta inválida do servidor após ' + tentativa + ' tentativas.');
+      }
       if (data.erro) throw new Error(data.erro);
       estadoAtual = data.estado || 'livre';
       motivoAtual = data.motivo || '';
@@ -210,7 +222,8 @@ function carregarEstado() {
     })
     .catch(function(e) {
       document.getElementById('tela-loading').innerHTML =
-        '<div style="color:var(--rt);text-align:center;padding:32px">Erro ao carregar estado.<br>' + e.message + '</div>';
+        '<div style="color:var(--rt);text-align:center;padding:32px">Erro ao carregar estado.<br>' + e.message +
+        '<br><br><button class="btn btn-checkin" onclick="carregarEstado()" style="max-width:200px;margin:0 auto">↻ Tentar novamente</button></div>';
     });
 }
 
@@ -323,7 +336,11 @@ function confirmarFimParada() {
 }
 
 // ── GRAVA NO SHEETS QT ────────────────────────────────────────────────────────
-function gravar(evento, motivo, tipo, atendimento) {
+var ultimoGravar = null; // guarda args da última tentativa p/ retry seguro
+
+function gravar(evento, motivo, tipo, atendimento, tentativa) {
+  tentativa = tentativa || 1;
+  ultimoGravar = {evento:evento, motivo:motivo, tipo:tipo, atendimento:atendimento};
   mostrar('tela-loading');
   var url = QT_API
     + '?acao=gravar'
@@ -334,8 +351,19 @@ function gravar(evento, motivo, tipo, atendimento) {
     + '&atendimento=' + encodeURIComponent(atendimento);
 
   fetch(url, {cache:'no-store'})
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
+    .then(function(r) { return r.text(); })
+    .then(function(txt) {
+      var data;
+      try {
+        data = JSON.parse(txt);
+      } catch (parseErr) {
+        // Resposta não é JSON (ex: sobrecarga/erro do Apps Script) — tenta de novo
+        if (tentativa < 3) {
+          setTimeout(function(){ gravar(evento, motivo, tipo, atendimento, tentativa + 1); }, 1500);
+          return;
+        }
+        throw new Error('Servidor não respondeu corretamente após ' + tentativa + ' tentativas. Verifique se já foi registrado antes de tentar de novo.');
+      }
       if (data.ok) {
         document.getElementById('res-icon').textContent = '✓';
         document.getElementById('res-icon').style.color = 'var(--gt)';
@@ -351,9 +379,15 @@ function gravar(evento, motivo, tipo, atendimento) {
       document.getElementById('res-icon').textContent = '✕';
       document.getElementById('res-icon').style.color = 'var(--rt)';
       document.getElementById('res-msg').textContent  = 'Erro ao registrar';
-      document.getElementById('res-sub').textContent  = e.message;
+      document.getElementById('res-sub').innerHTML  = e.message +
+        '<br><br><button class="btn btn-checkin" onclick="retryGravar()" style="max-width:200px;margin:8px auto 0">↻ Tentar novamente</button>';
       mostrar('tela-result');
     });
+}
+
+function retryGravar() {
+  if (!ultimoGravar) return;
+  gravar(ultimoGravar.evento, ultimoGravar.motivo, ultimoGravar.tipo, ultimoGravar.atendimento);
 }
 </script>
 <footer style="text-align:center;padding:16px 0 24px;font-size:10px;color:var(--tx3);font-family:var(--fm)">
