@@ -124,6 +124,15 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:20p
 .cfg-save{background:#1b2e6b;color:#fff;}
 .cfg-err{color:#f85149;font-size:11px;margin-top:8px;display:none;}
 .cfg-sync{font-size:9px;color:#3fb950;margin-top:10px;display:none;}
+.pareto-row-click{cursor:pointer;transition:.15s;border-radius:4px;}
+.pareto-row-click:hover{background:#1c2129;}
+.parada-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center;padding:20px;}
+.parada-overlay.open{display:flex;}
+.parada-box{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:20px 22px;width:640px;max-width:96vw;max-height:82vh;overflow-y:auto;}
+.parada-box h3{font-size:14px;font-weight:600;margin-bottom:6px;color:#fff;}
+.parada-close{position:sticky;top:0;float:right;background:none;border:none;color:#8b949e;font-size:16px;cursor:pointer;}
+.parada-close:hover{color:#fff;}
+.parada-sub{font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px;}
 </style>
 </head>
 <body>
@@ -178,6 +187,13 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:20p
     </div>
   </div>
 </div>
+
+<div class="parada-overlay" id="paradaOverlay">
+  <div class="parada-box">
+    <button class="parada-close" onclick="fecharParadaDetalhe()">&#10005;</button>
+    <div id="paradaDetalheBody"></div>
+  </div>
+</div>
 <nav class="nav">
   <a href="index.html">Painel QT</a>
   <a href="farmacia.html">Farmacia</a>
@@ -216,7 +232,7 @@ var META_OEE=0.70,META_DISP=0.80,META_EFIC=0.80,META_OCUP=0.80;
 var META_ATEND=0.70;
 
 // URL do Apps Script "Config" (Web App) - implantar o .gs correspondente e colar a URL aqui.
-// Enquanto vazio, o painel usa os valores padrao acima e a config fica só local (nao compartilhada).
+// Enquanto vazio, o painel usa os valores padrao acima e o Salvar guarda so localmente (nao compartilhado).
 var CFG_APPS_URL='';
 var CFG_SENHA='iomt2026';
 var CFG_KEY='iomt_resumo_cfg_cache';
@@ -232,7 +248,6 @@ function aplicarCfg(c){
   TURNO_MIN=(TURNO_FIM-TURNO_INI)*60;
 }
 
-// 1) Pintura instantanea com o ultimo valor conhecido (cache local), so para nao piscar "padrao" -> "real"
 (function(){
   try{
     var raw=localStorage.getItem(CFG_KEY);
@@ -240,7 +255,6 @@ function aplicarCfg(c){
   }catch(e){}
 })();
 
-// 2) Busca o valor compartilhado de verdade no Apps Script (fonte da verdade para todos os usuarios)
 function loadCfgRemoto(tentativas){
   tentativas=tentativas||0;
   if(!CFG_APPS_URL){updateHsub();return;}
@@ -316,8 +330,6 @@ function salvarConfig(){
   }
   var payload={turnoIni:ti,turnoFim:tf,metaOee:mo/100,metaDisp:md/100,metaOcup:mc/100,metaAtend:ma/100};
   if(!CFG_APPS_URL){
-    // Apps Script ainda nao implantado/configurado: aplica e guarda so localmente (neste navegador),
-    // pra nao travar o uso enquanto o backend compartilhado nao existe.
     aplicarCfg(payload);
     try{localStorage.setItem(CFG_KEY,JSON.stringify(payload));}catch(e){}
     updateHsub();
@@ -335,6 +347,8 @@ function salvarConfig(){
       aplicarCfg(payload);
       try{localStorage.setItem(CFG_KEY,JSON.stringify(payload));}catch(e){}
       updateHsub();
+      syncMsg.textContent='Salvo para todos os usuarios.';
+      syncMsg.style.color='#3fb950';
       syncMsg.style.display='block';
       if(document.getElementById('dp1').value&&document.getElementById('dp2').value){analisar();}
       setTimeout(fecharConfig,900);
@@ -439,7 +453,7 @@ function analisarDia(rows,diaStr){
     var num=pol.replace('Poltrona ','').trim().padStart(2,'0');
     if(!st[num])return;
     var dt=parseDt(ts);if(!dt)return;
-    var h=dt.getHours(); // TURNO_INI/FIM agora só definem a capacidade (denominador); nao filtra eventos reais do dia
+    var h=dt.getHours(); // TURNO_INI/FIM agora so definem a capacidade (denominador); nao filtra eventos reais do dia
     if(ev==='Check In Paciente'){
       // Se havia Check In sem Check Out, fechar sessão anterior automaticamente
       if(st[num].ciTs){
@@ -597,6 +611,116 @@ function gauge(val,meta,cor,label){
     +'</svg>';
 }
 
+function lineChartTUE(resDias){
+  var w=700,h=140,padL=30,padR=10,padT=14,padB=22;
+  var innerW=w-padL-padR,innerH=h-padT-padB;
+  var n=resDias.length;
+  function xAt(i){return n<=1?padL+innerW/2:padL+innerW*(i/(n-1));}
+  function yAt(v){v=Math.max(0,Math.min(1,v||0));return padT+innerH*(1-v);}
+  var series=[{key:'oee',cor:'#a78bfa'},{key:'disp',cor:'#3fb950'},{key:'ocup',cor:'#f59e0b'}];
+  var svg='<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" style="width:100%;height:120px;overflow:visible">';
+  [0,0.5,1].forEach(function(v){
+    var y=yAt(v);
+    svg+='<line x1="'+padL+'" y1="'+y+'" x2="'+(w-padR)+'" y2="'+y+'" stroke="#21262d" stroke-width="1"/>';
+    svg+='<text x="'+(padL-4)+'" y="'+(y+3)+'" font-size="8" fill="#8b949e" text-anchor="end">'+Math.round(v*100)+'%</text>';
+  });
+  series.forEach(function(s){
+    var pts=resDias.map(function(x,i){return xAt(i)+','+yAt(x.res.temDados?x.res[s.key]:0);}).join(' ');
+    svg+='<polyline points="'+pts+'" fill="none" stroke="'+s.cor+'" stroke-width="2"/>';
+    resDias.forEach(function(x,i){
+      if(!x.res.temDados)return;
+      svg+='<circle cx="'+xAt(i)+'" cy="'+yAt(x.res[s.key])+'" r="2.5" fill="'+s.cor+'"><title>'+x.dia+' - '+s.key+': '+Math.round(x.res[s.key]*100)+'%</title></circle>';
+    });
+  });
+  var step=n>10?Math.ceil(n/10):1;
+  resDias.forEach(function(x,i){
+    if(i%step!==0&&i!==n-1)return;
+    svg+='<text x="'+xAt(i)+'" y="'+(h-4)+'" font-size="8" fill="#8b949e" text-anchor="middle">'+x.dia.slice(0,5)+'</text>';
+  });
+  svg+='</svg>';
+  return svg;
+}
+
+function classificarMotivo(mot){
+  mot=mot||'';
+  if(mot.includes('Manipul'))return 'Farmacia';
+  if(mot.includes('édica')||mot.includes('edica'))return 'Lib. Medica';
+  if(mot.includes('Conv')||mot.includes('conv'))return 'Lib. Convenio';
+  if(mot.includes('intercorr')||mot.includes('devolu'))return 'Interc./Dev.';
+  return 'Outros';
+}
+
+function coletarParadas(categoriaAlvo){
+  var pols=polFiltradas();
+  var diasSet={};
+  (lastDias||[]).forEach(function(d){diasSet[d]=true;});
+  var abertas={};
+  var lista=[];
+  var rows=(allRows.length?allRows:DADOS).slice().sort(function(a,b){return a[0]<b[0]?-1:a[0]>b[0]?1:0;});
+  rows.forEach(function(r){
+    var ts=r[0],pol=r[1],ev=r[2],mot=r[3];
+    if(!pol)return;
+    var dia=ts.split(' ')[0];
+    if(!diasSet[dia])return;
+    var n=parseInt(pol.replace('Poltrona','').trim());
+    if(pols&&!pols.includes(n))return;
+    var num=String(n).padStart(2,'0');
+    if(ev==='Início da Parada'||ev==='Inicio da Parada'){
+      abertas[num]={ini:ts,mot:mot||''};
+    }else if(ev==='Fim da parada'){
+      var ab=abertas[num];
+      if(ab){
+        var pi=parseDt(ab.ini),pf=parseDt(ts);
+        var dur=(pi&&pf)?(pf-pi)/60000:0;
+        if(dur>0){
+          var cat=classificarMotivo(ab.mot);
+          if(cat===categoriaAlvo){
+            lista.push({poltrona:num,ini:ab.ini,fim:ts,dur:dur,mot:ab.mot,dia:dia});
+          }
+        }
+        delete abertas[num];
+      }
+    }
+  });
+  return lista;
+}
+
+function abrirDetalheParada(categoria){
+  var lista=coletarParadas(categoria);
+  var porPol={};
+  lista.forEach(function(p){
+    if(!porPol[p.poltrona])porPol[p.poltrona]={n:0,tot:0};
+    porPol[p.poltrona].n++;porPol[p.poltrona].tot+=p.dur;
+  });
+  var porPolArr=Object.entries(porPol).sort(function(a,b){return b[1].n-a[1].n;});
+  var listaOrdenada=lista.slice().sort(function(a,b){return b.dur-a.dur;});
+  var totDur=lista.reduce(function(a,p){return a+p.dur;},0);
+
+  var html='<h3>Paradas · '+categoria+'</h3>';
+  html+='<div style="font-size:11px;color:#8b949e;margin-bottom:4px">'+lista.length+' ocorrencias · '+fmtMin(totDur)+' no total, no periodo/fluxo analisado</div>';
+  html+='<div class="parada-sub">Por poltrona · maior para menor em numero de ocorrencias</div>';
+  html+='<table class="t" style="width:100%;margin-bottom:6px"><thead><tr><th>Poltrona</th><th>Ocorrencias</th><th>Tempo total</th><th>Media</th></tr></thead><tbody>';
+  porPolArr.forEach(function(e){
+    var k=e[0],v=e[1];
+    html+='<tr><td>Poltrona '+k+'</td><td>'+v.n+'x</td><td>'+fmtMin(v.tot)+'</td><td>'+fmtMin(v.tot/v.n)+'</td></tr>';
+  });
+  if(!porPolArr.length)html+='<tr><td colspan="4" style="text-align:center;color:#8b949e;padding:14px">Sem ocorrencias</td></tr>';
+  html+='</tbody></table>';
+  html+='<div class="parada-sub">Ocorrencias individuais · maior para menor duracao</div>';
+  html+='<table class="t" style="width:100%"><thead><tr><th>Data</th><th>Poltrona</th><th>Duracao</th><th>Motivo</th></tr></thead><tbody>';
+  listaOrdenada.forEach(function(p){
+    html+='<tr><td>'+p.dia+'</td><td>Poltrona '+p.poltrona+'</td><td>'+fmtMin(p.dur)+'</td><td>'+(p.mot||'-')+'</td></tr>';
+  });
+  if(!listaOrdenada.length)html+='<tr><td colspan="4" style="text-align:center;color:#8b949e;padding:14px">Sem ocorrencias</td></tr>';
+  html+='</tbody></table>';
+
+  document.getElementById('paradaDetalheBody').innerHTML=html;
+  document.getElementById('paradaOverlay').classList.add('open');
+}
+function fecharParadaDetalhe(){
+  document.getElementById('paradaOverlay').classList.remove('open');
+}
+
 function setFluxo(fi,btn){
   var nomes={'-1':'47 poltronas (Geral)','0':'14 poltronas (Longa/Longuissima)','1':'10 poltronas (Media)','2':'9 poltronas (Curta/Rapida)','3':'10 poltronas (Convenio)','4':'4 poltronas (Leito)'};
   var sub=document.getElementById('hsub');
@@ -667,59 +791,28 @@ function renderAll(resDias,dias){
   html+='<div class="sec-hdr" style="margin-top:4px"><span style="color:#8b949e">Evolucao diaria</span><hr></div>';
   html+='<div class="charts-row">';
 
-  // OEE + Disponibilidade por dia - barras duplas
-  html+='<div class="panel"><div class="phdr" style="color:#a78bfa">TUE e TD por dia'
+  // TUE, TD e TUT por dia - grafico de linha unico (antes eram 2 paineis de barras duplas, poluidos)
+  html+='<div class="panel"><div class="phdr" style="color:#a78bfa">TUE, TD e TUT por dia'
     +'<span style="font-weight:400;font-size:10px;text-transform:none;color:#8b949e">'
     +'<span style="display:inline-block;width:10px;height:10px;background:#a78bfa;border-radius:2px;margin-right:3px"></span>TUE &nbsp;'
-    +'<span style="display:inline-block;width:10px;height:10px;background:#3fb950;border-radius:2px;margin-right:3px"></span>TD'
+    +'<span style="display:inline-block;width:10px;height:10px;background:#3fb950;border-radius:2px;margin-right:3px"></span>TD &nbsp;'
+    +'<span style="display:inline-block;width:10px;height:10px;background:#f59e0b;border-radius:2px;margin-right:3px"></span>TUT'
     +'</span></div><div class="pbody">';
-  html+='<div style="display:flex;align-items:flex-end;gap:6px;height:110px;padding-top:4px;position:relative;">';
-  var metaPxOEE=Math.round(META_OEE*100);
-  resDias.forEach(function(x){
-    var r=x.res,d=x.dia.slice(0,5);
-    var hOEE=Math.max(Math.round(r.oee*100),1);
-    var hDisp=Math.max(Math.round(r.disp*100),1);
-    var corOEE=oeeColor(r.oee,META_OEE);
-    var corDisp=oeeColor(r.disp,META_DISP);
-    html+='<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:0;">'
-      +'<div style="display:flex;align-items:flex-end;gap:2px;width:100%;height:80px;">'
-      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:2px;">'
-      +'<span style="font-size:8px;font-weight:600;color:'+corOEE+'">'+Math.round(r.oee*100)+'%</span>'
-      +'<div title="TUE '+Math.round(r.oee*100)+'%" style="width:100%;height:'+hOEE+'%;background:'+corOEE+';border-radius:2px 2px 0 0;min-height:2px;"></div>'
-      +'</div>'
-      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:2px;">'
-      +'<span style="font-size:8px;font-weight:600;color:'+corDisp+'">'+Math.round(r.disp*100)+'%</span>'
-      +'<div title="TD '+Math.round(r.disp*100)+'%" style="width:100%;height:'+hDisp+'%;background:'+corDisp+';border-radius:2px 2px 0 0;min-height:2px;opacity:.8"></div>'
-      +'</div>'
-      +'</div>'
-      +'<div style="font-size:8px;color:#8b949e;text-align:center;margin-top:2px;">'+d+'</div>'
-      +'</div>';
-  });
-  html+='<div class="meta-line" style="bottom:'+metaPxOEE+'%"></div>';
-  html+='</div></div></div>';
+  html+=lineChartTUE(resDias);
+  html+='</div></div>';
 
-  // Atendimentos + Ocupação por dia
-  html+='<div class="panel"><div class="phdr" style="color:#60a5fa">Atendimentos e TUT por dia'
-    +'<span style="font-weight:400;font-size:10px;text-transform:none;color:#8b949e">'
-    +'<span style="display:inline-block;width:10px;height:10px;background:#60a5fa;border-radius:2px;margin-right:3px"></span>Atendimentos &nbsp;'
-    +'<span style="display:inline-block;width:10px;height:10px;background:#f59e0b;border-radius:2px;margin-right:3px"></span>TUT %'
-    +'</span></div><div class="pbody">';
+  // Atendimentos por dia - painel simples (1 metrica so, sem sobreposicao)
+  html+='<div class="panel"><div class="phdr" style="color:#60a5fa">Atendimentos por dia</div><div class="pbody">';
   var maxPac=Math.max.apply(null,resDias.map(function(x){return x.res.totPac;}))||1;
   html+='<div style="display:flex;align-items:flex-end;gap:6px;height:110px;padding-top:4px;position:relative;">';
   resDias.forEach(function(x){
     var r=x.res,d=x.dia.slice(0,5);
     var hPac=Math.max(Math.round(r.totPac/maxPac*100),1);
-    var hOcup=Math.max(Math.round(r.ocup*100),1);
-    var corOcup=oeeColor(r.ocup,META_OCUP);
     html+='<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:0;">'
-      +'<div style="display:flex;align-items:flex-end;gap:2px;width:100%;height:80px;">'
+      +'<div style="display:flex;align-items:flex-end;width:100%;height:80px;">'
       +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:2px;">'
       +'<span style="font-size:8px;font-weight:600;color:#60a5fa">'+r.totPac+'</span>'
       +'<div title="'+r.totPac+' atend." style="width:100%;height:'+hPac+'%;background:#60a5fa;border-radius:2px 2px 0 0;min-height:2px;"></div>'
-      +'</div>'
-      +'<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:2px;">'
-      +'<span style="font-size:8px;font-weight:600;color:'+corOcup+'">'+Math.round(r.ocup*100)+'%</span>'
-      +'<div title="TUT '+Math.round(r.ocup*100)+'%" style="width:100%;height:'+hOcup+'%;background:'+corOcup+';border-radius:2px 2px 0 0;min-height:2px;opacity:.85"></div>'
       +'</div>'
       +'</div>'
       +'<div style="font-size:8px;color:#8b949e;text-align:center;margin-top:2px;">'+d+'</div>'
@@ -742,7 +835,7 @@ function renderAll(resDias,dias){
     var pctBar=Math.round(v.tot/totMotTot*100);
     var pctAcum=Math.round(acum/totMotTot*100);
     var cor=i===0?'#f85149':i===1?'#f59e0b':'#60a5fa';
-    html+='<div class="pareto-row">'
+    html+='<div class="pareto-row pareto-row-click" onclick="abrirDetalheParada(\''+k+'\')" title="Ver ocorrencias de '+k+'">'
       +'<span class="pareto-nm">'+k+'</span>'
       +'<div class="pareto-bw">'
       +'<div class="pareto-bf" style="width:'+pctBar+'%;background:'+cor+'"></div>'
