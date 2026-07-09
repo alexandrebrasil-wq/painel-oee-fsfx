@@ -118,10 +118,12 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:20p
 .cfg-row>div{flex:1;}
 .cfg-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
 .cfg-actions button{border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;}
+.cfg-actions button:disabled{opacity:.5;cursor:default;}
 .cfg-cancel{background:transparent;color:#8b949e;}
 .cfg-cancel:hover{color:#fff;}
 .cfg-save{background:#1b2e6b;color:#fff;}
 .cfg-err{color:#f85149;font-size:11px;margin-top:8px;display:none;}
+.cfg-sync{font-size:9px;color:#3fb950;margin-top:10px;display:none;}
 </style>
 </head>
 <body>
@@ -153,6 +155,7 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:20p
     </div>
     <div id="cfgFormStep" style="display:none;">
       <h3>Configuracoes do Painel</h3>
+      <div style="font-size:10px;color:#8b949e;margin-bottom:4px;">Valores compartilhados — a alteracao vale para todos que abrirem o painel.</div>
       <label>Turno (tempo disponivel)</label>
       <div class="cfg-row">
         <div><input type="number" id="cfgTurnoIni" min="0" max="23" placeholder="Inicio (h)"></div>
@@ -166,10 +169,11 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:20p
       <input type="number" id="cfgMetaOcup" min="0" max="100" step="1">
       <label>Meta Atendimento (%)</label>
       <input type="number" id="cfgMetaAtend" min="0" max="100" step="1">
-      <div class="cfg-err" id="cfgFormErr">Verifique os valores informados.</div>
+      <div class="cfg-err" id="cfgFormErr">Verifique os valores informados ou a conexao.</div>
+      <div class="cfg-sync" id="cfgSyncMsg">Salvo para todos os usuarios.</div>
       <div class="cfg-actions">
         <button class="cfg-cancel" onclick="fecharConfig()">Cancelar</button>
-        <button class="cfg-save" onclick="salvarConfig()">Salvar</button>
+        <button class="cfg-save" id="cfgSaveBtn" onclick="salvarConfig()">Salvar</button>
       </div>
     </div>
   </div>
@@ -211,23 +215,50 @@ var TURNO_INI=7,TURNO_FIM=19,TURNO_MIN=720;
 var META_OEE=0.70,META_DISP=0.80,META_EFIC=0.80,META_OCUP=0.80;
 var META_ATEND=0.70;
 
+// URL do Apps Script "Config" (Web App) - implantar o .gs correspondente e colar a URL aqui.
+// Enquanto vazio, o painel usa os valores padrao acima e a config fica só local (nao compartilhada).
+var CFG_APPS_URL='';
 var CFG_SENHA='iomt2026';
-var CFG_KEY='iomt_resumo_cfg';
+var CFG_KEY='iomt_resumo_cfg_cache';
+
+function aplicarCfg(c){
+  if(!c)return;
+  if(typeof c.turnoIni!=='undefined'&&c.turnoIni!=='')TURNO_INI=Number(c.turnoIni);
+  if(typeof c.turnoFim!=='undefined'&&c.turnoFim!=='')TURNO_FIM=Number(c.turnoFim);
+  if(typeof c.metaOee!=='undefined'&&c.metaOee!=='')META_OEE=Number(c.metaOee);
+  if(typeof c.metaDisp!=='undefined'&&c.metaDisp!=='')META_DISP=Number(c.metaDisp);
+  if(typeof c.metaOcup!=='undefined'&&c.metaOcup!=='')META_OCUP=Number(c.metaOcup);
+  if(typeof c.metaAtend!=='undefined'&&c.metaAtend!=='')META_ATEND=Number(c.metaAtend);
+  TURNO_MIN=(TURNO_FIM-TURNO_INI)*60;
+}
+
+// 1) Pintura instantanea com o ultimo valor conhecido (cache local), so para nao piscar "padrao" -> "real"
 (function(){
   try{
     var raw=localStorage.getItem(CFG_KEY);
-    if(raw){
-      var c=JSON.parse(raw);
-      if(typeof c.turnoIni==='number')TURNO_INI=c.turnoIni;
-      if(typeof c.turnoFim==='number')TURNO_FIM=c.turnoFim;
-      if(typeof c.metaOee==='number')META_OEE=c.metaOee;
-      if(typeof c.metaDisp==='number')META_DISP=c.metaDisp;
-      if(typeof c.metaOcup==='number')META_OCUP=c.metaOcup;
-      if(typeof c.metaAtend==='number')META_ATEND=c.metaAtend;
-      TURNO_MIN=(TURNO_FIM-TURNO_INI)*60;
-    }
+    if(raw)aplicarCfg(JSON.parse(raw));
   }catch(e){}
 })();
+
+// 2) Busca o valor compartilhado de verdade no Apps Script (fonte da verdade para todos os usuarios)
+function loadCfgRemoto(tentativas){
+  tentativas=tentativas||0;
+  if(!CFG_APPS_URL){updateHsub();return;}
+  fetch(CFG_APPS_URL,{cache:'no-store'})
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      var cfg;
+      try{cfg=JSON.parse(txt);}catch(e){throw new Error('resposta invalida');}
+      aplicarCfg(cfg);
+      try{localStorage.setItem(CFG_KEY,JSON.stringify(cfg));}catch(e){}
+      updateHsub();
+      if(lastDias)analisar();
+    })
+    .catch(function(){
+      if(tentativas<2){setTimeout(function(){loadCfgRemoto(tentativas+1);},700);}
+      else{updateHsub();}
+    });
+}
 
 function updateHsub(){
   var h=document.getElementById('hsub');
@@ -241,6 +272,7 @@ function abrirConfig(){
   document.getElementById('cfgPassErr').style.display='none';
   document.getElementById('cfgPassStep').style.display='block';
   document.getElementById('cfgFormStep').style.display='none';
+  document.getElementById('cfgSyncMsg').style.display='none';
   document.getElementById('cfgOverlay').classList.add('open');
   setTimeout(function(){document.getElementById('cfgPass').focus();},50);
 }
@@ -272,22 +304,51 @@ function salvarConfig(){
   var ma=parseFloat(document.getElementById('cfgMetaAtend').value);
   var vals=[ti,tf,mo,md,mc,ma];
   var err=document.getElementById('cfgFormErr');
+  var syncMsg=document.getElementById('cfgSyncMsg');
+  var btn=document.getElementById('cfgSaveBtn');
   var invalid=false;
   for(var i=0;i<vals.length;i++){if(isNaN(vals[i]))invalid=true;}
+  err.style.display='none';syncMsg.style.display='none';
   if(invalid||ti<0||ti>23||tf<=ti||tf>24||mo<0||mo>100||md<0||md>100||mc<0||mc>100||ma<0||ma>100){
+    err.textContent='Verifique os valores informados.';
     err.style.display='block';
     return;
   }
-  TURNO_INI=ti;TURNO_FIM=tf;TURNO_MIN=(tf-ti)*60;
-  META_OEE=mo/100;META_DISP=md/100;META_OCUP=mc/100;META_ATEND=ma/100;
-  try{
-    localStorage.setItem(CFG_KEY,JSON.stringify({turnoIni:ti,turnoFim:tf,metaOee:META_OEE,metaDisp:META_DISP,metaOcup:META_OCUP,metaAtend:META_ATEND}));
-  }catch(e){}
-  updateHsub();
-  fecharConfig();
-  if(document.getElementById('dp1').value&&document.getElementById('dp2').value){analisar();}
+  var payload={turnoIni:ti,turnoFim:tf,metaOee:mo/100,metaDisp:md/100,metaOcup:mc/100,metaAtend:ma/100};
+  if(!CFG_APPS_URL){
+    // Apps Script ainda nao implantado/configurado: aplica e guarda so localmente (neste navegador),
+    // pra nao travar o uso enquanto o backend compartilhado nao existe.
+    aplicarCfg(payload);
+    try{localStorage.setItem(CFG_KEY,JSON.stringify(payload));}catch(e){}
+    updateHsub();
+    syncMsg.textContent='Salvo somente neste navegador (Apps Script ainda nao configurado - nao compartilhado).';
+    syncMsg.style.color='#f59e0b';
+    syncMsg.style.display='block';
+    if(document.getElementById('dp1').value&&document.getElementById('dp2').value){analisar();}
+    setTimeout(fecharConfig,1400);
+    return;
+  }
+  btn.disabled=true;btn.textContent='Salvando...';
+  fetch(CFG_APPS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(function(r){return r.text();})
+    .then(function(txt){
+      aplicarCfg(payload);
+      try{localStorage.setItem(CFG_KEY,JSON.stringify(payload));}catch(e){}
+      updateHsub();
+      syncMsg.style.display='block';
+      if(document.getElementById('dp1').value&&document.getElementById('dp2').value){analisar();}
+      setTimeout(fecharConfig,900);
+    })
+    .catch(function(){
+      err.textContent='Falha ao salvar (conexao ou permissao do Apps Script). Tente novamente.';
+      err.style.display='block';
+    })
+    .finally(function(){
+      btn.disabled=false;btn.textContent='Salvar';
+    });
 }
 updateHsub();
+loadCfgRemoto();
 
 var FLUXOS=[
   {idx:0,nome:'Longa/Longuissima',cor:'#a78bfa',poltronas:[1,2,3,4,5,6,7,8,9,10,11,12,13,14]},
@@ -378,7 +439,7 @@ function analisarDia(rows,diaStr){
     var num=pol.replace('Poltrona ','').trim().padStart(2,'0');
     if(!st[num])return;
     var dt=parseDt(ts);if(!dt)return;
-    var h=dt.getHours();if(h<TURNO_INI||h>=TURNO_FIM)return;
+    var h=dt.getHours(); // TURNO_INI/FIM agora só definem a capacidade (denominador); nao filtra eventos reais do dia
     if(ev==='Check In Paciente'){
       // Se havia Check In sem Check Out, fechar sessão anterior automaticamente
       if(st[num].ciTs){
