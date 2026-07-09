@@ -658,7 +658,7 @@ function coletarParadas(categoriaAlvo){
   var lista=[];
   var rows=(allRows.length?allRows:DADOS).slice().sort(function(a,b){return a[0]<b[0]?-1:a[0]>b[0]?1:0;});
   rows.forEach(function(r){
-    var ts=r[0],pol=r[1],ev=r[2],mot=r[3];
+    var ts=r[0],pol=r[1],ev=r[2],mot=r[3],atend=(r[5]!==undefined&&r[5]!==null&&r[5]!=='')?String(r[5]).trim():'';
     if(!pol)return;
     var dia=ts.split(' ')[0];
     if(!diasSet[dia])return;
@@ -666,7 +666,7 @@ function coletarParadas(categoriaAlvo){
     if(pols&&!pols.includes(n))return;
     var num=String(n).padStart(2,'0');
     if(ev==='Início da Parada'||ev==='Inicio da Parada'){
-      abertas[num]={ini:ts,mot:mot||''};
+      abertas[num]={ini:ts,mot:mot||'',atend:atend};
     }else if(ev==='Fim da parada'){
       var ab=abertas[num];
       if(ab){
@@ -675,7 +675,7 @@ function coletarParadas(categoriaAlvo){
         if(dur>0){
           var cat=classificarMotivo(ab.mot);
           if(cat===categoriaAlvo){
-            lista.push({poltrona:num,ini:ab.ini,fim:ts,dur:dur,mot:ab.mot,dia:dia});
+            lista.push({poltrona:num,ini:ab.ini,fim:ts,dur:dur,mot:ab.mot,dia:dia,atend:ab.atend||atend||'(sem numero)'});
           }
         }
         delete abertas[num];
@@ -687,31 +687,33 @@ function coletarParadas(categoriaAlvo){
 
 function abrirDetalheParada(categoria){
   var lista=coletarParadas(categoria);
-  var porPol={};
+  var porAtend={};
   lista.forEach(function(p){
-    if(!porPol[p.poltrona])porPol[p.poltrona]={n:0,tot:0};
-    porPol[p.poltrona].n++;porPol[p.poltrona].tot+=p.dur;
+    if(!porAtend[p.atend])porAtend[p.atend]={n:0,tot:0,poltronas:{}};
+    porAtend[p.atend].n++;porAtend[p.atend].tot+=p.dur;
+    porAtend[p.atend].poltronas[p.poltrona]=true;
   });
-  var porPolArr=Object.entries(porPol).sort(function(a,b){return b[1].n-a[1].n;});
+  var porAtendArr=Object.entries(porAtend).sort(function(a,b){return b[1].n-a[1].n;});
   var listaOrdenada=lista.slice().sort(function(a,b){return b.dur-a.dur;});
   var totDur=lista.reduce(function(a,p){return a+p.dur;},0);
 
   var html='<h3>Paradas · '+categoria+'</h3>';
   html+='<div style="font-size:11px;color:#8b949e;margin-bottom:4px">'+lista.length+' ocorrencias · '+fmtMin(totDur)+' no total, no periodo/fluxo analisado</div>';
-  html+='<div class="parada-sub">Por poltrona · maior para menor em numero de ocorrencias</div>';
-  html+='<table class="t" style="width:100%;margin-bottom:6px"><thead><tr><th>Poltrona</th><th>Ocorrencias</th><th>Tempo total</th><th>Media</th></tr></thead><tbody>';
-  porPolArr.forEach(function(e){
+  html+='<div class="parada-sub">Por numero de atendimento · maior para menor em numero de ocorrencias</div>';
+  html+='<table class="t" style="width:100%;margin-bottom:6px"><thead><tr><th>Nº Atendimento</th><th>Poltrona</th><th>Ocorrencias</th><th>Tempo total</th><th>Media</th></tr></thead><tbody>';
+  porAtendArr.forEach(function(e){
     var k=e[0],v=e[1];
-    html+='<tr><td>Poltrona '+k+'</td><td>'+v.n+'x</td><td>'+fmtMin(v.tot)+'</td><td>'+fmtMin(v.tot/v.n)+'</td></tr>';
+    var pols=Object.keys(v.poltronas).sort().join(', ');
+    html+='<tr><td>'+k+'</td><td>'+pols+'</td><td>'+v.n+'x</td><td>'+fmtMin(v.tot)+'</td><td>'+fmtMin(v.tot/v.n)+'</td></tr>';
   });
-  if(!porPolArr.length)html+='<tr><td colspan="4" style="text-align:center;color:#8b949e;padding:14px">Sem ocorrencias</td></tr>';
+  if(!porAtendArr.length)html+='<tr><td colspan="5" style="text-align:center;color:#8b949e;padding:14px">Sem ocorrencias</td></tr>';
   html+='</tbody></table>';
   html+='<div class="parada-sub">Ocorrencias individuais · maior para menor duracao</div>';
-  html+='<table class="t" style="width:100%"><thead><tr><th>Data</th><th>Poltrona</th><th>Duracao</th><th>Motivo</th></tr></thead><tbody>';
+  html+='<table class="t" style="width:100%"><thead><tr><th>Data</th><th>Nº Atendimento</th><th>Poltrona</th><th>Duracao</th><th>Motivo</th></tr></thead><tbody>';
   listaOrdenada.forEach(function(p){
-    html+='<tr><td>'+p.dia+'</td><td>Poltrona '+p.poltrona+'</td><td>'+fmtMin(p.dur)+'</td><td>'+(p.mot||'-')+'</td></tr>';
+    html+='<tr><td>'+p.dia+'</td><td>'+p.atend+'</td><td>Poltrona '+p.poltrona+'</td><td>'+fmtMin(p.dur)+'</td><td>'+(p.mot||'-')+'</td></tr>';
   });
-  if(!listaOrdenada.length)html+='<tr><td colspan="4" style="text-align:center;color:#8b949e;padding:14px">Sem ocorrencias</td></tr>';
+  if(!listaOrdenada.length)html+='<tr><td colspan="5" style="text-align:center;color:#8b949e;padding:14px">Sem ocorrencias</td></tr>';
   html+='</tbody></table>';
 
   document.getElementById('paradaDetalheBody').innerHTML=html;
