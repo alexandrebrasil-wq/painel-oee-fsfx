@@ -351,6 +351,12 @@ input[type="text"]::placeholder {
     <div id="lista-just"></div>
   </div>
 
+  <!-- Medicação de intercorrência: marca que este bipe NÃO é da medicação principal do atendimento -->
+  <div class="card">
+    <div class="label">Medicação</div>
+    <button type="button" class="just-btn" id="btn-intercorrencia" onclick="toggleIntercorrencia()">⚠️ É medicação de intercorrência (não é a principal)</button>
+  </div>
+
   <div class="erro-msg" id="erro-msg">Erro ao salvar. Verifique a conexão.</div>
 
   <button class="btn" id="btn-confirmar" disabled onclick="enviar()">
@@ -505,6 +511,7 @@ var etapa       = '';
 var atendimento = '';
 var just        = '';
 var precisaJust = false;
+var intercorrencia = false; // true = este bipe é de medicação de intercorrência, não a principal do atendimento
 
 // Estado da parada
 var paradaAtend  = '';
@@ -621,6 +628,11 @@ function verificar() {
   document.getElementById('btn-confirmar').disabled = !ok;
 }
 
+function toggleIntercorrencia() {
+  intercorrencia = !intercorrencia;
+  document.getElementById('btn-intercorrencia').classList.toggle('selecionado', intercorrencia);
+}
+
 function enviar() {
   document.getElementById('erro-msg').style.display = 'none';
   mostrarPg('pg-loading');
@@ -632,7 +644,8 @@ function enviar() {
     etapa:         etapa,
     responsavel:   '',
     justificativa: just || '',
-    dispositivo:   navigator.userAgent.substring(0, 80)
+    dispositivo:   navigator.userAgent.substring(0, 80),
+    tipo:          intercorrencia ? 'transicao_intercorrencia' : 'transicao'
   });
 
   fetch(APPS_SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' })
@@ -652,7 +665,7 @@ function mostrarSucesso(ts) {
   var m = d.getMinutes().toString().padStart(2,'0');
   document.getElementById('sucesso-hora').textContent = 'Salvo às ' + h + ':' + m;
   document.getElementById('res-atend').textContent = atendimento;
-  document.getElementById('res-etapa').textContent = etapa;
+  document.getElementById('res-etapa').textContent = etapa + (intercorrencia ? ' (intercorrência)' : '');
   if (just) {
     document.getElementById('res-just-linha').style.display = 'flex';
     document.getElementById('res-just').textContent = just;
