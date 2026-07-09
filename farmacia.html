@@ -63,6 +63,7 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
 .kbadge-receb{background:rgba(210,153,34,.18);border:1px solid rgba(210,153,34,.4);color:var(--at)}
 .kbadge-ok{background:var(--gd);border:1px solid rgba(29,158,117,.35);color:var(--gt)}
 .kbadge-farm-stop{background:rgba(210,153,34,.22);border:1px solid rgba(210,153,34,.5);color:var(--at);animation:blink .9s step-start infinite}
+.kbadge-interc{background:rgba(210,168,255,.18);border:1px solid rgba(210,168,255,.45);color:#d2a8ff}
 .kempty{font-size:11px;color:var(--tx3);text-align:center;padding:14px 0;font-family:var(--fm)}
 .ftable{width:100%;border-collapse:collapse;font-size:12px}
 .ftable th{padding:5px 7px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:1px solid var(--b1);text-align:left}
@@ -289,20 +290,28 @@ function calcFarmParadas(rows){
 }
 
 function processFarm(rows){
-  var hoje=new Date().toISOString().slice(0,10),pos={};
+  var hoje=new Date().toISOString().slice(0,10),pos={},interc={};
   rows.filter(function(r){
     var ts=new Date(r['Timestamp']||r['timestamp']||0),tipo=r['Tipo']||r['tipo']||'transicao';
     return ts.toISOString().slice(0,10)===hoje&&tipo!=='parada'&&tipo!=='encerramento';
   }).forEach(function(r){
     var a=r['Nº Atendimento']||r['atendimento']||'';if(!a)return;
+    var tipo=r['Tipo']||r['tipo']||'transicao';
     var ts=new Date(r['Timestamp']||r['timestamp']||0);
+    if(tipo==='transicao_intercorrencia'){
+      // Medicação de intercorrência: NÃO deve sobrescrever a posição do card principal do
+      // atendimento — fica só registrada à parte pra virar um selo no card.
+      if(!interc[a]||ts>new Date(interc[a].ts))interc[a]={etapa:r['Etapa']||r['etapa']||'',ts:r['Timestamp']||r['timestamp']||''};
+      return;
+    }
     if(!pos[a]||ts>new Date(pos[a].ts))pos[a]={etapa:r['Etapa']||r['etapa']||'',ts:r['Timestamp']||r['timestamp']||'',just:r['Justificativa']||r['justificativa']||''};
   });
-  return pos;
+  return {pos:pos,interc:interc};
 }
 
 // ── RENDER KANBAN ───────────────────────────────────────────
-function renderKanban(pos){
+function renderKanban(pos,interc){
+  interc=interc||{};
   var grid=document.getElementById('kanban-grid');grid.innerHTML='';var prepaTotal=0;
   STAGES.forEach(function(etapa){
     var cards=Object.entries(pos).filter(function(e){return e[1].etapa===etapa;});
@@ -350,9 +359,14 @@ function renderKanban(pos){
       var timerInline = isDisp ? qtBadge
         : '<span class="tbadge '+tc+'">⏱ '+fmtMin(mins)+'</span>'+(qtBadge?qtBadge:'');
       var etapaLabel=etapa;
+      // Selo de medicação de intercorrência (não sobrescreve a etapa do card, só sinaliza)
+      var intercInfo=interc[na];
+      var intercDisp=intercInfo&&(intercInfo.etapa==='Disponível QT'||intercInfo.etapa==='Disponível pré QT');
+      var intercBadge=intercInfo?'<div class="kbadge kbadge-interc">⚠ Intercorrência'+(intercDisp?' entregue':(': '+(intercInfo.etapa||'')))+'</div>':'';
       card.innerHTML='<span class="kcard-id">▍ '+atend+'</span>'
         +'<span class="kcard-time">'+fmtHora(info.ts)+(justHtml?'<span style="color:var(--at);font-size:8px"> ⚠</span>':'')+'</span>'
         +timerInline
+        +intercBadge
         +'<button class="kcard-del" title="Excluir atendimento '+atend+'" onclick="event.stopPropagation();excluirAtendimento(\''+atend+'\',\''+etapaLabel+'\')">✕</button>';
       body.appendChild(card);
     });
@@ -505,9 +519,9 @@ function carregar(){
     fetch(QT_CSV,{cache:'no-store'}).then(function(r){return r.text();}).catch(function(){return null;})
   ]).then(function(res){
     var farmRegs=res[0].rows||[],qtRowsArr=res[1]?parseCSV(res[1]):[];
-    var qtData=processQT(qtRowsArr),pos=processFarm(farmRegs);
+    var qtData=processQT(qtRowsArr),posResult=processFarm(farmRegs),pos=posResult.pos;
     farmParadas=calcFarmParadas(farmRegs);
-    renderKanban(pos);
+    renderKanban(pos,posResult.interc);
     renderQT(qtData,'Ao vivo - Sheets');
     renderPareto(farmRegs);
     renderFarmParadasAbertas(farmParadas);
