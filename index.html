@@ -129,7 +129,7 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:22p
 document.getElementById("cr-year").textContent="© "+new Date().getFullYear();
 
 const SHEET_ID='1wDkI4jw6mzAE08kab6GhDf5H7zMq4fRw21AHg4d5JFo',GID='1304195408';
-const FARM_URL='https://script.google.com/macros/s/AKfycbynRJx9tQ13rAtWMo8behDEbdQnOsU7mqKyOB77fcTZMZXsi8rX7PkZNt1q9J7h3fb3VA/exec?acao=posicao';
+const FARM_URL='https://script.google.com/macros/s/AKfycbwulrdZyfww-3ejAoGIwrGewM2eAmgCYFSY9SUKmJSU9uiGCtnTiGZT9EZxn8j3lgImhA/exec?acao=registros'; // registros brutos da farmácia — calculamos a etapa aqui pra poder ignorar medicação de intercorrência (não deve aparecer no painel da QT)
 // ── URL da nova API do Sheets QT (Apps Script) ────────────────────────────────
 // Substitua pelo URL gerado ao implantar o Code_QT_API.gs no Sheets QT
 const QT_API_URL='https://script.google.com/macros/s/AKfycbz-wiMFjIy65nSK_n6ukvV-wZE5h_SqhOdLcztXh6DOSCqgnbZbzHSAqM5JURHhp5qf/exec';
@@ -339,18 +339,30 @@ function render(st,fonte){
 
 async function loadFarmData(){
   try{
-    // ?acao=posicao retorna objetos com chaves nomeadas — mais simples e confiável
+    // Busca os registros brutos (mesma fonte do painel da farmácia) e calcula a posição
+    // aqui mesmo, pegando a movimentação mais recente de HOJE por atendimento.
+    // Ignora por completo linhas tipo=transicao_intercorrencia: medicação de intercorrência
+    // não deve influenciar nem aparecer no painel de poltronas da QT.
     const r=await fetch(FARM_URL,{cache:'no-store'});
     if(!r.ok)return;
     const data=await r.json();
     const rows=data.rows||[];
+    const hoje=new Date().toISOString().slice(0,10);
+    const pos={};
+    rows.forEach(row=>{
+      const tipo=String(row['Tipo']||row['tipo']||'transicao').trim();
+      if(tipo==='parada'||tipo==='encerramento'||tipo==='transicao_intercorrencia')return;
+      const a=String(row['Nº Atendimento']||row['atendimento']||'').trim();
+      if(!a)return;
+      const ts=new Date(row['Timestamp']||row['timestamp']||0);
+      if(ts.toISOString().slice(0,10)!==hoje)return;
+      if(!pos[a]||ts>pos[a].tsObj)pos[a]={etapa:String(row['Etapa']||row['etapa']||'').trim(),tsObj:ts};
+    });
     farmDisponivel=new Set(
-      rows.filter(r=>r['Etapa Atual']==='Disponível QT'||r['Etapa Atual']==='Disponível pré QT')
-          .map(r=>String(r['Nº Atendimento']||'').trim())
+      Object.entries(pos).filter(([,v])=>v.etapa==='Disponível QT'||v.etapa==='Disponível pré QT').map(([a])=>a)
     );
     farmEtapa=new Map(
-      rows.filter(r=>r['Etapa Atual']&&r['Nº Atendimento'])
-          .map(r=>[String(r['Nº Atendimento']||'').trim(), String(r['Etapa Atual']||'').trim()])
+      Object.entries(pos).filter(([,v])=>v.etapa).map(([a,v])=>[a,v.etapa])
     );
   }catch(e){
     console.warn('Farm data unavailable:',e.message);
