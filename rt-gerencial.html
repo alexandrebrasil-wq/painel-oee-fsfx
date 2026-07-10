@@ -661,6 +661,7 @@ function renderTipos(aFilt){
 // ── TABELA PARADAS ───────────────────────────────────────────────
 function renderTabelaParadas(pFilt){
   var wrap=document.getElementById('paradas-tbl-wrap');
+  if(!wrap) return;
   document.getElementById('meta-paradas-tbl').textContent=pFilt.length+' registros';
   if(!pFilt.length){wrap.innerHTML='<div class="empty">sem paradas no período</div>';return;}
   var sorted=pFilt.slice().sort((a,b)=>b.data.localeCompare(a.data));
