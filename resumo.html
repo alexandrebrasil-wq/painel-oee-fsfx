@@ -658,27 +658,35 @@ function coletarParadas(categoriaAlvo){
   var diasSet={};
   (lastDias||[]).forEach(function(d){diasSet[d]=true;});
   var abertas={};
+  var ciAtend={}; // poltrona -> nº atendimento do check-in em curso; paradas herdam esse valor
   var lista=[];
+  // Processa TODO o histórico (não só o período filtrado) pra manter o check-in em dia
+  // mesmo quando ele aconteceu antes do início do período selecionado.
   var rows=(allRows.length?allRows:DADOS).slice().sort(function(a,b){return a[0]<b[0]?-1:a[0]>b[0]?1:0;});
   rows.forEach(function(r){
     var ts=r[0],pol=r[1],ev=r[2],mot=r[3],atend=(r[5]!==undefined&&r[5]!==null&&r[5]!=='')?String(r[5]).trim():'';
     if(!pol)return;
-    var dia=ts.split(' ')[0];
-    if(!diasSet[dia])return;
     var n=parseInt(pol.replace('Poltrona','').trim());
     if(pols&&!pols.includes(n))return;
     var num=String(n).padStart(2,'0');
-    if(ev==='Início da Parada'||ev==='Inicio da Parada'){
-      abertas[num]={ini:ts,mot:mot||'',atend:atend};
+    var dia=ts.split(' ')[0];
+    if(ev==='Check In Paciente'){
+      ciAtend[num]=atend||ciAtend[num]||'';
+    }else if(ev==='Check Out Paciente'){
+      ciAtend[num]='';
+    }else if(ev==='Início da Parada'||ev==='Inicio da Parada'){
+      abertas[num]={ini:ts,mot:mot||'',atend:atend||ciAtend[num]||''};
     }else if(ev==='Fim da parada'){
       var ab=abertas[num];
       if(ab){
-        var pi=parseDt(ab.ini),pf=parseDt(ts);
-        var dur=(pi&&pf)?(pf-pi)/60000:0;
-        if(dur>0){
-          var cat=classificarMotivo(ab.mot);
-          if(cat===categoriaAlvo){
-            lista.push({poltrona:num,ini:ab.ini,fim:ts,dur:dur,mot:ab.mot,dia:dia,atend:ab.atend||atend||'(sem numero)'});
+        if(diasSet[dia]){
+          var pi=parseDt(ab.ini),pf=parseDt(ts);
+          var dur=(pi&&pf)?(pf-pi)/60000:0;
+          if(dur>0){
+            var cat=classificarMotivo(ab.mot);
+            if(cat===categoriaAlvo){
+              lista.push({poltrona:num,ini:ab.ini,fim:ts,dur:dur,mot:ab.mot,dia:dia,atend:ab.atend||ciAtend[num]||'(sem número)'});
+            }
           }
         }
         delete abertas[num];
