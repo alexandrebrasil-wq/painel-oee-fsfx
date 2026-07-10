@@ -704,13 +704,13 @@ function abrirDetalheParada(categoria){
     porAtend[p.atend].n++;porAtend[p.atend].tot+=p.dur;
     porAtend[p.atend].poltronas[p.poltrona]=true;
   });
-  var porAtendArr=Object.entries(porAtend).sort(function(a,b){return b[1].n-a[1].n;});
+  var porAtendArr=Object.entries(porAtend).sort(function(a,b){return b[1].tot-a[1].tot;});
   var listaOrdenada=lista.slice().sort(function(a,b){return b.dur-a.dur;});
   var totDur=lista.reduce(function(a,p){return a+p.dur;},0);
 
   var html='<h3>Paradas · '+categoria+'</h3>';
   html+='<div style="font-size:11px;color:#8b949e;margin-bottom:4px">'+lista.length+' ocorrencias · '+fmtMin(totDur)+' no total, no periodo/fluxo analisado</div>';
-  html+='<div class="parada-sub">Por numero de atendimento · maior para menor em numero de ocorrencias</div>';
+  html+='<div class="parada-sub">Por numero de atendimento · maior para menor tempo total</div>';
   html+='<table class="t" style="width:100%;margin-bottom:6px"><thead><tr><th>Nº Atendimento</th><th>Poltrona</th><th>Ocorrencias</th><th>Tempo total</th><th>Media</th></tr></thead><tbody>';
   porAtendArr.forEach(function(e){
     var k=e[0],v=e[1];
