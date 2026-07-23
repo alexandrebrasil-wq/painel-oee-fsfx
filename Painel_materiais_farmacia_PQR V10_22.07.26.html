@@ -1,0 +1,2448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>i-OMT — Painel de Materiais da Farmácia - Elaboração de PQR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--s1:#161b22;--s2:#1c2128;--s3:#21262d;
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.13);--b3:rgba(255,255,255,.22);
+  --tx:#e6edf3;--tx2:#8b949e;--tx3:#484f58;
+  --green:#1D9E75;--gt:#3dd68c;--gd:rgba(29,158,117,.15);
+  --amber:#d29922;--at:#e3b341;--ad:rgba(210,153,34,.15);
+  --red:#da3633;--rt:#f85149;--rd:rgba(218,54,51,.15);
+  --blue:#388bfd;--bt:#79c0ff;--bd:rgba(56,139,253,.12);
+  --purple:#8957e5;--pt:#d2a8ff;--pd:rgba(137,87,229,.15);
+  --ff:'Syne',sans-serif;--fm:'DM Mono',monospace;
+}
+html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(--ff);font-size:14px}
+.hdr{background:var(--s1);border-bottom:1px solid var(--b1);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.topo-fixo{position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.35)}
+.hdr-left{display:flex;align-items:center;gap:12px}
+.logo{height:34px}
+.hdr-title{font-size:15px;font-weight:600}
+.hdr-version{font-family:var(--fm);font-size:10px;font-weight:500;color:var(--tx3);border:1px solid var(--b2);border-radius:10px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+.btn-guia{display:inline-flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--b2);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--tx);text-decoration:none;transition:all .15s}
+.btn-guia:hover{border-color:var(--amber);background:var(--ad);color:var(--at)}
+.hdr-sub{font-size:11px;color:var(--tx2);margin-top:2px;font-family:var(--fm)}
+.hdr-note{font-size:10px;color:var(--tx3);margin-top:2px;font-family:var(--fm)}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.status-pill{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--b2);border-radius:20px;padding:4px 12px;font-size:11px;font-family:var(--fm);color:var(--tx2)}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--tx3)}
+.sdot.ok{background:var(--gt);animation:pdot 2s ease-in-out infinite}
+.sdot.err{background:var(--rt)}
+.sdot.saving{background:var(--at);animation:pdot .5s ease-in-out infinite}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.4}}
+.toolbar{background:var(--s1);border-bottom:1px solid var(--b1);padding:10px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.filter-label{font-size:11px;color:var(--tx);font-weight:700}
+.btn-filter{background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:5px 12px;font-size:12px;color:var(--tx2);cursor:pointer;transition:all .15s;font-family:var(--ff)}
+.btn-filter:hover{border-color:var(--b3);color:var(--tx)}
+.btn-filter.active{background:var(--bd);border-color:var(--blue);color:var(--bt)}
+.btn-print{background:var(--s2);border:1px solid var(--b2);border-radius:5px;padding:3px 7px;font-size:11px;color:var(--tx2);cursor:pointer;transition:all .15s;line-height:1;flex-shrink:0}
+.btn-print:hover{border-color:var(--green);color:var(--tx);background:rgba(29,158,117,.08)}
+.date-input,.sel-input{background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--tx);font-weight:700;font-family:var(--fm)}
+.vf-cal-sem-icone::-webkit-calendar-picker-indicator{display:none}
+.vf-cal-sem-icone{-moz-appearance:textfield}
+.date-input:focus,.sel-input:focus{outline:none;border-color:var(--green)}
+.btn-primary{background:var(--green);border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:600;color:#fff;cursor:pointer;transition:opacity .15s}
+.btn-primary:hover{opacity:.85}
+.sep{width:1px;height:20px;background:var(--b2);margin:0 2px}
+.ml-auto{margin-left:auto}
+/* KPI */
+.kpi-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--b1);border-bottom:1px solid var(--b1)}
+.kpi{background:var(--s1);padding:12px 18px}
+.kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:4px}
+.kpi-val{font-size:18px;font-weight:700;line-height:1;font-family:var(--fm)}
+.kpi-val.green{color:var(--gt)}.kpi-val.amber{color:var(--at)}.kpi-val.red{color:var(--rt)}.kpi-val.blue{color:var(--bt)}.kpi-val.purple{color:var(--pt)}
+.kpi-sub{font-size:10px;color:var(--tx2);margin-top:3px}
+/* LAYOUT */
+.main{padding:16px 20px;display:flex;flex-direction:column;gap:14px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.row13{display:grid;grid-template-columns:1fr 1.6fr;gap:14px}
+.panel{background:var(--s1);border:1px solid var(--b1);border-radius:10px;overflow:hidden}
+.panel-hdr{padding:11px 14px;border-bottom:1px solid var(--b1);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.panel-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx)}
+.panel-meta{font-size:10px;font-family:var(--fm);color:var(--tx3)}
+.panel-filter{display:flex;align-items:center;gap:6px}
+.mini-sel{background:var(--s2);border:1px solid var(--b2);border-radius:5px;padding:3px 8px;font-size:10px;color:var(--tx);font-weight:700;font-family:var(--fm)}
+.mini-sel:focus{outline:none;border-color:var(--green)}
+.panel-body{padding:14px}
+.chart-wrap{position:relative;height:220px}
+.chart-wrap-lg{position:relative;height:320px}
+.chart-wrap-xl{position:relative;height:400px}
+.chart-wrap-xxl{position:relative;height:580px}
+/* TABELAS */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{padding:6px 8px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);border-bottom:1px solid var(--b1);text-align:left;white-space:nowrap;cursor:pointer}
+.tbl th:hover{color:var(--tx)}
+.tbl th .arrow{opacity:.5;font-size:9px;margin-left:3px}
+.tbl td{padding:7px 8px;border-bottom:1px solid var(--b1);color:var(--tx);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl td:not(:first-child){font-family:var(--fm);font-size:11px}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.tbl-scroll{max-height:420px;overflow-y:auto}
+.pill{display:inline-block;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600;font-family:var(--fm)}
+.pill-g{background:var(--gd);color:var(--gt)}.pill-a{background:var(--ad);color:var(--at)}.pill-r{background:var(--rd);color:var(--rt)}.pill-b{background:var(--bd);color:var(--bt)}
+.bar-mini{height:5px;background:var(--b1);border-radius:3px;overflow:hidden;margin-top:3px;min-width:60px}
+.bar-mini-fill{height:100%;border-radius:3px}
+/* ── UPLOAD REDESENHADO ── */
+.upload-panel{ background:var(--s1); border:1px solid var(--b1); border-radius:10px; overflow:hidden; }
+.upload-panel-hdr{ padding:11px 14px; border-bottom:1px solid var(--b1); display:flex; align-items:center; gap:8px; }
+.upload-panel-title{ font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:var(--tx2); }
+.upload-panel-body{ padding:14px; display:flex; flex-direction:column; gap:12px; }
+
+.upload-dropzone{
+  border:2px dashed var(--b2); border-radius:10px; padding:28px 20px;
+  text-align:center; cursor:pointer; transition:all .2s; position:relative; overflow:hidden;
+  background:var(--s2);
+}
+.upload-dropzone:hover{ border-color:var(--green); background:rgba(29,158,117,.05); }
+.upload-dropzone.drag{ border-color:var(--green); background:rgba(29,158,117,.08); transform:scale(1.01); }
+.upload-dropzone.loading{ pointer-events:none; }
+.upload-dropzone.loading::after{
+  content:''; position:absolute; bottom:0; left:0; height:2px; width:0;
+  background:linear-gradient(90deg,var(--green),var(--gt));
+  animation:upld-progress 2s ease-in-out infinite;
+}
+@keyframes upld-progress{ 0%{width:0;left:0} 50%{width:100%;left:0} 100%{width:0;left:100%} }
+
+.upload-icon-wrap{
+  width:52px; height:52px; border-radius:12px; background:var(--s3);
+  border:1px solid var(--b2); display:flex; align-items:center; justify-content:center;
+  margin:0 auto 10px; transition:all .2s;
+}
+.upload-dropzone:hover .upload-icon-wrap,
+.upload-dropzone.drag .upload-icon-wrap{ background:rgba(29,158,117,.12); border-color:var(--green); }
+.upload-icon-wrap svg{ width:24px; height:24px; color:var(--tx3); transition:color .2s; }
+.upload-dropzone:hover .upload-icon-wrap svg,
+.upload-dropzone.drag .upload-icon-wrap svg{ color:var(--gt); }
+
+.upload-heading{ font-size:13px; font-weight:600; color:var(--tx); margin-bottom:4px; }
+.upload-sub{ font-size:11px; color:var(--tx2); }
+.upload-btn{
+  display:inline-block; margin-top:10px; padding:5px 14px;
+  background:var(--green); border-radius:6px; font-size:11px; font-weight:600; color:#fff;
+  transition:opacity .15s;
+}
+.upload-dropzone:hover .upload-btn{ opacity:.85; }
+
+.upload-cols{
+  display:flex; flex-wrap:wrap; gap:6px; padding:10px 12px;
+  background:var(--s3); border-radius:8px; border:1px solid var(--b1);
+}
+.upload-col-tag{
+  display:flex; align-items:center; gap:5px; font-size:10px;
+  font-family:var(--fm); color:var(--tx2); background:var(--s2);
+  border:1px solid var(--b2); border-radius:4px; padding:3px 8px;
+}
+.upload-col-tag.required{ color:var(--gt); border-color:rgba(29,158,117,.3); }
+.upload-col-dot{ width:5px; height:5px; border-radius:50%; flex-shrink:0; }
+
+.upload-result-bar{
+  display:none; align-items:center; gap:8px; padding:10px 12px;
+  border-radius:8px; font-size:11px; font-family:var(--fm);
+  border:1px solid transparent;
+}
+.upload-result-bar.ok{ display:flex; background:var(--gd); border-color:rgba(61,214,140,.2); color:var(--gt); }
+.upload-result-bar.err{ display:flex; background:var(--rd); border-color:rgba(248,81,73,.2); color:var(--rt); }
+.upload-result-bar .icon{ font-size:14px; flex-shrink:0; }
+
+.upload-meta{
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:10px; color:var(--tx3); padding:8px 12px;
+  background:var(--s2); border-radius:6px; border:1px solid var(--b1);
+}
+.upload-meta-label{ font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+.upload-meta-val{ font-family:var(--fm); color:var(--tx2); }
+.upload-formats{ display:flex; gap:5px; }
+.upload-fmt{ font-size:9px; font-family:var(--fm); background:var(--s3); border:1px solid var(--b2); border-radius:3px; padding:2px 6px; color:var(--tx3); }
+
+/* ── UPLOAD COMPACTO (canto superior direito do cabeçalho) ── */
+.upload-compact-wrap{ position:relative; }
+.upload-compact{
+  display:flex; align-items:center; gap:6px; border:1.5px dashed var(--b2); border-radius:7px;
+  padding:5px 10px; cursor:pointer; transition:all .15s; background:var(--s2);
+  font-size:11px; color:var(--tx2); white-space:nowrap; position:relative; overflow:hidden;
+}
+.upload-compact:hover,.upload-compact.drag{ border-color:var(--green); background:rgba(29,158,117,.08); color:var(--tx); }
+.upload-compact.loading{ pointer-events:none; }
+.upload-compact.loading::after{
+  content:''; position:absolute; bottom:0; left:0; height:2px; width:0;
+  background:linear-gradient(90deg,var(--green),var(--gt));
+  animation:upld-progress 2s ease-in-out infinite;
+}
+.upload-compact-icon{ font-size:13px; line-height:1; flex-shrink:0; }
+.upload-compact-text{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px; }
+.upload-compact-caption{ font-size:9px; color:var(--tx3); font-family:var(--fm); text-align:right; margin-top:3px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.upload-compact-wrap .upload-result-bar{
+  position:absolute; top:calc(100% + 4px); right:0; z-index:60; min-width:220px;
+  box-shadow:0 8px 28px rgba(0,0,0,.5);
+}
+
+/* UPLOAD legado (mantido para compatibilidade) */
+.upload-zone{border:2px dashed var(--b2);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--green)}
+.upload-zone p{font-size:12px;color:var(--tx2);margin-top:6px}
+.upload-zone small{font-size:10px;color:var(--tx3);font-family:var(--fm)}
+.upload-icon{font-size:26px;color:var(--tx3)}
+.upload-result{font-size:11px;margin-top:8px;font-family:var(--fm)}
+.upload-result.ok{color:var(--gt)}.upload-result.err{color:var(--rt)}
+.empty{text-align:center;padding:24px;font-size:12px;color:var(--tx3);font-family:var(--fm)}
+.legend-row{display:flex;gap:12px;flex-wrap:wrap;padding:0 14px 12px;font-size:10px;color:var(--tx2)}
+.legend-dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:middle}
+
+/* ── IQR annotation legend ── */
+.iqr-legend{display:flex;align-items:center;gap:12px;padding:4px 14px 8px;font-size:9px;color:var(--tx3);font-family:var(--fm);flex-wrap:wrap}
+.iqr-legend span{display:flex;align-items:center;gap:4px}
+.iqr-swatch-line{display:inline-block;width:20px;height:2px;border-radius:1px;vertical-align:middle}
+.iqr-swatch-band{display:inline-block;width:20px;height:10px;border-radius:2px;vertical-align:middle;opacity:.5}
+
+/* ── MULTI-SELECT DROPDOWN ── */
+.msel{position:relative;display:inline-block}
+.msel-btn{background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--tx);font-weight:700;font-family:var(--fm);cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.msel-btn:hover{border-color:var(--b3)}
+.msel.open .msel-btn{border-color:var(--green)}
+.msel-btn .car{font-size:9px;color:var(--tx3);transition:transform .15s}
+.msel.open .msel-btn .car{transform:rotate(180deg)}
+.msel-badge{background:var(--gd);color:var(--gt);border-radius:10px;padding:1px 6px;font-size:10px;font-weight:600}
+.msel-panel{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:50;background:var(--s2);border:1px solid var(--b2);border-radius:8px;min-width:260px;max-width:380px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.msel.open .msel-panel{display:block}
+.msel-search{padding:8px;border-bottom:1px solid var(--b1)}
+.msel-search input{width:100%;background:var(--s3);border:1px solid var(--b2);border-radius:5px;padding:5px 8px;font-size:11px;color:var(--tx);font-family:var(--ff)}
+.msel-search input:focus{outline:none;border-color:var(--green)}
+.msel-actions{display:flex;gap:6px;padding:6px 8px;border-bottom:1px solid var(--b1)}
+.msel-actions button{background:none;border:none;color:var(--bt);font-size:10px;cursor:pointer;font-family:var(--ff)}
+.msel-actions button:hover{text-decoration:underline}
+.msel-list{max-height:240px;overflow-y:auto;padding:4px 0}
+.msel-item{display:flex;align-items:flex-start;gap:8px;padding:6px 10px;cursor:pointer;font-size:12px;color:var(--tx)}
+.msel-item:hover{background:var(--b1)}
+.msel-item input{accent-color:var(--green);cursor:pointer;flex-shrink:0;margin-top:2px}
+.msel-item span{white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;line-height:1.3}
+.msel-empty{padding:14px;text-align:center;font-size:11px;color:var(--tx3)}
+.msel-mini .msel-btn{font-size:10px;padding:3px 8px;font-family:var(--fm)}
+
+.motivo-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--b1)}
+.motivo-row:last-child{border-bottom:none}
+.motivo-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.motivo-name{flex:1;font-size:11px;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.motivo-n{font-size:11px;font-family:var(--fm);color:var(--tx2);flex-shrink:0}
+.motivo-pct{font-size:10px;font-family:var(--fm);color:var(--tx3);flex-shrink:0;min-width:36px;text-align:right}
+@media(max-width:900px){.row2,.row13{grid-template-columns:1fr}.kpi-bar{grid-template-columns:1fr 1fr 1fr}}
+@media(max-width:560px){.kpi-bar{grid-template-columns:1fr 1fr}}
+</style>
+<style>
+/* ===== Extensões específicas do Painel de Materiais da Farmácia ===== */
+.badge-classe{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700;font-family:var(--fm);letter-spacing:.03em}
+.badge-P{background:var(--gd);color:var(--gt)}
+.badge-Q{background:var(--ad);color:var(--at)}
+.badge-R{background:var(--rd);color:var(--rt)}
+.upload-row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:900px){.upload-row2{grid-template-columns:1fr}}
+.step-badge{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--bd);color:var(--bt);font-size:10px;font-weight:700;font-family:var(--fm);margin-right:6px;flex-shrink:0}
+.pqr-legend{display:flex;gap:16px;flex-wrap:wrap;padding:0 14px 12px;font-size:11px;color:var(--tx2)}
+.pqr-legend b{color:var(--tx)}
+.mini-note{font-size:10px;color:var(--tx3);font-family:var(--fm);line-height:1.5}
+.dz-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2);font-family:var(--fm)}
+.dz-status .sdot{width:6px;height:6px}
+.class-filter-btn{background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--tx2);cursor:pointer;font-family:var(--ff);transition:all .15s}
+.class-filter-btn:hover{border-color:var(--b3);color:var(--tx)}
+.class-filter-btn.active{border-color:var(--green);color:var(--gt);background:var(--gd)}
+.search-inp{background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--tx);font-family:var(--ff);min-width:180px}
+.search-inp:focus{outline:none;border-color:var(--green)}
+.materiais-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:900px){.materiais-kpi-grid{grid-template-columns:1fr 1fr}}
+.materiais-kpi{background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px 12px}
+.materiais-kpi .kl{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);margin-bottom:3px}
+.materiais-kpi .kv{font-size:15px;font-weight:700;font-family:var(--fm);color:var(--tx)}
+.btn-limpar{margin-left:auto;background:transparent;border:1px solid var(--b2);border-radius:5px;padding:3px 9px;font-size:10.5px;color:var(--tx3);cursor:pointer;transition:all .15s;font-family:var(--ff);white-space:nowrap;flex-shrink:0}
+.btn-limpar:hover{border-color:var(--rt);color:var(--rt);background:var(--rd)}
+.tbl-semana th{ text-align:center; }
+.tbl-semana td{ text-align:center; font-family:var(--fm); font-size:11px; }
+.tbl-semana td:first-child{ text-align:left; font-family:var(--ff); white-space:normal; }
+.tbl-semana td.sem-total{ font-weight:700; }
+.th-ord{ cursor:pointer; user-select:none; }
+.th-ord:hover{ color:var(--tx); background:rgba(255,255,255,.04); }
+.sort-arrow{ font-size:8px; margin-left:3px; color:var(--green); }
+.resumo-semana{ margin-top:12px; padding:11px 14px; background:var(--s2); border:1px solid var(--b1); border-left:3px solid var(--green); border-radius:6px; font-size:12px; line-height:1.6; color:var(--tx2); }
+.resumo-semana b{ color:var(--tx); }
+.resumo-semana .resumo-titulo{ font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--tx3); margin-bottom:5px; font-weight:700; }
+
+/* ===== Relatório PQR para impressão / PDF ===== */
+.print-report{ display:none; }
+.pr-header{ display:flex; align-items:center; gap:14px; margin-bottom:8px; }
+.pr-header img{ height:34px; width:auto; flex-shrink:0; }
+.pr-header-textos{ min-width:0; }
+.pr-title{ font-size:15px; font-weight:700; margin-bottom:2px; }
+.pr-sub{ font-size:11px; margin-bottom:10px; }
+.pr-linha-periodo{ display:flex; justify-content:space-between; align-items:flex-end; font-size:11px; margin:8px 0 10px; border-bottom:1px solid #000; padding-bottom:6px; }
+.pr-resumo-semana{ font-size:10.5px; line-height:1.5; color:#222; background:#f7f8f9; border:1px solid #ccc; border-left:3px solid #444; border-radius:4px; padding:9px 12px; margin-bottom:12px; }
+.pr-resumo-semana .resumo-titulo{ font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:#555; margin-bottom:4px; font-weight:700; }
+.pr-resumo-semana ul{ margin:4px 0 0 16px; padding:0; }
+.pr-resumo-semana li{ margin-bottom:2px; }
+.pr-resumo{ width:100%; border-collapse:collapse; margin-bottom:14px; }
+.pr-resumo td{ border:1px solid #333; text-align:center; padding:4px 6px; font-size:11px; }
+.pr-resumo .pr-cab{ font-weight:700; font-size:10px; }
+.pr-resumo .pr-P{ background:#c9f2d8; color:#0b6b3a; }
+.pr-resumo .pr-Q{ background:#ffe9a8; color:#8a6100; }
+.pr-resumo .pr-R{ background:#f8c9c6; color:#a5251f; }
+.pr-tbl{ width:100%; border-collapse:collapse; font-size:10.5px; }
+.pr-tbl-semana{ width:100%; border-collapse:collapse; font-size:10px; -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact; }
+.pr-tbl-semana th{ background:#eef0f2; border:1px solid #999; padding:4px 5px; text-align:center; font-size:9.5px; font-weight:700; }
+.pr-tbl-semana td{ border:1px solid #ccc; padding:3px 5px; text-align:center; }
+.pr-tbl-semana td:first-child{ text-align:left; }
+.pr-tbl-semana td.pr-sem-total{ font-weight:700; }
+.pr-tbl th{ background:#eef0f2; border:1px solid #999; padding:4px 5px; text-align:center; font-size:9.5px; font-weight:700; }
+.pr-tbl td{ border:1px solid #ccc; padding:3px 5px; }
+.pr-tbl td.pr-num{ text-align:center; font-variant-numeric:tabular-nums; }
+.pr-tbl td.pr-nome{ text-align:left; }
+.pr-classe-P{ background:#c9f2d8; color:#0b6b3a; font-weight:700; text-align:center; }
+.pr-classe-Q{ background:#ffe9a8; color:#8a6100; font-weight:700; text-align:center; }
+.pr-classe-R{ background:#f8c9c6; color:#a5251f; font-weight:700; text-align:center; }
+@media print{
+  @page{ size: A4 landscape; margin: 10mm; }
+  html,body{ background:#fff !important; }
+  body > *:not(#print-report){ display:none !important; }
+  #print-report{ display:block !important; background:#fff; color:#000; font-family: Arial, Helvetica, sans-serif; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="topo-fixo">
+<header class="hdr">
+  <div class="hdr-left">
+    <img src="data:image/png;base64,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" class="logo" alt="Logo">
+    <div>
+      <div class="hdr-title">Painel de Materiais da Farmácia - Elaboração de PQR <span class="hdr-version">v10</span></div>
+      <div class="hdr-sub" id="hdr-sub">aguardando importação das bases…</div>
+      <div class="hdr-note">Curva PQR de protocolos oncológicos internados + Relatório de Atendimentos Farmácia · Curva PQR de Materiais em processamento paralelo.</div>
+      <div class="hdr-note" id="hdr-periodo-note">Período carregado: <span id="hdr-periodo-val">—</span></div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <a class="btn-guia" href="guia_utilizacao_painel.html" target="_blank" rel="noopener" title="Abre o Guia de Utilização do painel em uma nova aba">📖 Guia de Utilização</a>
+    <div class="status-pill"><div class="sdot" id="sdot"></div><span id="status-txt">aguardando arquivos</span></div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <span class="filter-label">Período da Curva PQR</span>
+  <input type="date" id="date-de" class="date-input">
+  <span style="color:var(--tx3);font-size:11px">até</span>
+  <input type="date" id="date-ate" class="date-input">
+  <button class="btn-filter" id="btn-periodo-completo" onclick="selecionarPeriodoCompleto()" title="Volta o período para o intervalo completo dos relatórios importados">📅 Todo o período</button>
+  <button class="btn-primary" onclick="recalcularTudo()">↻ Recalcular Curva PQR</button>
+  <div class="sep"></div>
+  <span class="filter-label">Agrupar volume diário por</span>
+  <select id="sel-agrupamento" class="sel-input" onchange="renderVolumeDiario()">
+    <option value="mes">Mês</option>
+    <option value="semana">Semana</option>
+    <option value="dia">Dia</option>
+    <option value="diasemana">Dia da semana</option>
+  </select>
+  <button class="btn-primary ml-auto" onclick="gerarRelatorioPDF()" title="Gerar Relatório PQR de Protocolos para impressão/PDF">🖶 Relatório PQR (PDF)</button>
+  <button class="btn-primary" onclick="gerarRelatorioPDFMateriais()" title="Gerar Relatório PQR de Materiais para impressão/PDF" style="background:var(--purple)">💊 Relatório PQR Materiais (PDF)</button>
+  <button class="btn-primary" onclick="gerarExcelProtocolos()" title="Baixar a Curva PQR de Protocolos em Excel (.xls, valores fixos, sem fórmulas)" style="background:#217346">📊 Excel Protocolos</button>
+  <button class="btn-primary" onclick="gerarExcelMateriais()" title="Baixar a Curva PQR de Materiais em Excel (.xls, valores fixos, sem fórmulas)" style="background:#1a5c38">📊 Excel Materiais</button>
+</div>
+
+<div class="kpi-bar" id="kpi-bar">
+  <div class="kpi">
+    <div class="kpi-label">Protocolos distintos</div>
+    <div class="kpi-val blue" id="kpi-protocolos">—</div>
+    <div class="kpi-sub" id="kpi-protocolos-sub">aguardando dados</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Total de prescrições</div>
+    <div class="kpi-val" id="kpi-prescricoes">—</div>
+    <div class="kpi-sub" id="kpi-prescricoes-sub">no período selecionado</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Classe P (Popular · 70%)</div>
+    <div class="kpi-val green" id="kpi-classe-p">—</div>
+    <div class="kpi-sub" id="kpi-classe-p-sub">protocolos</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Classe Q (Intermediário · 25%)</div>
+    <div class="kpi-val amber" id="kpi-classe-q">—</div>
+    <div class="kpi-sub" id="kpi-classe-q-sub">protocolos</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Classe R (Raro · 5%)</div>
+    <div class="kpi-val red" id="kpi-classe-r">—</div>
+    <div class="kpi-sub" id="kpi-classe-r-sub">protocolos</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Base de materiais</div>
+    <div class="kpi-val purple" id="kpi-materiais">—</div>
+    <div class="kpi-sub" id="kpi-materiais-sub">não carregada</div>
+  </div>
+</div>
+</div>
+
+<div class="main">
+
+  <div class="upload-row2">
+    <div class="upload-panel">
+      <div class="upload-panel-hdr">
+        <span class="step-badge">1</span>
+        <span class="upload-panel-title">Protocolos internados (opcional — combine com Atendimentos ou use sozinho)</span>
+        <button class="btn-limpar" id="btn-limpar-protocolos" onclick="limparDados('protocolos')" style="display:none" title="Remover a planilha importada e limpar a Curva PQR">✕ Limpar dados</button>
+      </div>
+      <div class="upload-panel-body">
+        <div class="upload-dropzone" id="dz-protocolos"
+          onclick="document.getElementById('file-protocolos').click()"
+          ondragover="dragOver(event,'dz-protocolos')" ondragleave="dragLeave(event,'dz-protocolos')"
+          ondrop="dropFile(event,'protocolos')">
+          <div class="upload-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          </div>
+          <div class="upload-heading">Arraste a planilha aqui ou clique para selecionar</div>
+          <div class="upload-sub">Ex.: Protocolos_internados_15_06.xlsx (uma aba por mês)</div>
+          <span class="upload-btn">Selecionar arquivo</span>
+        </div>
+        <input type="file" id="file-protocolos" accept=".xls,.xlsx,.csv,.tsv" style="display:none" onchange="processarArquivo(this,'protocolos')">
+        <div class="upload-cols">
+          <span class="upload-col-tag required"><span class="upload-col-dot" style="background:var(--gt)"></span>Data da prescrição <span style="color:var(--tx3)">ou</span> DT_CHEGADA</span>
+          <span class="upload-col-tag required"><span class="upload-col-dot" style="background:var(--gt)"></span>Protocolo <span style="color:var(--tx3)">ou</span> DS_PROTOCOLO_ONCO</span>
+          <span class="upload-col-tag"><span class="upload-col-dot" style="background:var(--tx3)"></span>Paciente / Nº Prontuário / Médico (informativo)</span>
+        </div>
+        <div class="upload-result-bar" id="upload-result-protocolos" style="display:none">
+          <span class="icon" id="upload-result-protocolos-icon">✓</span>
+          <span id="upload-result-protocolos-text"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="upload-panel">
+      <div class="upload-panel-hdr">
+        <span class="step-badge">2</span>
+        <span class="upload-panel-title">Atendimentos · consumo de materiais (gera sozinho a Curva PQR de Protocolos e de Materiais)</span>
+        <button class="btn-limpar" id="btn-limpar-materiais" onclick="limparDados('materiais')" style="display:none" title="Remover a planilha importada">✕ Limpar dados</button>
+      </div>
+      <div class="upload-panel-body">
+        <div class="upload-dropzone" id="dz-materiais"
+          onclick="document.getElementById('file-materiais').click()"
+          ondragover="dragOver(event,'dz-materiais')" ondragleave="dragLeave(event,'dz-materiais')"
+          ondrop="dropFile(event,'materiais')">
+          <div class="upload-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          </div>
+          <div class="upload-heading">Arraste a planilha aqui ou clique para selecionar</div>
+          <div class="upload-sub">Ex.: Atendimentos_2025_2026.xlsx (consumo de materiais por prescrição)</div>
+          <span class="upload-btn">Selecionar arquivo</span>
+        </div>
+        <input type="file" id="file-materiais" accept=".xls,.xlsx,.csv,.tsv" style="display:none" onchange="processarArquivo(this,'materiais')">
+        <div class="upload-cols">
+          <span class="upload-col-tag required"><span class="upload-col-dot" style="background:var(--gt)"></span>DS_PROTOCOLO_ONCO</span>
+          <span class="upload-col-tag required"><span class="upload-col-dot" style="background:var(--gt)"></span>MATERIAL / QT_MATERIAL</span>
+          <span class="upload-col-tag"><span class="upload-col-dot" style="background:var(--tx3)"></span>DT_CHEGADA / prescrição (informativo)</span>
+        </div>
+        <div class="upload-result-bar" id="upload-result-materiais" style="display:none">
+          <span class="icon" id="upload-result-materiais-icon">✓</span>
+          <span id="upload-result-materiais-text"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-materiais-status" style="display:none">
+    <div class="panel-hdr">
+      <span class="panel-title">Base de Materiais — Resumo da Importação</span>
+      <span class="panel-meta" id="materiais-meta">—</span>
+    </div>
+    <div class="panel-body">
+      <div class="materiais-kpi-grid">
+        <div class="materiais-kpi"><div class="kl">Registros</div><div class="kv" id="mat-kpi-registros">—</div></div>
+        <div class="materiais-kpi"><div class="kl">Período</div><div class="kv" id="mat-kpi-periodo" style="font-size:12px">—</div></div>
+        <div class="materiais-kpi"><div class="kl">Materiais distintos</div><div class="kv" id="mat-kpi-materiais">—</div></div>
+        <div class="materiais-kpi"><div class="kl">Protocolos distintos</div><div class="kv" id="mat-kpi-protocolos">—</div></div>
+      </div>
+      <div class="mini-note" style="margin-top:10px">Base carregada com sucesso. A Curva PQR de Materiais foi calculada a partir desta planilha (veja a seção "Curva PQR de Materiais" abaixo).</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-vazio">
+    <div class="panel-body">
+      <div class="empty">📎 Importe a planilha de <b>Protocolos internados</b> e/ou <b>Atendimentos</b> acima para calcular a Curva PQR.</div>
+    </div>
+  </div>
+
+  <div id="conteudo-pqr" style="display:none">
+
+    <div class="row13">
+      <div class="panel">
+        <div class="panel-hdr">
+          <span class="panel-title">Curva PQR — Distribuição Acumulada</span>
+          <span class="panel-meta" id="pareto-meta">—</span>
+        </div>
+        <div class="pqr-legend">
+          <span><span class="badge-classe badge-P">P</span> Popular — concentra 70% das prescrições</span>
+          <span><span class="badge-classe badge-Q">Q</span> Intermediário — próximos 25%</span>
+          <span><span class="badge-classe badge-R">R</span> Raro — últimos 5%</span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-wrap-lg"><canvas id="chart-pareto"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hdr">
+          <span class="panel-title">Ranking de Protocolos</span>
+          <div class="panel-filter">
+            <button class="class-filter-btn active" data-cls="TODOS" onclick="filtrarClasse(this,'TODOS')">Todos</button>
+            <button class="class-filter-btn" data-cls="P" onclick="filtrarClasse(this,'P')">P</button>
+            <button class="class-filter-btn" data-cls="Q" onclick="filtrarClasse(this,'Q')">Q</button>
+            <button class="class-filter-btn" data-cls="R" onclick="filtrarClasse(this,'R')">R</button>
+          </div>
+        </div>
+        <div class="panel-body" style="padding-top:8px">
+          <input type="text" class="search-inp" id="busca-protocolo" placeholder="Buscar protocolo…" oninput="renderTabelaPQR()" style="width:100%;margin-bottom:10px">
+          <div class="tbl-scroll">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Protocolo</th>
+                  <th>Qtd. Prescr.</th>
+                  <th title="Quantidade de dias distintos em que o protocolo foi prescrito">Dias c/ Prescr.</th>
+                  <th title="Qtd. de prescrições ÷ dias com prescrição (só conta os dias em que o protocolo foi de fato prescrito)">Média/Dia</th>
+                  <th>% Indiv.</th>
+                  <th>% Acum.</th>
+                  <th>Classe</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-pqr"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">
+        <span class="panel-title">Volume de Prescrições Agrupado por Dia</span>
+        <span class="panel-meta" id="volume-meta">agrupamento: mês · empilhado por classe P/Q/R</span>
+      </div>
+      <div class="panel-body">
+        <div class="chart-wrap-lg"><canvas id="chart-volume"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">
+        <span class="panel-title">📅 Distribuição por Dia da Semana — Protocolos</span>
+        <div class="panel-filter">
+          <button class="class-filter-btn active" data-cls="P" onclick="filtrarClasseSemanaProtocolos(this,'P')">P</button>
+          <button class="class-filter-btn" data-cls="Q" onclick="filtrarClasseSemanaProtocolos(this,'Q')">Q</button>
+          <button class="class-filter-btn" data-cls="R" onclick="filtrarClasseSemanaProtocolos(this,'R')">R</button>
+          <button class="class-filter-btn" data-cls="TODOS" onclick="filtrarClasseSemanaProtocolos(this,'TODOS')">Todos</button>
+          <button class="btn-limpar" style="color:var(--tx2);margin-left:10px" onclick="resetarOrdenacaoSemanaProtocolos()" title="Volta a ordenação da tabela para Total, do maior para o menor">↺ Resetar ordenação</button>
+          <button class="btn-limpar" style="color:var(--tx2)" onclick="gerarRelatorioPDFSemanaProtocolos()" title="Gerar PDF da distribuição semanal de protocolos">🖶 PDF</button>
+        </div>
+      </div>
+      <div class="panel-body" style="padding-top:8px">
+        <div class="mini-note" style="margin-bottom:8px">Quantidade de prescrições por dia da semana, para os protocolos da classe selecionada (por padrão, Classe P). A cor de cada célula indica a intensidade dentro da própria linha — útil para planejar estoque e escalas por dia da semana.</div>
+        <button class="btn-primary" style="margin-bottom:10px" onclick="gerarResumoSemanaProtocolosClick()">📊 Gerar Resumo do Período</button>
+        <div class="resumo-semana" id="resumo-semana-protocolos">
+          <span style="color:var(--tx3)">Clique em "Gerar Resumo do Período" para ver o comportamento desta classe por dia da semana, incluindo os 5 principais protocolos de cada dia.</span>
+        </div>
+        <div class="tbl-scroll">
+          <table class="tbl tbl-semana">
+            <thead>
+              <tr>
+                <th class="th-ord" onclick="ordenarSemanaProtocolos('nome')">Protocolo<span class="sort-arrow" id="seta-semprot-nome"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaProtocolos(0)">Seg<span class="sort-arrow" id="seta-semprot-0"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaProtocolos(1)">Ter<span class="sort-arrow" id="seta-semprot-1"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaProtocolos(2)">Qua<span class="sort-arrow" id="seta-semprot-2"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaProtocolos(3)">Qui<span class="sort-arrow" id="seta-semprot-3"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaProtocolos(4)">Sex<span class="sort-arrow" id="seta-semprot-4"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaProtocolos(5)">Sáb<span class="sort-arrow" id="seta-semprot-5"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaProtocolos(6)">Dom<span class="sort-arrow" id="seta-semprot-6"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaProtocolos('total')">Total<span class="sort-arrow" id="seta-semprot-total"></span></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-semana-protocolos"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel" id="panel-vazio-materiais">
+    <div class="panel-body">
+      <div class="empty">📎 Importe a planilha de <b>Atendimentos</b> acima para calcular a Curva PQR de Materiais (a coluna de material só existe nesse arquivo).</div>
+    </div>
+  </div>
+
+  <div id="conteudo-pqr-materiais" style="display:none">
+
+    <div class="row13">
+      <div class="panel">
+        <div class="panel-hdr">
+          <span class="panel-title">💊 Curva PQR de Materiais — Distribuição Acumulada</span>
+          <span class="panel-meta" id="pareto-meta-materiais">—</span>
+        </div>
+        <div class="pqr-legend">
+          <span><span class="badge-classe badge-P">P</span> Popular — concentra 70% do consumo</span>
+          <span><span class="badge-classe badge-Q">Q</span> Intermediário — próximos 25%</span>
+          <span><span class="badge-classe badge-R">R</span> Raro — últimos 5%</span>
+        </div>
+        <div class="panel-body">
+          <div class="chart-wrap-lg"><canvas id="chart-pareto-materiais"></canvas></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hdr">
+          <span class="panel-title">Ranking de Materiais</span>
+          <div class="panel-filter">
+            <button class="class-filter-btn active" data-cls="TODOS" onclick="filtrarClasseMateriais(this,'TODOS')">Todos</button>
+            <button class="class-filter-btn" data-cls="P" onclick="filtrarClasseMateriais(this,'P')">P</button>
+            <button class="class-filter-btn" data-cls="Q" onclick="filtrarClasseMateriais(this,'Q')">Q</button>
+            <button class="class-filter-btn" data-cls="R" onclick="filtrarClasseMateriais(this,'R')">R</button>
+          </div>
+        </div>
+        <div class="panel-body" style="padding-top:8px">
+          <input type="text" class="search-inp" id="busca-material" placeholder="Buscar material…" oninput="renderTabelaPQRMateriais()" style="width:100%;margin-bottom:10px">
+          <div class="mini-note" id="materiais-estimativa-nota" style="margin-bottom:8px"></div>
+          <div class="tbl-scroll">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Material</th>
+                  <th>Qtd. Consumida</th>
+                  <th title="Quantidade de dias distintos em que houve consumo do material">Dias c/ Consumo</th>
+                  <th title="Qtd. consumida ÷ dias com consumo (só conta os dias em que houve consumo)">Média/Dia</th>
+                  <th>% Indiv.</th>
+                  <th>% Acum.</th>
+                  <th>Classe</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-pqr-materiais"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">
+        <span class="panel-title">Consumo de Materiais Agrupado por Dia</span>
+        <span class="panel-meta" id="volume-meta-materiais">agrupamento: mês · empilhado por classe P/Q/R</span>
+        <div class="panel-filter">
+          <span class="filter-label" style="font-size:10px;font-weight:400;color:var(--tx3)">Agrupar por</span>
+          <select id="sel-agrupamento-materiais" class="sel-input" onchange="renderVolumeDiarioMateriais()">
+            <option value="mes">Mês</option>
+            <option value="semana">Semana</option>
+            <option value="dia">Dia</option>
+            <option value="diasemana">Dia da semana</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="chart-wrap-lg"><canvas id="chart-volume-materiais"></canvas></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-hdr">
+        <span class="panel-title">📅 Distribuição por Dia da Semana — Materiais</span>
+        <div class="panel-filter">
+          <button class="class-filter-btn active" data-cls="P" onclick="filtrarClasseSemanaMateriais(this,'P')">P</button>
+          <button class="class-filter-btn" data-cls="Q" onclick="filtrarClasseSemanaMateriais(this,'Q')">Q</button>
+          <button class="class-filter-btn" data-cls="R" onclick="filtrarClasseSemanaMateriais(this,'R')">R</button>
+          <button class="class-filter-btn" data-cls="TODOS" onclick="filtrarClasseSemanaMateriais(this,'TODOS')">Todos</button>
+          <button class="btn-limpar" style="color:var(--tx2);margin-left:10px" onclick="gerarRelatorioPDFSemanaMateriais()" title="Gerar PDF da distribuição semanal de materiais">🖶 PDF</button>
+        </div>
+      </div>
+      <div class="panel-body" style="padding-top:8px">
+        <div class="mini-note" style="margin-bottom:8px">Quantidade consumida por dia da semana, para os materiais da classe selecionada (por padrão, Classe P). A cor de cada célula indica a intensidade dentro da própria linha.</div>
+        <button class="btn-primary" style="margin-bottom:10px" onclick="gerarResumoSemanaMateriaisClick()">📊 Gerar Resumo do Período</button>
+        <div class="resumo-semana" id="resumo-semana-materiais">
+          <span style="color:var(--tx3)">Clique em "Gerar Resumo do Período" para ver o comportamento desta classe por dia da semana, incluindo os 5 principais materiais de cada dia.</span>
+        </div>
+        <div class="tbl-scroll">
+          <table class="tbl tbl-semana">
+            <thead>
+              <tr>
+                <th class="th-ord" onclick="ordenarSemanaMateriais('nome')">Material<span class="sort-arrow" id="seta-semmat-nome"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaMateriais(0)">Seg<span class="sort-arrow" id="seta-semmat-0"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaMateriais(1)">Ter<span class="sort-arrow" id="seta-semmat-1"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaMateriais(2)">Qua<span class="sort-arrow" id="seta-semmat-2"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaMateriais(3)">Qui<span class="sort-arrow" id="seta-semmat-3"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaMateriais(4)">Sex<span class="sort-arrow" id="seta-semmat-4"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaMateriais(5)">Sáb<span class="sort-arrow" id="seta-semmat-5"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaMateriais(6)">Dom<span class="sort-arrow" id="seta-semmat-6"></span></th>
+                <th class="th-ord" onclick="ordenarSemanaMateriais('total')">Total<span class="sort-arrow" id="seta-semmat-total"></span></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-semana-materiais"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<div id="print-report" class="print-report"></div>
+
+<script>
+/* Logo i-OMT (usado nos relatórios PQR em PDF) */
+const LOGO_IOMT_BASE64 = "data:image/png;base64,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";
+
+/* ============================================================
+   ESTADO GLOBAL
+============================================================ */
+let protocolRows = [];         // {date:'YYYY-MM-DD', protocolo:string}
+let dailyAgg = new Map();      // date -> Map(protocolo -> qtd)   (referente ao período filtrado atual)
+let pqrFull = [];               // [{protocolo, qtd, pct, cum, classe}] ordenado desc, período filtrado
+let classeMap = new Map();     // protocolo -> 'P'|'Q'|'R'         (período filtrado atual)
+let totalGeralAtual = 0;
+let classeFiltroAtual = 'TODOS';
+let chartPareto = null;
+let chartVolume = null;
+let protocolosCarregados = false;
+let materiaisCarregados = false;
+let periodoCompletoMin = null;   // menor data encontrada no relatório de protocolos importado
+let periodoCompletoMax = null;   // maior data encontrada no relatório de protocolos importado
+let diasAnalisadosAtual = 0;     // quantidade de dias com prescrição no período filtrado atual
+let nomeArquivoProtocolos = '';
+let nomeArquivoMateriais = '';
+let linhasFonteProtocolos = [];  // {date, protocolo, presc} extraídas do arquivo de Protocolos internados
+let linhasFonteMateriais = [];   // {date, protocolo, presc} extraídas do arquivo de Atendimentos/materiais
+
+/* ---- Curva PQR de Materiais ---- */
+let matDailyAggReal = new Map();          // date -> Map(material -> qtd)  (consumo real, direto do arquivo de Atendimentos)
+let perfilProtocoloMaterial = new Map();  // protocolo -> Map(material -> média de qtd por prescrição), calculado a partir de Atendimentos
+let idsPrescricoesConhecidas = new Set(); // IDs de prescrição presentes no arquivo de Atendimentos (para localizar prescrições "órfãs")
+let pqrMateriaisFull = [];                 // [{material, qtd, pct, cum, classe, dias, media, estimado}]
+let classeMaterialMap = new Map();
+let dailyAggMateriais = new Map();         // date -> Map(material -> qtd) já filtrado/estimado, período atual
+let totalGeralMateriaisAtual = 0;
+let diasAnalisadosMateriaisAtual = 0;
+let classeFiltroMateriaisAtual = 'TODOS';
+
+/* ---- Distribuição por Dia da Semana, por Classe (P/Q/R) ---- */
+let semanaPorProtocolo = new Map();   // protocolo -> [Seg,Ter,Qua,Qui,Sex,Sáb,Dom]
+let semanaPorMaterial = new Map();    // material  -> [Seg,Ter,Qua,Qui,Sex,Sáb,Dom]
+let classeFiltroSemanaProtocolos = 'P';
+let classeFiltroSemanaMateriais = 'P';
+let ordenacaoSemanaProtocolos = {coluna:'total', direcao:'desc'};
+let ordenacaoSemanaMateriais = {coluna:'total', direcao:'desc'};
+let chartParetoMateriais = null;
+let chartVolumeMateriais = null;
+let qtdPrescricoesOrfasAtual = 0;   // prescrições vindas só de Protocolos internados, sem material conhecido direto
+let qtdPrescricoesOrfasEstimadas = 0; // dessas, quantas tiveram material estimado via perfil do protocolo
+
+/* ============================================================
+   UTILITÁRIOS DE DATA / TEXTO
+============================================================ */
+function normalizarCabecalho(h){
+  return String(h||'').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function chaveColuna(h){
+  // remove tudo que não for letra/número, para comparar cabeçalhos como
+  // "Protocolo", "DS_PROTOCOLO_ONCO", "ds protocolo onco" etc. de forma equivalente
+  return normalizarCabecalho(h).replace(/[^a-z0-9]/g,'');
+}
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function excelSerialToISO(serial){
+  var d = new Date(Date.UTC(1899,11,30) + Math.round(serial)*86400000);
+  return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());
+}
+function parseDataCell(val){
+  if(val===null||val===undefined||val==='') return null;
+  if(typeof val==='number') return excelSerialToISO(val);
+  if(val instanceof Date) return val.getFullYear()+'-'+pad(val.getMonth()+1)+'-'+pad(val.getDate());
+  var s = String(val).trim();
+  var m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if(m) return m[3]+'-'+m[2]+'-'+m[1];
+  var m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m2) return m2[0].slice(0,10);
+  return null;
+}
+function fmtDataBR(iso){
+  if(!iso) return '—';
+  var p = iso.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0].slice(2);
+}
+function fmtInt(n){ return (n||0).toLocaleString('pt-BR'); }
+function fmtNum1(n){ return (n||0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}); }
+function fmtPct1(n){ return (n||0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'; }
+function fmtPct(n){ return (n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%'; }
+
+/* ============================================================
+   STATUS / DRAG & DROP
+============================================================ */
+function setStatus(kind, txt){
+  var dot = document.getElementById('sdot');
+  var t = document.getElementById('status-txt');
+  dot.className = 'sdot ' + (kind||'');
+  t.textContent = txt;
+}
+function dragOver(e, zoneId){ e.preventDefault(); document.getElementById(zoneId).classList.add('drag'); }
+function dragLeave(e, zoneId){ e.preventDefault(); document.getElementById(zoneId).classList.remove('drag'); }
+function dropFile(e, tipo){
+  e.preventDefault();
+  var zoneId = tipo==='protocolos' ? 'dz-protocolos' : 'dz-materiais';
+  document.getElementById(zoneId).classList.remove('drag');
+  var f = e.dataTransfer.files[0];
+  if(f) processarArquivoObj(f, tipo);
+}
+function processarArquivo(input, tipo){
+  var f = input.files[0];
+  if(!f) return;
+  processarArquivoObj(f, tipo);
+  input.value='';
+}
+
+function showUploadResult(tipo, ok, msg){
+  var bar = document.getElementById('upload-result-'+tipo);
+  var txt = document.getElementById('upload-result-'+tipo+'-text');
+  var ico = document.getElementById('upload-result-'+tipo+'-icon');
+  bar.style.display = 'flex';
+  bar.className = 'upload-result-bar ' + (ok?'ok':'err');
+  ico.textContent = ok ? '✓' : '✗';
+  txt.textContent = msg;
+  var zoneId = tipo==='protocolos' ? 'dz-protocolos' : 'dz-materiais';
+  document.getElementById(zoneId).classList.remove('loading');
+}
+
+/* ============================================================
+   LEITURA DO ARQUIVO (SheetJS)
+============================================================ */
+function processarArquivoObj(f, tipo){
+  var zoneId = tipo==='protocolos' ? 'dz-protocolos' : 'dz-materiais';
+  document.getElementById(zoneId).classList.add('loading');
+  setStatus('saving', 'importando '+(tipo==='protocolos'?'protocolos':'materiais')+'…');
+
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var buffer = e.target.result;
+      var wb = XLSX.read(buffer, {type:'array', raw:true});
+      if(tipo==='protocolos'){
+        processarProtocolos(wb, f.name);
+      } else {
+        processarMateriais(wb, f.name);
+      }
+    } catch(err){
+      console.error(err);
+      showUploadResult(tipo, false, 'Erro ao ler o arquivo: '+err.message);
+      setStatus('err', 'erro na importação');
+    }
+  };
+  reader.onerror = function(){
+    showUploadResult(tipo, false, 'Falha ao ler o arquivo.');
+    setStatus('err', 'erro na importação');
+  };
+  reader.readAsArrayBuffer(f);
+}
+
+/* ---------- Protocolos internados (uma aba por mês) ---------- */
+function processarProtocolos(wb, nomeArquivo){
+  var novasLinhas = [];
+  var abasLidas = 0, abasIgnoradas = 0;
+  var chavesVistas = new Set(); // usado para deduplicar por prescrição (evita contar 1x por linha de material)
+  var usouDeduplicacao = false;
+
+  wb.SheetNames.forEach(function(nomeAba){
+    var sheet = wb.Sheets[nomeAba];
+    var aoa = XLSX.utils.sheet_to_json(sheet, {defval:null, header:1, raw:true});
+    if(!aoa.length) { abasIgnoradas++; return; }
+    var header = aoa[0];
+    if(!header || header.every(function(h){return h===null||h==='';})){ abasIgnoradas++; return; }
+    var headerNorm = header.map(normalizarCabecalho);
+    var chaves = header.map(chaveColuna);
+
+    // coluna de data: aceita "Data..." (ex.: Data da prescrição/Data prevista) ou DT_CHEGADA
+    var idxData = headerNorm.findIndex(function(h){ return h.indexOf('data')===0; });
+    if(idxData<0){
+      idxData = chaves.findIndex(function(k){ return k==='dtchegada' || k==='dataprescricao' || k==='dtprescricao'; });
+    }
+    // coluna de protocolo: aceita "Protocolo" ou "DS_PROTOCOLO_ONCO"
+    var idxProtocolo = chaves.findIndex(function(k){ return k==='protocolo' || k==='dsprotocoloonco'; });
+    // coluna de identificação da prescrição (ex.: "Prescrição" ou "NR_PRESCRICAO"), usada para deduplicar
+    // linhas de material da mesma prescrição E para não contar 2x a mesma prescrição quando ela
+    // também aparecer no outro arquivo importado (Protocolos internados x Atendimentos)
+    var idxPrescricaoId = chaves.findIndex(function(k, idx){ return idx!==idxData && k.indexOf('prescricao')>=0; });
+
+    if(idxData<0 || idxProtocolo<0){ abasIgnoradas++; return; }
+    abasLidas++;
+
+    for(var i=1;i<aoa.length;i++){
+      var row = aoa[i];
+      if(!row) continue;
+      var proto = row[idxProtocolo];
+      if(proto===null || proto===undefined || String(proto).trim()==='') continue;
+      var iso = parseDataCell(row[idxData]);
+      if(!iso) continue;
+      var protoTrim = String(proto).trim();
+      var idPresc = idxPrescricaoId>=0 ? row[idxPrescricaoId] : null;
+      var temId = (idPresc!==null && idPresc!==undefined && String(idPresc).trim()!=='');
+
+      if(temId){
+        var chaveDedup = iso+'|'+protoTrim+'|'+String(idPresc);
+        if(chavesVistas.has(chaveDedup)){ usouDeduplicacao = true; continue; }
+        chavesVistas.add(chaveDedup);
+      }
+
+      novasLinhas.push({date: iso, protocolo: protoTrim, presc: temId?String(idPresc):null});
+    }
+  });
+
+  if(!novasLinhas.length){
+    showUploadResult('protocolos', false, 'Nenhuma linha válida encontrada (verifique colunas "Data..." / "DT_CHEGADA" e "Protocolo" / "DS_PROTOCOLO_ONCO").');
+    setStatus('err', 'erro na importação');
+    return;
+  }
+
+  protocolosCarregados = true;
+  nomeArquivoProtocolos = nomeArquivo;
+  linhasFonteProtocolos = novasLinhas;
+
+  var msgDedup = usouDeduplicacao ? ' (linhas de materiais agrupadas em prescrições únicas)' : '';
+  showUploadResult('protocolos', true, nomeArquivo+' · '+abasLidas+' aba(s) lida(s), '+fmtInt(novasLinhas.length)+' prescrições'+msgDedup+'.');
+  setStatus('ok', 'base de protocolos carregada');
+  document.getElementById('btn-limpar-protocolos').style.display = 'inline-block';
+  atualizarHdrSub();
+
+  combinarFontesERecalcular();
+}
+
+/* ---------- Atendimentos (consumo de materiais) ---------- */
+function processarMateriais(wb, nomeArquivo){
+  var nomeAba = wb.SheetNames[0];
+  var sheet = wb.Sheets[nomeAba];
+  var aoa = XLSX.utils.sheet_to_json(sheet, {defval:null, header:1, raw:true});
+  if(!aoa.length){
+    showUploadResult('materiais', false, 'Planilha vazia.');
+    return;
+  }
+  var headerOriginal = aoa[0];
+  var header = headerOriginal.map(normalizarCabecalho);
+  var chaves = headerOriginal.map(chaveColuna);
+  var idxData = header.findIndex(function(h){ return h.indexOf('dt_chegada')>=0 || h.indexOf('data')===0; });
+  var idxProtocolo = header.findIndex(function(h){ return h.indexOf('protocolo')>=0; });
+  var idxMaterial = header.findIndex(function(h){ return h==='material'; });
+  var idxQt = header.findIndex(function(h){ return h.indexOf('qt_material')>=0; });
+  var idxPrescricaoId = chaves.findIndex(function(k, idx){ return idx!==idxData && k.indexOf('prescricao')>=0; });
+
+  var materiaisSet = new Set();
+  var protocolosSet = new Set();
+  var registros = 0;
+  var minD = null, maxD = null;
+
+  var linhasProtocolo = [];      // {date, protocolo, presc} para alimentar a Curva PQR de Protocolos combinada
+  var vistosPrescLocal = new Set();
+
+  // reinicia as estruturas de consumo de materiais (substituem uma importação anterior)
+  matDailyAggReal = new Map();            // date -> Map(material -> qtd)
+  idsPrescricoesConhecidas = new Set();    // todos os IDs de prescrição vistos neste arquivo
+  var protocoloMaterialQtd = new Map();    // protocolo -> Map(material -> qtdTotal)
+  var protocoloPrescricoesConhecidas = new Map(); // protocolo -> Set(idPresc)
+
+  for(var i=1;i<aoa.length;i++){
+    var row = aoa[i];
+    if(!row) continue;
+    registros++;
+
+    var materialVal = idxMaterial>=0 ? row[idxMaterial] : null;
+    var materialTrim = (materialVal!==null && materialVal!==undefined && String(materialVal).trim()!=='') ? String(materialVal).trim() : null;
+    if(materialTrim) materiaisSet.add(materialTrim);
+
+    var protoVal = idxProtocolo>=0 ? row[idxProtocolo] : null;
+    var protoTrim = (protoVal!==null && protoVal!==undefined && String(protoVal).trim()!=='') ? String(protoVal).trim() : null;
+    if(protoTrim) protocolosSet.add(protoTrim);
+
+    var iso = idxData>=0 ? parseDataCell(row[idxData]) : null;
+    if(iso){
+      if(!minD || iso<minD) minD = iso;
+      if(!maxD || iso>maxD) maxD = iso;
+    }
+
+    var idPrescRaw = idxPrescricaoId>=0 ? row[idxPrescricaoId] : null;
+    var temId = (idPrescRaw!==null && idPrescRaw!==undefined && String(idPrescRaw).trim()!=='');
+    var idPresc = temId ? String(idPrescRaw) : null;
+    if(idPresc) idsPrescricoesConhecidas.add(idPresc);
+
+    // --- Agregação do consumo de materiais: toda linha soma (não é deduplicada por prescrição) ---
+    if(materialTrim && iso){
+      var qtdMat = idxQt>=0 ? parseFloat(row[idxQt]) : NaN;
+      if(isNaN(qtdMat) || qtdMat<=0) qtdMat = 1;
+
+      if(!matDailyAggReal.has(iso)) matDailyAggReal.set(iso, new Map());
+      var diaMap = matDailyAggReal.get(iso);
+      diaMap.set(materialTrim, (diaMap.get(materialTrim)||0) + qtdMat);
+
+      if(protoTrim){
+        if(!protocoloMaterialQtd.has(protoTrim)) protocoloMaterialQtd.set(protoTrim, new Map());
+        var matMap = protocoloMaterialQtd.get(protoTrim);
+        matMap.set(materialTrim, (matMap.get(materialTrim)||0) + qtdMat);
+      }
+    }
+
+    if(protoTrim){
+      if(!protocoloPrescricoesConhecidas.has(protoTrim)) protocoloPrescricoesConhecidas.set(protoTrim, new Set());
+      if(idPresc) protocoloPrescricoesConhecidas.get(protoTrim).add(idPresc);
+    }
+
+    // --- Lista de prescrições (para a Curva PQR de Protocolos combinada) ---
+    if(protoTrim && iso){
+      if(temId){
+        if(!vistosPrescLocal.has(idPresc)){
+          vistosPrescLocal.add(idPresc);
+          linhasProtocolo.push({date: iso, protocolo: protoTrim, presc: idPresc});
+        }
+      } else {
+        linhasProtocolo.push({date: iso, protocolo: protoTrim, presc: null});
+      }
+    }
+  }
+
+  if(registros===0){
+    showUploadResult('materiais', false, 'Nenhum registro encontrado na planilha.');
+    return;
+  }
+
+  // perfil médio de materiais por protocolo (qtd média por prescrição), usado para
+  // estimar o consumo de prescrições que só existem no arquivo de Protocolos internados
+  perfilProtocoloMaterial = new Map();
+  protocoloMaterialQtd.forEach(function(matMap, protocolo){
+    var setPresc = protocoloPrescricoesConhecidas.get(protocolo);
+    var totalPresc = setPresc ? setPresc.size : 0;
+    if(!totalPresc) return;
+    var perfil = new Map();
+    matMap.forEach(function(qtdTotal, material){
+      perfil.set(material, qtdTotal/totalPresc);
+    });
+    perfilProtocoloMaterial.set(protocolo, perfil);
+  });
+
+  materiaisCarregados = true;
+  nomeArquivoMateriais = nomeArquivo;
+  linhasFonteMateriais = linhasProtocolo;
+
+  document.getElementById('panel-materiais-status').style.display = 'block';
+  document.getElementById('materiais-meta').textContent = nomeArquivo;
+  document.getElementById('mat-kpi-registros').textContent = fmtInt(registros);
+  document.getElementById('mat-kpi-periodo').textContent = (minD&&maxD) ? (fmtDataBR(minD)+' – '+fmtDataBR(maxD)) : '—';
+  document.getElementById('mat-kpi-materiais').textContent = fmtInt(materiaisSet.size);
+  document.getElementById('mat-kpi-protocolos').textContent = fmtInt(protocolosSet.size);
+
+  document.getElementById('kpi-materiais').textContent = fmtInt(registros);
+  document.getElementById('kpi-materiais-sub').textContent = fmtInt(materiaisSet.size)+' materiais distintos';
+
+  showUploadResult('materiais', true, nomeArquivo+' · '+fmtInt(registros)+' registros de consumo carregados ('+fmtInt(linhasProtocolo.length)+' prescrições identificadas).');
+  setStatus('ok', 'bases carregadas');
+  document.getElementById('btn-limpar-materiais').style.display = 'inline-block';
+  atualizarHdrSub();
+
+  combinarFontesERecalcular();
+}
+
+function atualizarHdrSub(){
+  var partes = [];
+  if(protocolosCarregados) partes.push('protocolos ✓');
+  if(materiaisCarregados) partes.push('materiais ✓');
+  document.getElementById('hdr-sub').textContent = partes.length ? partes.join(' · ') : 'aguardando importação das bases…';
+}
+
+/* ============================================================
+   COMBINAÇÃO DAS DUAS FONTES (Protocolos internados + Atendimentos)
+   Uma mesma prescrição pode existir nos dois arquivos (confirmado por
+   sobreposição de IDs de prescrição); por isso a combinação deduplica
+   globalmente por ID de prescrição, evitando contagem duplicada.
+============================================================ */
+function combinarFontesERecalcular(){
+  var vistos = new Set();
+  var combinado = [];
+
+  function incluirLista(lista){
+    lista.forEach(function(r){
+      if(r.presc){
+        if(vistos.has(r.presc)) return; // mesma prescrição já contabilizada pela outra fonte
+        vistos.add(r.presc);
+      }
+      combinado.push({date: r.date, protocolo: r.protocolo});
+    });
+  }
+  // Protocolos internados primeiro (fonte de referência), depois Atendimentos
+  // complementa com prescrições adicionais que não estejam na primeira fonte
+  incluirLista(linhasFonteProtocolos);
+  incluirLista(linhasFonteMateriais);
+
+  protocolRows = combinado;
+
+  if(!protocolRows.length){
+    periodoCompletoMin = null;
+    periodoCompletoMax = null;
+    dailyAgg = new Map();
+    pqrFull = [];
+    classeMap = new Map();
+    totalGeralAtual = 0;
+    diasAnalisadosAtual = 0;
+
+    if(chartPareto){ chartPareto.destroy(); chartPareto = null; }
+    if(chartVolume){ chartVolume.destroy(); chartVolume = null; }
+
+    document.getElementById('date-de').value = '';
+    document.getElementById('date-ate').value = '';
+    document.getElementById('hdr-periodo-val').textContent = '—';
+    document.getElementById('tbody-pqr').innerHTML = '';
+    document.getElementById('conteudo-pqr').style.display = 'none';
+    document.getElementById('panel-vazio').style.display = 'block';
+
+    document.getElementById('kpi-protocolos').textContent = '—';
+    document.getElementById('kpi-protocolos-sub').textContent = 'aguardando dados';
+    document.getElementById('kpi-prescricoes').textContent = '—';
+    document.getElementById('kpi-classe-p').textContent = '—';
+    document.getElementById('kpi-classe-q').textContent = '—';
+    semanaPorProtocolo = new Map();
+    document.getElementById('tbody-semana-protocolos').innerHTML = '';
+    document.getElementById('resumo-semana-protocolos').innerHTML = '';
+    document.getElementById('kpi-classe-r').textContent = '—';
+    recalcularPQRMateriais();
+    return;
+  }
+
+  var datas = protocolRows.map(function(r){ return r.date; }).sort();
+  var minD = datas[0], maxD = datas[datas.length-1];
+  periodoCompletoMin = minD;
+  periodoCompletoMax = maxD;
+  document.getElementById('date-de').value = minD;
+  document.getElementById('date-ate').value = maxD;
+  document.getElementById('hdr-periodo-val').textContent = fmtDataBR(minD)+' até '+fmtDataBR(maxD);
+
+  document.getElementById('panel-vazio').style.display = 'none';
+  document.getElementById('conteudo-pqr').style.display = 'block';
+
+  recalcularPQR();
+  recalcularPQRMateriais();
+}
+
+/* ============================================================
+   LIMPAR DADOS IMPORTADOS
+============================================================ */
+function limparDados(tipo){
+  if(tipo==='protocolos'){
+    if(!protocolosCarregados) return;
+    if(!confirm('Remover a planilha de Protocolos internados importada?'+(materiaisCarregados?' A Curva PQR será recalculada apenas com os dados de Atendimentos.':' A Curva PQR será limpa.'))) return;
+
+    protocolosCarregados = false;
+    nomeArquivoProtocolos = '';
+    linhasFonteProtocolos = [];
+    classeFiltroAtual = 'TODOS';
+
+    document.getElementById('file-protocolos').value = '';
+    document.getElementById('busca-protocolo').value = '';
+    document.getElementById('upload-result-protocolos').style.display = 'none';
+    document.getElementById('btn-limpar-protocolos').style.display = 'none';
+    document.getElementById('print-report').innerHTML = '';
+
+    setStatus(materiaisCarregados?'ok':'', materiaisCarregados?'base de materiais carregada':'aguardando arquivos');
+    atualizarHdrSub();
+    combinarFontesERecalcular();
+
+  } else if(tipo==='materiais'){
+    if(!materiaisCarregados) return;
+    if(!confirm('Remover a planilha de Atendimentos/consumo de materiais importada? Isso também limpa a Curva PQR de Materiais.'+(protocolosCarregados?' A Curva PQR de Protocolos será recalculada apenas com os dados de Protocolos internados.':''))) return;
+
+    materiaisCarregados = false;
+    nomeArquivoMateriais = '';
+    linhasFonteMateriais = [];
+    matDailyAggReal = new Map();
+    perfilProtocoloMaterial = new Map();
+    idsPrescricoesConhecidas = new Set();
+    classeFiltroMateriaisAtual = 'TODOS';
+
+    document.getElementById('file-materiais').value = '';
+    document.getElementById('busca-material').value = '';
+    document.getElementById('upload-result-materiais').style.display = 'none';
+    document.getElementById('btn-limpar-materiais').style.display = 'none';
+    document.getElementById('panel-materiais-status').style.display = 'none';
+    document.getElementById('mat-kpi-registros').textContent = '—';
+    document.getElementById('mat-kpi-periodo').textContent = '—';
+    document.getElementById('mat-kpi-materiais').textContent = '—';
+    document.getElementById('mat-kpi-protocolos').textContent = '—';
+    document.getElementById('kpi-materiais').textContent = '—';
+    document.getElementById('kpi-materiais-sub').textContent = 'não carregada';
+    document.getElementById('print-report').innerHTML = '';
+
+    setStatus(protocolosCarregados?'ok':'', protocolosCarregados?'base de protocolos carregada':'aguardando arquivos');
+    atualizarHdrSub();
+    combinarFontesERecalcular();
+  }
+}
+
+/* ============================================================
+   CÁLCULO DA CURVA PQR
+============================================================ */
+function recalcularPQR(){
+  if(!protocolRows.length) return;
+  var de = document.getElementById('date-de').value;
+  var ate = document.getElementById('date-ate').value;
+
+  var novoDailyAgg = new Map();
+  var totalGeral = 0;
+
+  for(var i=0;i<protocolRows.length;i++){
+    var r = protocolRows[i];
+    if(de && r.date < de) continue;
+    if(ate && r.date > ate) continue;
+    if(!novoDailyAgg.has(r.date)) novoDailyAgg.set(r.date, new Map());
+    var dm = novoDailyAgg.get(r.date);
+    dm.set(r.protocolo, (dm.get(r.protocolo)||0)+1);
+    totalGeral++;
+  }
+
+  var protocolTotals = new Map();
+  var protocolDias = new Map(); // protocolo -> quantidade de dias distintos com prescrição
+  novoDailyAgg.forEach(function(dm){
+    dm.forEach(function(qtd, proto){
+      protocolTotals.set(proto, (protocolTotals.get(proto)||0)+qtd);
+      protocolDias.set(proto, (protocolDias.get(proto)||0)+1);
+    });
+  });
+
+  var arr = [];
+  protocolTotals.forEach(function(qtd, proto){
+    var dias = protocolDias.get(proto)||0;
+    arr.push({protocolo:proto, qtd:qtd, dias:dias, media: dias ? Math.round(qtd/dias) : 0});
+  });
+  arr.sort(function(a,b){ return b.qtd - a.qtd; });
+
+  var cum = 0;
+  var novoClasseMap = new Map();
+  arr.forEach(function(item){
+    item.pct = totalGeral ? (item.qtd/totalGeral*100) : 0;
+    cum += item.pct;
+    item.cum = cum;
+    item.classe = cum<=70 ? 'P' : (cum<=95 ? 'Q' : 'R');
+    novoClasseMap.set(item.protocolo, item.classe);
+  });
+
+  dailyAgg = novoDailyAgg;
+  pqrFull = arr;
+  classeMap = novoClasseMap;
+  totalGeralAtual = totalGeral;
+  diasAnalisadosAtual = novoDailyAgg.size;
+
+  // Distribuição por dia da semana (Seg..Dom), para todos os protocolos — usada no
+  // painel "Distribuição por Dia da Semana", filtrável depois por classe P/Q/R.
+  var novaSemanaPorProtocolo = new Map();
+  novoDailyAgg.forEach(function(dm, dia){
+    var idxSemana = parseInt(chaveAgrupamento(dia, 'diasemana'), 10);
+    dm.forEach(function(qtd, proto){
+      if(!novaSemanaPorProtocolo.has(proto)) novaSemanaPorProtocolo.set(proto, [0,0,0,0,0,0,0]);
+      novaSemanaPorProtocolo.get(proto)[idxSemana] += qtd;
+    });
+  });
+  semanaPorProtocolo = novaSemanaPorProtocolo;
+
+  atualizarKPIs();
+  renderTabelaPQR();
+  renderParetoChart();
+  renderVolumeDiario();
+  renderTabelaSemanaProtocolos();
+}
+
+/* Recalcula as duas curvas PQR (Protocolos e Materiais) com o período atual dos campos de data */
+function recalcularTudo(){
+  recalcularPQR();
+  recalcularPQRMateriais();
+}
+
+/* Volta o período para o intervalo completo detectado nos relatórios importados */
+function selecionarPeriodoCompleto(){
+  if(!protocolRows.length || !periodoCompletoMin || !periodoCompletoMax) return;
+  document.getElementById('date-de').value = periodoCompletoMin;
+  document.getElementById('date-ate').value = periodoCompletoMax;
+  recalcularTudo();
+}
+
+function atualizarKPIs(){
+  var qtdP=0, qtdQ=0, qtdR=0, volP=0, volQ=0, volR=0;
+  pqrFull.forEach(function(item){
+    if(item.classe==='P'){ qtdP++; volP+=item.pct; }
+    else if(item.classe==='Q'){ qtdQ++; volQ+=item.pct; }
+    else { qtdR++; volR+=item.pct; }
+  });
+  document.getElementById('kpi-protocolos').textContent = fmtInt(pqrFull.length);
+  document.getElementById('kpi-protocolos-sub').textContent = 'no período selecionado';
+  document.getElementById('kpi-prescricoes').textContent = fmtInt(totalGeralAtual);
+  document.getElementById('kpi-classe-p').textContent = fmtInt(qtdP);
+  document.getElementById('kpi-classe-p-sub').textContent = qtdP+' protocolo(s) · '+fmtPct(volP)+' do volume';
+  document.getElementById('kpi-classe-q').textContent = fmtInt(qtdQ);
+  document.getElementById('kpi-classe-q-sub').textContent = qtdQ+' protocolo(s) · '+fmtPct(volQ)+' do volume';
+  document.getElementById('kpi-classe-r').textContent = fmtInt(qtdR);
+  document.getElementById('kpi-classe-r-sub').textContent = qtdR+' protocolo(s) · '+fmtPct(volR)+' do volume';
+  document.getElementById('pareto-meta').textContent = pqrFull.length+' protocolos · '+fmtInt(totalGeralAtual)+' prescrições';
+}
+
+/* ============================================================
+   TABELA DE RANKING
+============================================================ */
+function filtrarClasse(btn, cls){
+  classeFiltroAtual = cls;
+  btn.closest('.panel-filter').querySelectorAll('.class-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderTabelaPQR();
+}
+
+function renderTabelaPQR(){
+  var busca = (document.getElementById('busca-protocolo').value||'').trim().toLowerCase();
+  var tbody = document.getElementById('tbody-pqr');
+  var html = '';
+  var corBarra = {P:'var(--gt)', Q:'var(--at)', R:'var(--rt)'};
+
+  pqrFull.forEach(function(item, idx){
+    if(classeFiltroAtual!=='TODOS' && item.classe!==classeFiltroAtual) return;
+    if(busca && item.protocolo.toLowerCase().indexOf(busca)<0) return;
+    html += '<tr>'
+      + '<td>'+(idx+1)+'</td>'
+      + '<td style="font-family:var(--ff);white-space:normal">'+escapeHtml(item.protocolo)+'</td>'
+      + '<td>'+fmtInt(item.qtd)+'</td>'
+      + '<td>'+(item.dias?fmtInt(item.dias):'—')+'</td>'
+      + '<td>'+(item.media?fmtInt(item.media):'—')+'</td>'
+      + '<td>'+fmtPct(item.pct)+'<div class="bar-mini"><div class="bar-mini-fill" style="width:'+Math.min(100,item.pct*4)+'%;background:'+corBarra[item.classe]+'"></div></div></td>'
+      + '<td>'+fmtPct(item.cum)+'</td>'
+      + '<td><span class="badge-classe badge-'+item.classe+'">'+item.classe+'</span></td>'
+      + '</tr>';
+  });
+  tbody.innerHTML = html || '<tr><td colspan="8" style="text-align:center;color:var(--tx3);padding:16px">Nenhum protocolo encontrado.</td></tr>';
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+/* ============================================================
+   GRÁFICO PARETO (CURVA PQR)
+============================================================ */
+function renderParetoChart(){
+  var ctx = document.getElementById('chart-pareto').getContext('2d');
+  var cores = {P:'#3dd68c', Q:'#e3b341', R:'#f85149'};
+  var labels = pqrFull.map(function(i){ return i.protocolo; });
+  var dadosPct = pqrFull.map(function(i){ return i.pct; });
+  var dadosCum = pqrFull.map(function(i){ return i.cum; });
+  var backgroundColors = pqrFull.map(function(i){ return cores[i.classe]; });
+
+  if(chartPareto) chartPareto.destroy();
+  chartPareto = new Chart(ctx, {
+    data:{
+      labels: labels,
+      datasets:[
+        {
+          type:'bar',
+          label:'% individual',
+          data: dadosPct,
+          backgroundColor: backgroundColors,
+          yAxisID:'y',
+          order:2,
+          barPercentage:0.9,
+          categoryPercentage:0.95
+        },
+        {
+          type:'line',
+          label:'% acumulado',
+          data: dadosCum,
+          borderColor:'#79c0ff',
+          backgroundColor:'transparent',
+          borderWidth:2,
+          pointRadius:0,
+          yAxisID:'y1',
+          order:1,
+          tension:.15
+        },
+        {
+          type:'line',
+          label:'Limite P/Q (70%)',
+          data: labels.map(function(){return 70;}),
+          borderColor:'rgba(61,214,140,.5)',
+          borderDash:[5,4],
+          borderWidth:1,
+          pointRadius:0,
+          yAxisID:'y1',
+          order:0
+        },
+        {
+          type:'line',
+          label:'Limite Q/R (95%)',
+          data: labels.map(function(){return 95;}),
+          borderColor:'rgba(248,81,73,.5)',
+          borderDash:[5,4],
+          borderWidth:1,
+          pointRadius:0,
+          yAxisID:'y1',
+          order:0
+        }
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ labels:{ color:'#8b949e', font:{size:10}, boxWidth:12 } },
+        datalabels:{ display:false },
+        tooltip:{
+          callbacks:{
+            title: function(items){ return items[0] ? items[0].label : ''; },
+            label: function(item){
+              if(item.dataset.label==='% individual') return '% individual: '+item.raw.toFixed(2)+'%';
+              if(item.dataset.label==='% acumulado') return '% acumulado: '+item.raw.toFixed(2)+'%';
+              return null;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ ticks:{ display:false }, grid:{ display:false } },
+        y:{ position:'left', title:{display:true,text:'% individual',color:'#8b949e',font:{size:10}}, ticks:{color:'#8b949e',font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'} },
+        y1:{ position:'right', min:0, max:100, title:{display:true,text:'% acumulado',color:'#8b949e',font:{size:10}}, ticks:{color:'#8b949e',font:{size:10}}, grid:{display:false} }
+      }
+    }
+  });
+}
+
+/* ============================================================
+   GRÁFICO DE VOLUME DIÁRIO (AGRUPADO)
+============================================================ */
+function chaveAgrupamento(iso, modo){
+  var partes = iso.split('-').map(Number);
+  var y=partes[0], m=partes[1], d=partes[2];
+  if(modo==='dia') return iso;
+  if(modo==='mes') return y+'-'+pad(m);
+  if(modo==='diasemana'){
+    var dtSem = new Date(Date.UTC(y,m-1,d));
+    var idxSemana = (dtSem.getUTCDay()+6)%7; // 0=segunda ... 6=domingo
+    return String(idxSemana);
+  }
+  // semana: segunda-feira da semana (ISO)
+  var dt = new Date(Date.UTC(y,m-1,d));
+  var diaSemana = (dt.getUTCDay()+6)%7; // 0 = segunda
+  dt.setUTCDate(dt.getUTCDate()-diaSemana);
+  return dt.getUTCFullYear()+'-'+pad(dt.getUTCMonth()+1)+'-'+pad(dt.getUTCDate());
+}
+function labelAgrupamento(chave, modo){
+  if(modo==='mes'){
+    var p = chave.split('-');
+    var meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    return meses[parseInt(p[1],10)-1]+'/'+p[0].slice(2);
+  }
+  if(modo==='diasemana'){
+    var diasSemana = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+    return diasSemana[parseInt(chave,10)];
+  }
+  return fmtDataBR(chave);
+}
+
+function renderVolumeDiario(){
+  if(!dailyAgg.size){ return; }
+  var modo = document.getElementById('sel-agrupamento').value;
+  document.getElementById('volume-meta').textContent = 'agrupamento: '+({dia:'dia',semana:'semana',mes:'mês',diasemana:'dia da semana'}[modo])+' · empilhado por classe P/Q/R'+(modo==='diasemana'?' · cada barra soma todas as ocorrências daquele dia da semana no período':'');
+
+  var grupos = new Map(); // chave -> {P:0,Q:0,R:0}
+  var chavesOrdenadas = [];
+
+  var diasOrdenados = Array.from(dailyAgg.keys()).sort();
+  diasOrdenados.forEach(function(dia){
+    var chave = chaveAgrupamento(dia, modo);
+    if(!grupos.has(chave)){ grupos.set(chave, {P:0,Q:0,R:0}); chavesOrdenadas.push(chave); }
+    var g = grupos.get(chave);
+    dailyAgg.get(dia).forEach(function(qtd, proto){
+      var cls = classeMap.get(proto) || 'R';
+      g[cls] += qtd;
+    });
+  });
+  chavesOrdenadas.sort();
+
+  var labels = chavesOrdenadas.map(function(c){ return labelAgrupamento(c, modo); });
+  var serieP = chavesOrdenadas.map(function(c){ return grupos.get(c).P; });
+  var serieQ = chavesOrdenadas.map(function(c){ return grupos.get(c).Q; });
+  var serieR = chavesOrdenadas.map(function(c){ return grupos.get(c).R; });
+
+  var ctx = document.getElementById('chart-volume').getContext('2d');
+  if(chartVolume) chartVolume.destroy();
+  chartVolume = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[
+        {label:'Classe P', data:serieP, backgroundColor:'#1D9E75', stack:'s'},
+        {label:'Classe Q', data:serieQ, backgroundColor:'#d29922', stack:'s'},
+        {label:'Classe R', data:serieR, backgroundColor:'#da3633', stack:'s'}
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{ labels:{ color:'#8b949e', font:{size:10}, boxWidth:12 } },
+        datalabels:{ display:false }
+      },
+      scales:{
+        x:{ stacked:true, ticks:{ color:'#8b949e', font:{size:9}, maxRotation:0, autoSkip:true }, grid:{ display:false } },
+        y:{ stacked:true, ticks:{ color:'#8b949e', font:{size:10} }, grid:{ color:'rgba(255,255,255,.05)' } }
+      }
+    }
+  });
+}
+
+/* ============================================================
+   DISTRIBUIÇÃO POR DIA DA SEMANA, POR CLASSE — PROTOCOLOS
+   Permite verificar, para os protocolos de uma classe (P por padrão),
+   em quais dias da semana cada um é mais prescrito.
+============================================================ */
+var CORES_SEMANA_RGB = {P:'61,214,140', Q:'227,179,65', R:'248,81,73'};
+var NOMES_DIAS_LONGOS = ['segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado','domingo'];
+var NOMES_MESES_LONGOS = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+/* Monta o texto (HTML) de resumo do comportamento semanal — usado tanto no botão
+   "Gerar Resumo do Período" da tela quanto nos relatórios em PDF. Adapta o texto
+   quando o período filtrado é um único dia ou está restrito a um único mês, e
+   lista os 5 principais itens (protocolos/materiais) de cada dia da semana. */
+function calcularTextoResumoSemana(linhas, opts){
+  if(!linhas.length) return 'Nenhum item nesta classe no período selecionado.';
+
+  var classeLabel = {P:'Classe P (Popular)', Q:'Classe Q (Intermediário)', R:'Classe R (Raro)', TODOS:'Todas as classes'}[opts.classeAtual] || opts.classeAtual;
+  var titulo = '<div class="resumo-titulo">📊 Resumo do comportamento semanal — '+classeLabel+'</div>';
+
+  var de = document.getElementById('date-de').value;
+  var ate = document.getElementById('date-ate').value;
+  var diasNoIntervalo = null;
+  if(de && ate){
+    diasNoIntervalo = Math.round((new Date(ate+'T00:00:00Z') - new Date(de+'T00:00:00Z'))/86400000) + 1;
+  }
+
+  // Cenário 1: período filtrado é um único dia — não há "padrão semanal" a mostrar
+  if(diasNoIntervalo!==null && diasNoIntervalo<=1){
+    var dt = new Date(de+'T12:00:00Z');
+    var idxDia = (dt.getUTCDay()+6)%7;
+    return titulo
+      + 'O período filtrado corresponde a um único dia: <b>'+fmtDataBR(de)+'</b> ('+NOMES_DIAS_LONGOS[idxDia]+'). '
+      + 'Não é possível identificar um padrão semanal com apenas uma data selecionada — os valores da tabela referem-se somente a esse dia. '
+      + 'Amplie o período no campo "Período da Curva PQR", no topo do painel, para visualizar a distribuição por dia da semana.';
+  }
+
+  // soma o volume de cada dia da semana, considerando todos os itens já filtrados pela classe
+  var somaSemana = [0,0,0,0,0,0,0];
+  var totalGeral = 0;
+  linhas.forEach(function(l){
+    l.valores.forEach(function(v,i){ somaSemana[i]+=v; });
+    totalGeral += l.total;
+  });
+
+  var indices = [0,1,2,3,4,5,6].slice().sort(function(a,b){ return somaSemana[b]-somaSemana[a]; });
+  var diaMax = indices[0], diaMax2 = indices[1];
+  var diasZerados = indices.filter(function(i){ return somaSemana[i]===0; });
+  var diasComMovimento = indices.filter(function(i){ return somaSemana[i]>0; });
+  var diaMin = diasComMovimento.length ? diasComMovimento[diasComMovimento.length-1] : indices[6];
+
+  var pctMax = totalGeral ? (somaSemana[diaMax]/totalGeral*100) : 0;
+  var pctMax2 = totalGeral ? (somaSemana[diaMax2]/totalGeral*100) : 0;
+  var pctMin = totalGeral ? (somaSemana[diaMin]/totalGeral*100) : 0;
+
+  var periodoTxt = (de && ate) ? (fmtDataBR(de)+' a '+fmtDataBR(ate)) : 'todo o período disponível';
+
+  var txt = titulo;
+  txt += 'No período de <b>'+periodoTxt+'</b>'+(diasNoIntervalo?(' ('+fmtInt(diasNoIntervalo)+' dias corridos)'):'')+', ';
+  txt += '<b>'+fmtInt(linhas.length)+'</b> '+(linhas.length===1?opts.tipoSingular:opts.tipoPlural)+' desta classe somam <b>'+opts.fmtValor(totalGeral)+'</b> '+opts.unidade+'. ';
+  txt += 'A concentração é maior às <b>'+NOMES_DIAS_LONGOS[diaMax]+'s</b> ('+fmtPct1(pctMax)+' do total), seguida por <b>'+NOMES_DIAS_LONGOS[diaMax2]+'s</b> ('+fmtPct1(pctMax2)+'). ';
+
+  if(diasZerados.length){
+    var nomesZerados = diasZerados.map(function(i){ return NOMES_DIAS_LONGOS[i]+'s'; });
+    txt += 'Não há registros aos <b>'+nomesZerados.join(', ')+'</b> no período analisado.';
+  } else {
+    txt += 'O dia com menor movimento é <b>'+NOMES_DIAS_LONGOS[diaMin]+'</b> ('+fmtPct1(pctMin)+' do total).';
+  }
+
+  // Cenário 2: período restrito a um único mês — alerta que a amostra é limitada
+  if(de && ate){
+    var deP = de.split('-'), ateP = ate.split('-');
+    if(deP[0]===ateP[0] && deP[1]===ateP[1]){
+      txt += ' <br><span style="opacity:.75">⚠ O período filtrado está restrito a <b>'+NOMES_MESES_LONGOS[parseInt(deP[1],10)-1]+'/'+deP[0]+'</b>; o padrão acima reflete apenas esse mês e pode não representar a sazonalidade de outros períodos.</span>';
+    }
+  }
+
+  // Top 5 protocolos/materiais de cada dia da semana
+  txt += '<div style="margin-top:10px"><b>Top 5 '+opts.tipoPlural+' de cada dia da semana:</b><ul style="margin:6px 0 0 18px;padding:0">';
+  for(var d=0; d<7; d++){
+    var ordenadoPorDia = linhas.slice().sort(function(a,b){ return b.valores[d]-a.valores[d]; });
+    var top5 = ordenadoPorDia.filter(function(l){ return l.valores[d]>0; }).slice(0,5);
+    var nomeDiaCap = NOMES_DIAS_LONGOS[d].charAt(0).toUpperCase()+NOMES_DIAS_LONGOS[d].slice(1);
+    txt += '<li style="margin-bottom:3px"><b>'+nomeDiaCap+':</b> ';
+    if(!top5.length){
+      txt += 'sem registros';
+    } else {
+      txt += top5.map(function(it,i){ return (i+1)+'º '+escapeHtml(it.nome)+' ('+opts.fmtValor(it.valores[d])+')'; }).join(', ');
+    }
+    txt += '</li>';
+  }
+  txt += '</ul></div>';
+
+  return txt;
+}
+
+/* Botões "Gerar Resumo do Período" — calculam sob demanda (usam a classe/ordenação/período
+   atuais da tela) e preenchem a caixa de resumo, posicionada acima da tabela. */
+function gerarResumoSemanaProtocolosClick(){
+  var linhas = obterLinhasSemanaProtocolos();
+  var el = document.getElementById('resumo-semana-protocolos');
+  if(!linhas.length){ el.innerHTML = 'Nenhum protocolo nesta classe no período selecionado.'; return; }
+  el.innerHTML = calcularTextoResumoSemana(linhas, {
+    classeAtual: classeFiltroSemanaProtocolos,
+    tipoPlural: 'protocolos',
+    tipoSingular: 'protocolo',
+    unidade: 'prescrições',
+    fmtValor: fmtInt
+  });
+}
+function gerarResumoSemanaMateriaisClick(){
+  var linhas = obterLinhasSemanaMateriais();
+  var el = document.getElementById('resumo-semana-materiais');
+  if(!linhas.length){ el.innerHTML = 'Nenhum material nesta classe no período selecionado.'; return; }
+  el.innerHTML = calcularTextoResumoSemana(linhas, {
+    classeAtual: classeFiltroSemanaMateriais,
+    tipoPlural: 'materiais',
+    tipoSingular: 'material',
+    unidade: 'unidades consumidas',
+    fmtValor: fmtNum1
+  });
+}
+
+function filtrarClasseSemanaProtocolos(btn, cls){
+  classeFiltroSemanaProtocolos = cls;
+  btn.closest('.panel-filter').querySelectorAll('.class-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderTabelaSemanaProtocolos();
+}
+
+/* ordena a tabela ao clicar num cabeçalho (Protocolo/Material, Seg..Dom, Total);
+   clicar de novo na mesma coluna inverte a direção */
+function atualizarSetasOrdenacao(prefixo, estado){
+  ['nome',0,1,2,3,4,5,6,'total'].forEach(function(c){
+    var el = document.getElementById('seta-'+prefixo+'-'+c);
+    if(el) el.textContent = '';
+  });
+  var ativo = document.getElementById('seta-'+prefixo+'-'+estado.coluna);
+  if(ativo) ativo.textContent = estado.direcao==='asc' ? '▲' : '▼';
+}
+
+/* Monta a lista de itens (protocolo + valores por dia da semana + total), já
+   filtrada pela classe e ordenada conforme a coluna clicada — reaproveitada
+   pela tabela, pelo botão "Gerar Resumo do Período" e pelo relatório em PDF. */
+function obterLinhasSemanaProtocolos(){
+  var cls = classeFiltroSemanaProtocolos;
+  var linhas = [];
+  pqrFull.forEach(function(item){
+    if(cls!=='TODOS' && item.classe!==cls) return;
+    var valores = semanaPorProtocolo.get(item.protocolo);
+    if(!valores) return;
+    linhas.push({ nome: item.protocolo, valores: valores, total: valores.reduce(function(a,b){return a+b;},0) });
+  });
+
+  var col = ordenacaoSemanaProtocolos.coluna;
+  var dir = ordenacaoSemanaProtocolos.direcao==='asc' ? 1 : -1;
+  linhas.sort(function(a,b){
+    if(col==='nome') return dir * a.nome.localeCompare(b.nome, 'pt-BR');
+    var va = (col==='total') ? a.total : a.valores[col];
+    var vb = (col==='total') ? b.total : b.valores[col];
+    return dir * (va - vb);
+  });
+  return linhas;
+}
+
+function ordenarSemanaProtocolos(coluna){
+  if(ordenacaoSemanaProtocolos.coluna === coluna){
+    ordenacaoSemanaProtocolos.direcao = ordenacaoSemanaProtocolos.direcao==='desc' ? 'asc' : 'desc';
+  } else {
+    ordenacaoSemanaProtocolos.coluna = coluna;
+    ordenacaoSemanaProtocolos.direcao = (coluna==='nome') ? 'asc' : 'desc';
+  }
+  renderTabelaSemanaProtocolos();
+}
+
+/* Volta a ordenação da tabela de Distribuição por Dia da Semana — Protocolos
+   para o padrão: coluna "Total", do maior para o menor. */
+function resetarOrdenacaoSemanaProtocolos(){
+  ordenacaoSemanaProtocolos.coluna = 'total';
+  ordenacaoSemanaProtocolos.direcao = 'desc';
+  renderTabelaSemanaProtocolos();
+}
+
+function renderTabelaSemanaProtocolos(){
+  var tbody = document.getElementById('tbody-semana-protocolos');
+  if(!tbody) return;
+  var cls = classeFiltroSemanaProtocolos;
+  var corRgb = CORES_SEMANA_RGB[cls] || '121,192,255';
+  var linhas = obterLinhasSemanaProtocolos();
+
+  var html = '';
+  linhas.forEach(function(linha){
+    var maxDia = Math.max.apply(null, linha.valores);
+    html += '<tr><td>'+escapeHtml(linha.nome)+'</td>';
+    linha.valores.forEach(function(v){
+      var alpha = maxDia>0 ? Math.min(0.75, (v/maxDia)*0.7+ (v>0?0.08:0)) : 0;
+      var bg = v>0 ? 'background:rgba('+corRgb+','+alpha.toFixed(2)+')' : '';
+      html += '<td style="'+bg+'">'+(v?fmtInt(v):'—')+'</td>';
+    });
+    html += '<td class="sem-total">'+fmtInt(linha.total)+'</td></tr>';
+  });
+
+  tbody.innerHTML = html || '<tr><td colspan="9" style="text-align:center;color:var(--tx3);padding:16px">Nenhum protocolo nesta classe no período selecionado.</td></tr>';
+  atualizarSetasOrdenacao('semprot', ordenacaoSemanaProtocolos);
+}
+
+/* ============================================================
+   RELATÓRIO PDF — DISTRIBUIÇÃO POR DIA DA SEMANA (PROTOCOLOS)
+============================================================ */
+function gerarRelatorioPDFSemanaProtocolos(){
+  var cls = classeFiltroSemanaProtocolos;
+  var linhas = obterLinhasSemanaProtocolos();
+  if(!linhas.length){
+    alert('Não há protocolos da classe selecionada com distribuição semanal calculada.');
+    return;
+  }
+
+  var de = document.getElementById('date-de').value;
+  var ate = document.getElementById('date-ate').value;
+  var fonte = nomeArquivoProtocolos || nomeArquivoMateriais || 'Protocolos internados';
+  if(nomeArquivoProtocolos && nomeArquivoMateriais) fonte += ' + ' + nomeArquivoMateriais;
+  var corRgb = CORES_SEMANA_RGB[cls] || '121,192,255';
+  var nomesClasse = {P:'Popular (P)', Q:'Intermediário (Q)', R:'Raro (R)', TODOS:'Todas as classes'};
+
+  // resumo do comportamento semanal (com os 5 principais protocolos de cada dia) — sempre incluído no PDF
+  var resumoHtml = calcularTextoResumoSemana(linhas, {
+    classeAtual: cls, tipoPlural: 'protocolos', tipoSingular: 'protocolo', unidade: 'prescrições', fmtValor: fmtInt
+  });
+
+  var linhasTbl = '';
+  linhas.forEach(function(item){
+    var v = item.valores;
+    var maxDia = Math.max.apply(null, v);
+    linhasTbl += '<tr><td>'+escapeHtml(item.nome)+'</td>';
+    v.forEach(function(val){
+      var alpha = maxDia>0 ? Math.min(0.6, (val/maxDia)*0.55+(val>0?0.08:0)) : 0;
+      var bg = val>0 ? 'background:rgba('+corRgb+','+alpha.toFixed(2)+')' : '';
+      linhasTbl += '<td style="'+bg+'">'+(val?fmtInt(val):'—')+'</td>';
+    });
+    linhasTbl += '<td class="pr-sem-total">'+fmtInt(item.total)+'</td></tr>';
+  });
+
+  var html = ''
+    + '<div class="pr-header"><img src="'+LOGO_IOMT_BASE64+'" alt="i-OMT"><div class="pr-header-textos">'
+    + '<div class="pr-title">Distribuição por Dia da Semana — Protocolos: Fonte ('+escapeHtml(fonte)+')</div>'
+    + '</div></div>'
+    + '<div class="pr-linha-periodo">'
+      + '<span>Período de análise: <b>'+(de?fmtDataBR(de):'___/___/______')+'</b> até <b>'+(ate?fmtDataBR(ate):'___/___/______')+'</b></span>'
+      + '<span>Classificação exibida: <b>'+nomesClasse[cls]+'</b> · '+fmtInt(linhas.length)+' protocolo(s)</span>'
+    + '</div>'
+    + '<div class="pr-resumo-semana">'+resumoHtml+'</div>'
+    + '<table class="pr-tbl-semana"><thead><tr>'
+      + '<th>Protocolo</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th><th>Total</th>'
+    + '</tr></thead><tbody>'+linhasTbl+'</tbody></table>';
+
+  document.getElementById('print-report').innerHTML = html;
+  setTimeout(function(){ window.print(); }, 80);
+}
+
+/* ============================================================
+   RELATÓRIO PQR (IMPRESSÃO / PDF)
+============================================================ */
+function gerarRelatorioPDF(){
+  if(!pqrFull.length){
+    alert('Importe a planilha de Protocolos internados e/ou Atendimentos e calcule a Curva PQR antes de gerar o relatório.');
+    return;
+  }
+
+  var de = document.getElementById('date-de').value;
+  var ate = document.getElementById('date-ate').value;
+  var fonte = nomeArquivoProtocolos || nomeArquivoMateriais || 'Protocolos internados';
+  if(nomeArquivoProtocolos && nomeArquivoMateriais) fonte += ' + ' + nomeArquivoMateriais;
+
+  var totalProtocolos = pqrFull.length;
+  var qtdP=0, qtdQ=0, qtdR=0;
+  pqrFull.forEach(function(item){
+    if(item.classe==='P') qtdP++; else if(item.classe==='Q') qtdQ++; else qtdR++;
+  });
+  var fmtPct1 = function(n){ return (n||0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'; };
+  var pctP = totalProtocolos ? qtdP/totalProtocolos*100 : 0;
+  var pctQ = totalProtocolos ? qtdQ/totalProtocolos*100 : 0;
+  var pctR = totalProtocolos ? qtdR/totalProtocolos*100 : 0;
+
+  var linhasTbl = '';
+  pqrFull.forEach(function(item, idx){
+    linhasTbl += '<tr>'
+      + '<td class="pr-num">'+(idx+1)+'</td>'
+      + '<td class="pr-nome">'+escapeHtml(item.protocolo)+'</td>'
+      + '<td class="pr-num">'+fmtInt(item.qtd)+'</td>'
+      + '<td class="pr-num">'+(item.dias?fmtInt(item.dias):'—')+'</td>'
+      + '<td class="pr-num">'+(item.media?fmtInt(item.media):'—')+'</td>'
+      + '<td class="pr-num">'+fmtPct(item.pct)+'</td>'
+      + '<td class="pr-num">'+fmtPct(item.cum)+'</td>'
+      + '<td class="pr-classe-'+item.classe+'">'+item.classe+'</td>'
+      + '</tr>';
+  });
+
+  var html = ''
+    + '<div class="pr-header"><img src="'+LOGO_IOMT_BASE64+'" alt="i-OMT"><div class="pr-header-textos">'
+    + '<div class="pr-title">Curva PQR Protocolos Oncologia: Fonte ('+escapeHtml(fonte)+')</div>'
+    + '</div></div>'
+    + '<div class="pr-linha-periodo">'
+      + '<span>Período de análise: <b>'+(de?fmtDataBR(de):'___/___/______')+'</b> até <b>'+(ate?fmtDataBR(ate):'___/___/______')+'</b></span>'
+      + '<span>Quantidade de dias analisados: <b>'+fmtInt(diasAnalisadosAtual)+'</b></span>'
+    + '</div>'
+    + '<table class="pr-resumo">'
+      + '<tr><td class="pr-cab" colspan="3">Quantidade de Protocolos em relação a sua classificação</td></tr>'
+      + '<tr><td class="pr-P">P</td><td class="pr-Q">Q</td><td class="pr-R">R</td></tr>'
+      + '<tr><td class="pr-P">'+fmtInt(qtdP)+'</td><td class="pr-Q">'+fmtInt(qtdQ)+'</td><td class="pr-R">'+fmtInt(qtdR)+'</td></tr>'
+      + '<tr><td class="pr-P">'+fmtPct1(pctP)+'</td><td class="pr-Q">'+fmtPct1(pctQ)+'</td><td class="pr-R">'+fmtPct1(pctR)+'</td></tr>'
+    + '</table>'
+    + '<table class="pr-tbl"><thead><tr>'
+      + '<th>Ranking</th><th>Protocolos Prescritos</th><th>Quantidade de<br>Prescrições</th>'
+      + '<th>Quantidade de dias<br>de prescrições do protocolo</th>'
+      + '<th>Média de<br>prescrições diárias</th>'
+      + '<th>% de cada protocolo<br>em relação ao total de prescrições</th>'
+      + '<th>% Acumulado em relação<br>ao total de prescrições</th>'
+      + '<th>Classe</th>'
+    + '</tr></thead><tbody>'+linhasTbl+'</tbody></table>';
+
+  document.getElementById('print-report').innerHTML = html;
+  setTimeout(function(){ window.print(); }, 80);
+}
+
+/* ============================================================
+   EXPORTAÇÃO EM EXCEL — CURVA PQR DE PROTOCOLOS (.xls, valores fixos, sem fórmulas)
+============================================================ */
+function gerarExcelProtocolos(){
+  if(!pqrFull.length){
+    alert('Importe a planilha de Protocolos internados e/ou Atendimentos e calcule a Curva PQR antes de exportar.');
+    return;
+  }
+
+  var de = document.getElementById('date-de').value;
+  var ate = document.getElementById('date-ate').value;
+  var fonte = nomeArquivoProtocolos || nomeArquivoMateriais || 'Protocolos internados';
+  if(nomeArquivoProtocolos && nomeArquivoMateriais) fonte += ' + ' + nomeArquivoMateriais;
+
+  var totalProtocolos = pqrFull.length;
+  var qtdP=0, qtdQ=0, qtdR=0;
+  pqrFull.forEach(function(item){
+    if(item.classe==='P') qtdP++; else if(item.classe==='Q') qtdQ++; else qtdR++;
+  });
+  var pctP = totalProtocolos ? qtdP/totalProtocolos*100 : 0;
+  var pctQ = totalProtocolos ? qtdQ/totalProtocolos*100 : 0;
+  var pctR = totalProtocolos ? qtdR/totalProtocolos*100 : 0;
+
+  var aoa = [];
+  aoa.push(['Curva PQR Protocolos Oncologia', 'Fonte: '+fonte]);
+  aoa.push(['Período de análise', de?fmtDataBR(de):'', 'até', ate?fmtDataBR(ate):'', 'Dias analisados', diasAnalisadosAtual]);
+  aoa.push([]);
+  aoa.push(['Classificação', 'Qtd. Protocolos', '% do total de protocolos']);
+  aoa.push(['P', qtdP, Number(pctP.toFixed(2))]);
+  aoa.push(['Q', qtdQ, Number(pctQ.toFixed(2))]);
+  aoa.push(['R', qtdR, Number(pctR.toFixed(2))]);
+  aoa.push([]);
+  aoa.push(['Ranking','Protocolo','Quantidade de Prescrições','Quantidade de Dias com Prescrição','Média de Prescrições Diárias','% Individual','% Acumulado','Classe']);
+  pqrFull.forEach(function(item, idx){
+    aoa.push([
+      idx+1,
+      item.protocolo,
+      item.qtd,
+      item.dias||0,
+      item.media||0,
+      Number(item.pct.toFixed(2)),
+      Number(item.cum.toFixed(2)),
+      item.classe
+    ]);
+  });
+
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:9},{wch:48},{wch:16},{wch:20},{wch:18},{wch:12},{wch:12},{wch:8}];
+
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'PQR Protocolos');
+
+  // aba extra: distribuição por dia da semana, na classe e ordenação selecionadas em tela
+  if(semanaPorProtocolo.size){
+    var clsSemana = classeFiltroSemanaProtocolos;
+    var itensSemana = obterLinhasSemanaProtocolos();
+    var aoaSemana = [['Protocolo','Seg','Ter','Qua','Qui','Sex','Sáb','Dom','Total']];
+    itensSemana.forEach(function(item){
+      aoaSemana.push([item.nome, item.valores[0],item.valores[1],item.valores[2],item.valores[3],item.valores[4],item.valores[5],item.valores[6], item.total]);
+    });
+    var wsSemana = XLSX.utils.aoa_to_sheet(aoaSemana);
+    wsSemana['!cols'] = [{wch:48},{wch:7},{wch:7},{wch:7},{wch:7},{wch:7},{wch:7},{wch:7},{wch:9}];
+    XLSX.utils.book_append_sheet(wb, wsSemana, 'Dist. Semanal ('+clsSemana+')');
+  }
+
+  var nomeArquivo = 'Curva_PQR_Protocolos_'+(de||'inicio')+'_a_'+(ate||'fim')+'.xls';
+  XLSX.writeFile(wb, nomeArquivo);
+}
+
+/* ============================================================
+   CÁLCULO DA CURVA PQR DE MATERIAIS
+   Fonte principal: consumo real registrado no arquivo de Atendimentos
+   (coluna MATERIAL). Prescrições que existem apenas no arquivo de
+   Protocolos internados (sem material correspondente em Atendimentos)
+   têm o consumo ESTIMADO a partir do perfil médio de materiais do
+   mesmo protocolo, calculado sobre as prescrições conhecidas em
+   Atendimentos.
+============================================================ */
+function recalcularPQRMateriais(){
+  if(!matDailyAggReal.size){
+    dailyAggMateriais = new Map();
+    pqrMateriaisFull = [];
+    classeMaterialMap = new Map();
+    totalGeralMateriaisAtual = 0;
+    diasAnalisadosMateriaisAtual = 0;
+    qtdPrescricoesOrfasAtual = 0;
+    qtdPrescricoesOrfasEstimadas = 0;
+
+    if(chartParetoMateriais){ chartParetoMateriais.destroy(); chartParetoMateriais = null; }
+    if(chartVolumeMateriais){ chartVolumeMateriais.destroy(); chartVolumeMateriais = null; }
+    document.getElementById('tbody-pqr-materiais').innerHTML = '';
+    document.getElementById('conteudo-pqr-materiais').style.display = 'none';
+    document.getElementById('panel-vazio-materiais').style.display = 'block';
+    semanaPorMaterial = new Map();
+    document.getElementById('tbody-semana-materiais').innerHTML = '';
+    document.getElementById('resumo-semana-materiais').innerHTML = '';
+    return;
+  }
+
+  var de = document.getElementById('date-de').value;
+  var ate = document.getElementById('date-ate').value;
+
+  // 1) parte do consumo real (registrado linha a linha em Atendimentos), filtrado pelo período
+  var novoDailyAggMateriais = new Map();
+  matDailyAggReal.forEach(function(matMap, dia){
+    if(de && dia < de) return;
+    if(ate && dia > ate) return;
+    novoDailyAggMateriais.set(dia, new Map(matMap));
+  });
+
+  // 2) soma estimativas para prescrições que só existem em Protocolos internados
+  //    (sem nenhuma linha de material correspondente em Atendimentos)
+  qtdPrescricoesOrfasAtual = 0;
+  qtdPrescricoesOrfasEstimadas = 0;
+
+  linhasFonteProtocolos.forEach(function(r){
+    if(de && r.date < de) return;
+    if(ate && r.date > ate) return;
+    var temMaterialConhecido = r.presc && idsPrescricoesConhecidas.has(r.presc);
+    if(temMaterialConhecido) return; // esta prescrição já tem material real contabilizado via Atendimentos
+
+    qtdPrescricoesOrfasAtual++;
+    var perfil = perfilProtocoloMaterial.get(r.protocolo);
+    if(!perfil || !perfil.size) return; // protocolo sem nenhuma referência de materiais conhecida
+
+    qtdPrescricoesOrfasEstimadas++;
+    if(!novoDailyAggMateriais.has(r.date)) novoDailyAggMateriais.set(r.date, new Map());
+    var diaMap = novoDailyAggMateriais.get(r.date);
+    perfil.forEach(function(mediaQtd, material){
+      diaMap.set(material, (diaMap.get(material)||0) + mediaQtd);
+    });
+  });
+
+  // 3) totais e dias de consumo por material
+  var materialTotals = new Map();
+  var materialDias = new Map();
+  novoDailyAggMateriais.forEach(function(matMap){
+    matMap.forEach(function(qtd, material){
+      materialTotals.set(material, (materialTotals.get(material)||0)+qtd);
+      materialDias.set(material, (materialDias.get(material)||0)+1);
+    });
+  });
+
+  var totalGeral = 0;
+  materialTotals.forEach(function(qtd){ totalGeral += qtd; });
+
+  var arr = [];
+  materialTotals.forEach(function(qtd, material){
+    var dias = materialDias.get(material)||0;
+    arr.push({material:material, qtd:qtd, dias:dias, media: dias ? (qtd/dias) : 0});
+  });
+  arr.sort(function(a,b){ return b.qtd - a.qtd; });
+
+  var cum = 0;
+  var novoClasseMaterialMap = new Map();
+  arr.forEach(function(item){
+    item.pct = totalGeral ? (item.qtd/totalGeral*100) : 0;
+    cum += item.pct;
+    item.cum = cum;
+    item.classe = cum<=70 ? 'P' : (cum<=95 ? 'Q' : 'R');
+    novoClasseMaterialMap.set(item.material, item.classe);
+  });
+
+  dailyAggMateriais = novoDailyAggMateriais;
+  pqrMateriaisFull = arr;
+  classeMaterialMap = novoClasseMaterialMap;
+  totalGeralMateriaisAtual = totalGeral;
+  diasAnalisadosMateriaisAtual = novoDailyAggMateriais.size;
+
+  // Distribuição por dia da semana (Seg..Dom), para todos os materiais
+  var novaSemanaPorMaterial = new Map();
+  novoDailyAggMateriais.forEach(function(mm, dia){
+    var idxSemana = parseInt(chaveAgrupamento(dia, 'diasemana'), 10);
+    mm.forEach(function(qtd, material){
+      if(!novaSemanaPorMaterial.has(material)) novaSemanaPorMaterial.set(material, [0,0,0,0,0,0,0]);
+      novaSemanaPorMaterial.get(material)[idxSemana] += qtd;
+    });
+  });
+  semanaPorMaterial = novaSemanaPorMaterial;
+
+  document.getElementById('panel-vazio-materiais').style.display = 'none';
+  document.getElementById('conteudo-pqr-materiais').style.display = 'block';
+
+  atualizarKPIsMateriais();
+  renderTabelaPQRMateriais();
+  renderParetoChartMateriais();
+  renderVolumeDiarioMateriais();
+  renderTabelaSemanaMateriais();
+}
+
+function atualizarKPIsMateriais(){
+  var qtdP=0, qtdQ=0, qtdR=0;
+  pqrMateriaisFull.forEach(function(item){
+    if(item.classe==='P') qtdP++; else if(item.classe==='Q') qtdQ++; else qtdR++;
+  });
+  document.getElementById('pareto-meta-materiais').textContent =
+    fmtInt(pqrMateriaisFull.length)+' materiais · '+fmtNum1(totalGeralMateriaisAtual)+' unidades consumidas · P:'+qtdP+' Q:'+qtdQ+' R:'+qtdR;
+
+  var nota = '';
+  if(qtdPrescricoesOrfasAtual>0){
+    nota = 'ℹ️ '+fmtInt(qtdPrescricoesOrfasAtual)+' prescrição(ões) do arquivo de Protocolos internados sem linha de material correspondente em Atendimentos';
+    if(qtdPrescricoesOrfasEstimadas>0){
+      nota += ' — '+fmtInt(qtdPrescricoesOrfasEstimadas)+' tiveram o consumo ESTIMADO pelo perfil médio de materiais do mesmo protocolo em Atendimentos';
+    }
+    if(qtdPrescricoesOrfasEstimadas < qtdPrescricoesOrfasAtual){
+      nota += ', '+fmtInt(qtdPrescricoesOrfasAtual-qtdPrescricoesOrfasEstimadas)+' não puderam ser estimadas (protocolo sem nenhuma referência em Atendimentos)';
+    }
+    nota += '.';
+  }
+  document.getElementById('materiais-estimativa-nota').textContent = nota;
+}
+
+/* ============================================================
+   TABELA DE RANKING — MATERIAIS
+============================================================ */
+function filtrarClasseMateriais(btn, cls){
+  classeFiltroMateriaisAtual = cls;
+  btn.closest('.panel-filter').querySelectorAll('.class-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderTabelaPQRMateriais();
+}
+
+function renderTabelaPQRMateriais(){
+  var busca = (document.getElementById('busca-material').value||'').trim().toLowerCase();
+  var tbody = document.getElementById('tbody-pqr-materiais');
+  var html = '';
+  var corBarra = {P:'var(--gt)', Q:'var(--at)', R:'var(--rt)'};
+
+  pqrMateriaisFull.forEach(function(item, idx){
+    if(classeFiltroMateriaisAtual!=='TODOS' && item.classe!==classeFiltroMateriaisAtual) return;
+    if(busca && item.material.toLowerCase().indexOf(busca)<0) return;
+    html += '<tr>'
+      + '<td>'+(idx+1)+'</td>'
+      + '<td style="font-family:var(--ff);white-space:normal">'+escapeHtml(item.material)+'</td>'
+      + '<td>'+fmtNum1(item.qtd)+'</td>'
+      + '<td>'+(item.dias?fmtInt(item.dias):'—')+'</td>'
+      + '<td>'+(item.media?fmtNum1(item.media):'—')+'</td>'
+      + '<td>'+fmtPct(item.pct)+'<div class="bar-mini"><div class="bar-mini-fill" style="width:'+Math.min(100,item.pct*4)+'%;background:'+corBarra[item.classe]+'"></div></div></td>'
+      + '<td>'+fmtPct(item.cum)+'</td>'
+      + '<td><span class="badge-classe badge-'+item.classe+'">'+item.classe+'</span></td>'
+      + '</tr>';
+  });
+  tbody.innerHTML = html || '<tr><td colspan="8" style="text-align:center;color:var(--tx3);padding:16px">Nenhum material encontrado.</td></tr>';
+}
+
+/* ============================================================
+   GRÁFICO PARETO — CURVA PQR DE MATERIAIS
+============================================================ */
+function renderParetoChartMateriais(){
+  var ctx = document.getElementById('chart-pareto-materiais').getContext('2d');
+  var cores = {P:'#3dd68c', Q:'#e3b341', R:'#f85149'};
+  var labels = pqrMateriaisFull.map(function(i){ return i.material; });
+  var dadosPct = pqrMateriaisFull.map(function(i){ return i.pct; });
+  var dadosCum = pqrMateriaisFull.map(function(i){ return i.cum; });
+  var backgroundColors = pqrMateriaisFull.map(function(i){ return cores[i.classe]; });
+
+  if(chartParetoMateriais) chartParetoMateriais.destroy();
+  chartParetoMateriais = new Chart(ctx, {
+    data:{
+      labels: labels,
+      datasets:[
+        { type:'bar', label:'% individual', data: dadosPct, backgroundColor: backgroundColors, yAxisID:'y', order:2, barPercentage:0.9, categoryPercentage:0.95 },
+        { type:'line', label:'% acumulado', data: dadosCum, borderColor:'#79c0ff', backgroundColor:'transparent', borderWidth:2, pointRadius:0, yAxisID:'y1', order:1, tension:.15 },
+        { type:'line', label:'Limite P/Q (70%)', data: labels.map(function(){return 70;}), borderColor:'rgba(61,214,140,.5)', borderDash:[5,4], borderWidth:1, pointRadius:0, yAxisID:'y1', order:0 },
+        { type:'line', label:'Limite Q/R (95%)', data: labels.map(function(){return 95;}), borderColor:'rgba(248,81,73,.5)', borderDash:[5,4], borderWidth:1, pointRadius:0, yAxisID:'y1', order:0 }
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ labels:{ color:'#8b949e', font:{size:10}, boxWidth:12 } },
+        datalabels:{ display:false },
+        tooltip:{
+          callbacks:{
+            title: function(items){ return items[0] ? items[0].label : ''; },
+            label: function(item){
+              if(item.dataset.label==='% individual') return '% individual: '+item.raw.toFixed(2)+'%';
+              if(item.dataset.label==='% acumulado') return '% acumulado: '+item.raw.toFixed(2)+'%';
+              return null;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ ticks:{ display:false }, grid:{ display:false } },
+        y:{ position:'left', title:{display:true,text:'% individual',color:'#8b949e',font:{size:10}}, ticks:{color:'#8b949e',font:{size:10}}, grid:{color:'rgba(255,255,255,.05)'} },
+        y1:{ position:'right', min:0, max:100, title:{display:true,text:'% acumulado',color:'#8b949e',font:{size:10}}, ticks:{color:'#8b949e',font:{size:10}}, grid:{display:false} }
+      }
+    }
+  });
+}
+
+/* ============================================================
+   GRÁFICO DE CONSUMO DIÁRIO — MATERIAIS (AGRUPADO)
+============================================================ */
+function renderVolumeDiarioMateriais(){
+  if(!dailyAggMateriais.size){ return; }
+  var modo = document.getElementById('sel-agrupamento-materiais').value;
+  document.getElementById('volume-meta-materiais').textContent = 'agrupamento: '+({dia:'dia',semana:'semana',mes:'mês',diasemana:'dia da semana'}[modo])+' · empilhado por classe P/Q/R'+(modo==='diasemana'?' · cada barra soma todas as ocorrências daquele dia da semana no período':'');
+
+  var grupos = new Map();
+  var chavesOrdenadas = [];
+  var diasOrdenados = Array.from(dailyAggMateriais.keys()).sort();
+  diasOrdenados.forEach(function(dia){
+    var chave = chaveAgrupamento(dia, modo);
+    if(!grupos.has(chave)){ grupos.set(chave, {P:0,Q:0,R:0}); chavesOrdenadas.push(chave); }
+    var g = grupos.get(chave);
+    dailyAggMateriais.get(dia).forEach(function(qtd, material){
+      var cls = classeMaterialMap.get(material) || 'R';
+      g[cls] += qtd;
+    });
+  });
+  chavesOrdenadas.sort();
+
+  var labels = chavesOrdenadas.map(function(c){ return labelAgrupamento(c, modo); });
+  var serieP = chavesOrdenadas.map(function(c){ return grupos.get(c).P; });
+  var serieQ = chavesOrdenadas.map(function(c){ return grupos.get(c).Q; });
+  var serieR = chavesOrdenadas.map(function(c){ return grupos.get(c).R; });
+
+  var ctx = document.getElementById('chart-volume-materiais').getContext('2d');
+  if(chartVolumeMateriais) chartVolumeMateriais.destroy();
+  chartVolumeMateriais = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[
+        {label:'Classe P', data:serieP, backgroundColor:'#1D9E75', stack:'s'},
+        {label:'Classe Q', data:serieQ, backgroundColor:'#d29922', stack:'s'},
+        {label:'Classe R', data:serieR, backgroundColor:'#da3633', stack:'s'}
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{ labels:{ color:'#8b949e', font:{size:10}, boxWidth:12 } },
+        datalabels:{ display:false }
+      },
+      scales:{
+        x:{ stacked:true, ticks:{ color:'#8b949e', font:{size:9}, maxRotation:0, autoSkip:true }, grid:{ display:false } },
+        y:{ stacked:true, ticks:{ color:'#8b949e', font:{size:10} }, grid:{ color:'rgba(255,255,255,.05)' } }
+      }
+    }
+  });
+}
+
+/* ============================================================
+   DISTRIBUIÇÃO POR DIA DA SEMANA, POR CLASSE — MATERIAIS
+============================================================ */
+function filtrarClasseSemanaMateriais(btn, cls){
+  classeFiltroSemanaMateriais = cls;
+  btn.closest('.panel-filter').querySelectorAll('.class-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderTabelaSemanaMateriais();
+}
+
+function obterLinhasSemanaMateriais(){
+  var cls = classeFiltroSemanaMateriais;
+  var linhas = [];
+  pqrMateriaisFull.forEach(function(item){
+    if(cls!=='TODOS' && item.classe!==cls) return;
+    var valores = semanaPorMaterial.get(item.material);
+    if(!valores) return;
+    linhas.push({ nome: item.material, valores: valores, total: valores.reduce(function(a,b){return a+b;},0) });
+  });
+
+  var col = ordenacaoSemanaMateriais.coluna;
+  var dir = ordenacaoSemanaMateriais.direcao==='asc' ? 1 : -1;
+  linhas.sort(function(a,b){
+    if(col==='nome') return dir * a.nome.localeCompare(b.nome, 'pt-BR');
+    var va = (col==='total') ? a.total : a.valores[col];
+    var vb = (col==='total') ? b.total : b.valores[col];
+    return dir * (va - vb);
+  });
+  return linhas;
+}
+
+function ordenarSemanaMateriais(coluna){
+  if(ordenacaoSemanaMateriais.coluna === coluna){
+    ordenacaoSemanaMateriais.direcao = ordenacaoSemanaMateriais.direcao==='desc' ? 'asc' : 'desc';
+  } else {
+    ordenacaoSemanaMateriais.coluna = coluna;
+    ordenacaoSemanaMateriais.direcao = (coluna==='nome') ? 'asc' : 'desc';
+  }
+  renderTabelaSemanaMateriais();
+}
+
+function renderTabelaSemanaMateriais(){
+  var tbody = document.getElementById('tbody-semana-materiais');
+  if(!tbody) return;
+  var cls = classeFiltroSemanaMateriais;
+  var corRgb = CORES_SEMANA_RGB[cls] || '121,192,255';
+  var linhas = obterLinhasSemanaMateriais();
+
+  var html = '';
+  linhas.forEach(function(linha){
+    var maxDia = Math.max.apply(null, linha.valores);
+    html += '<tr><td>'+escapeHtml(linha.nome)+'</td>';
+    linha.valores.forEach(function(v){
+      var alpha = maxDia>0 ? Math.min(0.75, (v/maxDia)*0.7+ (v>0?0.08:0)) : 0;
+      var bg = v>0 ? 'background:rgba('+corRgb+','+alpha.toFixed(2)+')' : '';
+      html += '<td style="'+bg+'">'+(v?fmtNum1(v):'—')+'</td>';
+    });
+    html += '<td class="sem-total">'+fmtNum1(linha.total)+'</td></tr>';
+  });
+
+  tbody.innerHTML = html || '<tr><td colspan="9" style="text-align:center;color:var(--tx3);padding:16px">Nenhum material nesta classe no período selecionado.</td></tr>';
+  atualizarSetasOrdenacao('semmat', ordenacaoSemanaMateriais);
+}
+
+/* ============================================================
+   RELATÓRIO PDF — DISTRIBUIÇÃO POR DIA DA SEMANA (MATERIAIS)
+============================================================ */
+function gerarRelatorioPDFSemanaMateriais(){
+  var cls = classeFiltroSemanaMateriais;
+  var linhas = obterLinhasSemanaMateriais();
+  if(!linhas.length){
+    alert('Não há materiais da classe selecionada com distribuição semanal calculada.');
+    return;
+  }
+
+  var de = document.getElementById('date-de').value;
+  var ate = document.getElementById('date-ate').value;
+  var fonte = nomeArquivoMateriais || 'Atendimentos';
+  if(nomeArquivoProtocolos) fonte += ' + ' + nomeArquivoProtocolos;
+  var corRgb = CORES_SEMANA_RGB[cls] || '121,192,255';
+  var nomesClasse = {P:'Popular (P)', Q:'Intermediário (Q)', R:'Raro (R)', TODOS:'Todas as classes'};
+
+  // resumo do comportamento semanal (com os 5 principais materiais de cada dia) — sempre incluído no PDF
+  var resumoHtml = calcularTextoResumoSemana(linhas, {
+    classeAtual: cls, tipoPlural: 'materiais', tipoSingular: 'material', unidade: 'unidades consumidas', fmtValor: fmtNum1
+  });
+
+  var linhasTbl = '';
+  linhas.forEach(function(item){
+    var v = item.valores;
+    var maxDia = Math.max.apply(null, v);
+    linhasTbl += '<tr><td>'+escapeHtml(item.nome)+'</td>';
+    v.forEach(function(val){
+      var alpha = maxDia>0 ? Math.min(0.6, (val/maxDia)*0.55+(val>0?0.08:0)) : 0;
+      var bg = val>0 ? 'background:rgba('+corRgb+','+alpha.toFixed(2)+')' : '';
+      linhasTbl += '<td style="'+bg+'">'+(val?fmtNum1(val):'—')+'</td>';
+    });
+    linhasTbl += '<td class="pr-sem-total">'+fmtNum1(item.total)+'</td></tr>';
+  });
+
+  var html = ''
+    + '<div class="pr-header"><img src="'+LOGO_IOMT_BASE64+'" alt="i-OMT"><div class="pr-header-textos">'
+    + '<div class="pr-title">Distribuição por Dia da Semana — Materiais: Fonte ('+escapeHtml(fonte)+')</div>'
+    + '</div></div>'
+    + '<div class="pr-linha-periodo">'
+      + '<span>Período de análise: <b>'+(de?fmtDataBR(de):'___/___/______')+'</b> até <b>'+(ate?fmtDataBR(ate):'___/___/______')+'</b></span>'
+      + '<span>Classificação exibida: <b>'+nomesClasse[cls]+'</b> · '+fmtInt(linhas.length)+' material(is)</span>'
+    + '</div>'
+    + '<div class="pr-resumo-semana">'+resumoHtml+'</div>'
+    + '<table class="pr-tbl-semana"><thead><tr>'
+      + '<th>Material</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th><th>Dom</th><th>Total</th>'
+    + '</tr></thead><tbody>'+linhasTbl+'</tbody></table>';
+
+  document.getElementById('print-report').innerHTML = html;
+  setTimeout(function(){ window.print(); }, 80);
+}
+
+/* ============================================================
+   RELATÓRIO PQR DE MATERIAIS (IMPRESSÃO / PDF) — botão independente
+============================================================ */
+function gerarRelatorioPDFMateriais(){
+  if(!pqrMateriaisFull.length){
+    alert('Importe a planilha de Atendimentos e calcule a Curva PQR de Materiais antes de gerar o relatório.');
+    return;
+  }
+
+  var de = document.getElementById('date-de').value;
+  var ate = document.getElementById('date-ate').value;
+  var fonte = nomeArquivoMateriais || 'Atendimentos';
+  if(nomeArquivoProtocolos) fonte += ' + ' + nomeArquivoProtocolos;
+
+  var totalMateriais = pqrMateriaisFull.length;
+  var qtdP=0, qtdQ=0, qtdR=0;
+  pqrMateriaisFull.forEach(function(item){
+    if(item.classe==='P') qtdP++; else if(item.classe==='Q') qtdQ++; else qtdR++;
+  });
+  var fmtPct1 = function(n){ return (n||0).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%'; };
+  var pctP = totalMateriais ? qtdP/totalMateriais*100 : 0;
+  var pctQ = totalMateriais ? qtdQ/totalMateriais*100 : 0;
+  var pctR = totalMateriais ? qtdR/totalMateriais*100 : 0;
+
+  var linhasTbl = '';
+  pqrMateriaisFull.forEach(function(item, idx){
+    linhasTbl += '<tr>'
+      + '<td class="pr-num">'+(idx+1)+'</td>'
+      + '<td class="pr-nome">'+escapeHtml(item.material)+'</td>'
+      + '<td class="pr-num">'+fmtNum1(item.qtd)+'</td>'
+      + '<td class="pr-num">'+(item.dias?fmtInt(item.dias):'—')+'</td>'
+      + '<td class="pr-num">'+(item.media?fmtNum1(item.media):'—')+'</td>'
+      + '<td class="pr-num">'+fmtPct(item.pct)+'</td>'
+      + '<td class="pr-num">'+fmtPct(item.cum)+'</td>'
+      + '<td class="pr-classe-'+item.classe+'">'+item.classe+'</td>'
+      + '</tr>';
+  });
+
+  var notaEstimativa = '';
+  if(qtdPrescricoesOrfasAtual>0){
+    notaEstimativa = '<div style="font-size:9.5px;color:#555;margin:4px 0 10px">ℹ️ '+fmtInt(qtdPrescricoesOrfasAtual)+' prescrição(ões) do arquivo de Protocolos internados não tinham linha de material em Atendimentos; '
+      + fmtInt(qtdPrescricoesOrfasEstimadas)+' tiveram o consumo estimado pelo perfil médio de materiais do respectivo protocolo.</div>';
+  }
+
+  var html = ''
+    + '<div class="pr-header"><img src="'+LOGO_IOMT_BASE64+'" alt="i-OMT"><div class="pr-header-textos">'
+    + '<div class="pr-title">Curva PQR de Materiais — Consumo de Insumos: Fonte ('+escapeHtml(fonte)+')</div>'
+    + '</div></div>'
+    + '<div class="pr-linha-periodo">'
+      + '<span>Período de análise: <b>'+(de?fmtDataBR(de):'___/___/______')+'</b> até <b>'+(ate?fmtDataBR(ate):'___/___/______')+'</b></span>'
+      + '<span>Quantidade de dias analisados: <b>'+fmtInt(diasAnalisadosMateriaisAtual)+'</b></span>'
+    + '</div>'
+    + notaEstimativa
+    + '<table class="pr-resumo">'
+      + '<tr><td class="pr-cab" colspan="3">Quantidade de Materiais em relação à sua classificação</td></tr>'
+      + '<tr><td class="pr-P">P</td><td class="pr-Q">Q</td><td class="pr-R">R</td></tr>'
+      + '<tr><td class="pr-P">'+fmtInt(qtdP)+'</td><td class="pr-Q">'+fmtInt(qtdQ)+'</td><td class="pr-R">'+fmtInt(qtdR)+'</td></tr>'
+      + '<tr><td class="pr-P">'+fmtPct1(pctP)+'</td><td class="pr-Q">'+fmtPct1(pctQ)+'</td><td class="pr-R">'+fmtPct1(pctR)+'</td></tr>'
+    + '</table>'
+    + '<table class="pr-tbl"><thead><tr>'
+      + '<th>Ranking</th><th>Materiais</th><th>Quantidade<br>Consumida</th>'
+      + '<th>Quantidade de dias<br>de consumo</th>'
+      + '<th>Média de<br>consumo diário</th>'
+      + '<th>% de cada material<br>em relação ao total consumido</th>'
+      + '<th>% Acumulado em relação<br>ao total consumido</th>'
+      + '<th>Classe</th>'
+    + '</tr></thead><tbody>'+linhasTbl+'</tbody></table>';
+
+  document.getElementById('print-report').innerHTML = html;
+  setTimeout(function(){ window.print(); }, 80);
+}
+
+/* ============================================================
+   EXPORTAÇÃO EM EXCEL — CURVA PQR DE MATERIAIS (.xls, valores fixos, sem fórmulas)
+============================================================ */
+function gerarExcelMateriais(){
+  if(!pqrMateriaisFull.length){
+    alert('Importe a planilha de Atendimentos e calcule a Curva PQR de Materiais antes de exportar.');
+    return;
+  }
+
+  var de = document.getElementById('date-de').value;
+  var ate = document.getElementById('date-ate').value;
+  var fonte = nomeArquivoMateriais || 'Atendimentos';
+  if(nomeArquivoProtocolos) fonte += ' + ' + nomeArquivoProtocolos;
+
+  var totalMateriais = pqrMateriaisFull.length;
+  var qtdP=0, qtdQ=0, qtdR=0;
+  pqrMateriaisFull.forEach(function(item){
+    if(item.classe==='P') qtdP++; else if(item.classe==='Q') qtdQ++; else qtdR++;
+  });
+  var pctP = totalMateriais ? qtdP/totalMateriais*100 : 0;
+  var pctQ = totalMateriais ? qtdQ/totalMateriais*100 : 0;
+  var pctR = totalMateriais ? qtdR/totalMateriais*100 : 0;
+
+  var aoa = [];
+  aoa.push(['Curva PQR de Materiais - Consumo de Insumos', 'Fonte: '+fonte]);
+  aoa.push(['Período de análise', de?fmtDataBR(de):'', 'até', ate?fmtDataBR(ate):'', 'Dias analisados', diasAnalisadosMateriaisAtual]);
+  if(qtdPrescricoesOrfasAtual>0){
+    aoa.push(['Nota', fmtInt(qtdPrescricoesOrfasAtual)+' prescrição(ões) de Protocolos internados sem material direto em Atendimentos; '+fmtInt(qtdPrescricoesOrfasEstimadas)+' tiveram consumo estimado pelo perfil médio do protocolo.']);
+  }
+  aoa.push([]);
+  aoa.push(['Classificação', 'Qtd. Materiais', '% do total de materiais']);
+  aoa.push(['P', qtdP, Number(pctP.toFixed(2))]);
+  aoa.push(['Q', qtdQ, Number(pctQ.toFixed(2))]);
+  aoa.push(['R', qtdR, Number(pctR.toFixed(2))]);
+  aoa.push([]);
+  aoa.push(['Ranking','Material','Quantidade Consumida','Quantidade de Dias de Consumo','Média de Consumo Diário','% Individual','% Acumulado','Classe']);
+  pqrMateriaisFull.forEach(function(item, idx){
+    aoa.push([
+      idx+1,
+      item.material,
+      Number(item.qtd.toFixed(2)),
+      item.dias||0,
+      Number((item.media||0).toFixed(2)),
+      Number(item.pct.toFixed(2)),
+      Number(item.cum.toFixed(2)),
+      item.classe
+    ]);
+  });
+
+  var ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = [{wch:9},{wch:55},{wch:18},{wch:20},{wch:18},{wch:12},{wch:12},{wch:8}];
+
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'PQR Materiais');
+
+  // aba extra: distribuição por dia da semana, na classe e ordenação selecionadas em tela
+  if(semanaPorMaterial.size){
+    var clsSemana = classeFiltroSemanaMateriais;
+    var itensSemana = obterLinhasSemanaMateriais();
+    var aoaSemana = [['Material','Seg','Ter','Qua','Qui','Sex','Sáb','Dom','Total']];
+    itensSemana.forEach(function(item){
+      var v = item.valores;
+      aoaSemana.push([item.nome,
+        Number(v[0].toFixed(1)), Number(v[1].toFixed(1)), Number(v[2].toFixed(1)), Number(v[3].toFixed(1)),
+        Number(v[4].toFixed(1)), Number(v[5].toFixed(1)), Number(v[6].toFixed(1)), Number(item.total.toFixed(1))]);
+    });
+    var wsSemana = XLSX.utils.aoa_to_sheet(aoaSemana);
+    wsSemana['!cols'] = [{wch:55},{wch:7},{wch:7},{wch:7},{wch:7},{wch:7},{wch:7},{wch:7},{wch:9}];
+    XLSX.utils.book_append_sheet(wb, wsSemana, 'Dist. Semanal ('+clsSemana+')');
+  }
+
+  var nomeArquivo = 'Curva_PQR_Materiais_'+(de||'inicio')+'_a_'+(ate||'fim')+'.xls';
+  XLSX.writeFile(wb, nomeArquivo);
+}
+
+/* estado inicial */
+setStatus('', 'aguardando arquivos');
+</script>
+</body>
+</html>
