@@ -116,7 +116,6 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 .upload-zone p{font-size:12px;color:var(--tx2);margin-top:6px}
 .upload-zone small{font-size:10px;color:var(--tx3);font-family:var(--fm)}
 .upload-icon{font-size:26px;color:var(--tx3)}
-.upload-result{font-size:11px;margin-top:8px;font-family:var(--fm)}
 .upload-result.ok{color:var(--gt)}.upload-result.err{color:var(--rt)}
 /* MODAL */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
@@ -143,11 +142,11 @@ select option{background:var(--s2)}
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;padding:24px;font-size:12px;color:var(--tx3);font-family:var(--fm)}
+.hidden{display:none}
 @media(max-width:820px){.row2,.row13{grid-template-columns:1fr}.kpi-bar{grid-template-columns:1fr 1fr}.maquinas-bar{grid-template-columns:1fr}.oee-grid{grid-template-columns:repeat(2,1fr)}.field-row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-
 <header class="hdr">
   <div class="hdr-left">
     <a href="central.html" title="Voltar para a Central"><img src="https://painel.i-omt.com/logo_iomt_branco.png" class="logo" alt="i-OMT"></a>
@@ -162,7 +161,6 @@ select option{background:var(--s2)}
     <div class="status-pill"><div class="sdot" id="sdot"></div><span id="status-txt">carregando</span></div>
   </div>
 </header>
-
 <div class="toolbar">
   <span class="filter-label">De</span>
   <input type="date" id="dt-ini" class="date-input">
@@ -180,13 +178,11 @@ select option{background:var(--s2)}
   <div class="sep"></div>
   <button class="btn-primary ml-auto" onclick="abrirModalParada()">+ Registrar Parada</button>
 </div>
-
 <div class="kpi-bar">
   <div class="kpi" style="text-align:center"><div class="kpi-label">OEE Geral</div><div class="gauge-wrap" id="gauge-oee"></div><div class="kpi-sub">tempo atendido / disponível (meta ≥ 80%)</div></div>
   <div class="kpi" style="text-align:center"><div class="kpi-label">Disponibilidade</div><div class="gauge-wrap" id="gauge-disp"></div><div class="kpi-sub">meta ≥ 90%</div></div>
   <div class="kpi"><div class="kpi-label">Paradas</div><div class="kpi-val red" id="k-paradas">—</div><div class="kpi-sub" id="k-paradas-sub">ocorrências</div></div>
 </div>
-
 <div class="kpi-pac">
   <div class="kpi-pac-main">
     <div class="kpi-pac-label">Atendimentos realizados</div>
@@ -199,7 +195,6 @@ select option{background:var(--s2)}
     <div class="kpi-ader-sub">atend / prog</div>
   </div>
 </div>
-
 <div class="maquinas-bar">
   <div class="maq-card">
     <div class="maq-name">CXS — Clinac iX <span class="maq-badge badge-imrt">IMRT</span></div>
@@ -220,7 +215,6 @@ select option{background:var(--s2)}
     </div>
   </div>
 </div>
-
 <main class="main">
   <div class="row2">
     <div class="panel">
@@ -232,12 +226,23 @@ select option{background:var(--s2)}
       <div class="panel-body" id="pareto-body"><div class="empty">sem paradas no período</div></div>
     </div>
   </div>
-
   <div class="panel">
     <div class="panel-hdr"><span class="panel-title">Atendimentos por tipo</span><span class="panel-meta" id="meta-tipos"></span></div>
-    <div class="panel-body"><div class="chart-wrap-lg"><canvas id="chart-tipos"></canvas></div></div>
+    <div class="panel-body">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+        <input type="text" id="tipo-busca" class="date-input" placeholder="Buscar tipo (ex: Mama, IMRT, Pelve...)" style="min-width:220px;flex:1" oninput="renderTipos()">
+        <div class="sep"></div>
+        <button class="btn-filter active" data-cat="todos" onclick="filtrarTipoCat(this)">Todos</button>
+        <button class="btn-filter" data-cat="Tratamento" onclick="filtrarTipoCat(this)">Tratamento</button>
+        <button class="btn-filter" data-cat="ALTA" onclick="filtrarTipoCat(this)">ALTA</button>
+        <button class="btn-filter" data-cat="1º dia" onclick="filtrarTipoCat(this)">1º dia</button>
+        <button class="btn-filter" data-cat="QA" onclick="filtrarTipoCat(this)">QA</button>
+        <button class="btn-filter" data-cat="Consulta" onclick="filtrarTipoCat(this)">Consulta</button>
+      </div>
+      <div class="chart-wrap-lg" id="tipos-chart-wrap"><canvas id="chart-tipos"></canvas></div>
+      <div class="empty hidden" id="tipos-vazio" style="display:none">nenhum tipo encontrado com esse filtro</div>
+    </div>
   </div>
-
   <div class="row13" style="grid-template-columns:1fr">
     <div class="panel">
       <div class="panel-hdr"><span class="panel-title">📥 Importar Programação</span></div>
@@ -252,10 +257,8 @@ select option{background:var(--s2)}
         <div style="margin-top:10px;font-size:11px;color:var(--tx3)">Última importação: <span id="ultima-importacao" style="font-family:var(--fm)">—</span></div>
       </div>
     </div>
-
   </div>
 </main>
-
 <!-- MODAL PARADA -->
 <div class="overlay hidden" id="overlay-parada">
   <div class="modal">
@@ -331,7 +334,6 @@ select option{background:var(--s2)}
     </div>
   </div>
 </div>
-
 <!-- MODAL CONFIG TEMPO DISPONÍVEL -->
 <div class="overlay hidden" id="overlay-config-cap">
   <div class="modal">
@@ -380,25 +382,20 @@ select option{background:var(--s2)}
     </div>
   </div>
 </div>
-
 <script>
 // ── CONFIG — cole aqui a URL do Web App após implantar ───────────
 var APPS_URL = 'https://script.google.com/macros/s/AKfycbxpSDbJnHczI10429ySca9Zf4xcZ1Ry9H0lKsQveGS6nQH9JunpKmezBIE2qC8XlTML/exec';
-
 var T_PROG   = 480; // min/dia/máquina — usado só como fallback antes de carregar a config real
 var META_OEE = 0.80;
-
 // ── TEMPO DISPONÍVEL (capacidade configurável por máquina + por data) ──
 var capacidadePadrao   = { CXS: 480, CX: 480 };
 var capacidadeExcecoes = {}; // chave "data|maquina" -> minutos
 var CFG_SENHA = 'iomt2026';
-
 function getCapacidade(maq, data){
   var k = data + '|' + maq;
   if (capacidadeExcecoes.hasOwnProperty(k)) return capacidadeExcecoes[k];
   return capacidadePadrao[maq] !== undefined ? capacidadePadrao[maq] : T_PROG;
 }
-
 // ── GAUGE (velocímetro SVG, igual ao Painel QT) ─────────────────────
 function gaugeColor(v, m){ return v >= m ? 'var(--gt)' : v >= m * 0.85 ? 'var(--at)' : 'var(--rt)'; }
 function gaugeSVG(val, meta, lg){
@@ -417,7 +414,6 @@ function gaugeSVG(val, meta, lg){
     + '</svg>';
 }
 function setGauge(id, val, meta, lg){ var el = document.getElementById(id); if (el) el.innerHTML = gaugeSVG(val, meta, lg); }
-
 var TEMPO_PADRAO = {
   'Tratamento - IMRT - CP':18,'Tratamento - IMRT - Prostata Hipofracionada':18,
   'Tratamento - IMRT - Torax':18,'Tratamento - IMRT - Pelve':18,
@@ -453,13 +449,10 @@ function tAtendTotal(am,ader){
   },0);
   return base*(ader!==undefined?ader:1);
 }
-
-
 var paradas=[]; var atendimentos=[]; var filtrMaq='todas'; var editId=null; var charts={};
-
+var filtrTipoCat='todos'; var ultimoAFilt=[];
 // ── STATUS ───────────────────────────────────────────────────────
 function setStatus(t,txt){ var d=document.getElementById('sdot'),s=document.getElementById('status-txt'); d.className='sdot'+(t==='ok'?' ok':t==='err'?' err':t==='saving'?' saving':''); s.textContent=txt; }
-
 // ── API ──────────────────────────────────────────────────────────
 async function api(params){
   var qs=Object.entries(params).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v||'')).join('&');
@@ -468,14 +461,11 @@ async function api(params){
   if(d.status==='erro') throw new Error(d.message||'Erro Apps Script');
   return d;
 }
-
-
 // ── DATAS ────────────────────────────────────────────────────────
 function fmtDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 function pad(n){ return String(n).padStart(2,'0'); }
 function fmtBR(iso){ if(!iso)return'—'; var p=iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
 function fmtMin(m){ if(!m||m<1)return'0min'; if(m<60)return Math.round(m)+'min'; return Math.floor(m/60)+'h'+pad(Math.round(m%60))+'min'; }
-
 function setPreset(p){
   var hoje=new Date(), ini=new Date();
   if(p==='hoje') ini=new Date();
@@ -486,7 +476,6 @@ function setPreset(p){
   analisar();
 }
 // datas inicializadas em carregar()
-
 // ── CARREGAR ─────────────────────────────────────────────────────
 async function carregar(){
   // Inicializa datas se ainda vazias
@@ -516,27 +505,22 @@ async function carregar(){
   } catch(e){ setStatus('err','erro: '+e.message); console.error(e); }
   analisar();
 }
-
 // ── FILTROS ──────────────────────────────────────────────────────
 function filtrarMaq(btn){
   document.querySelectorAll('[data-maq]').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active'); filtrMaq=btn.dataset.maq; analisar();
 }
-
 // ── ANÁLISE ──────────────────────────────────────────────────────
 function analisar(){
   var ini=new Date(document.getElementById('dt-ini').value); ini.setHours(0,0,0,0);
   var fim=new Date(document.getElementById('dt-fim').value); fim.setHours(23,59,59);
   if(isNaN(ini)||isNaN(fim)) return;
-
   var pFilt=paradas.filter(p=>{ var d=new Date(p.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&(filtrMaq==='todas'||p.maquina===filtrMaq); });
   var aFilt=atendimentos.filter(a=>{ var d=new Date(a.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&(filtrMaq==='todas'||a.maquina===filtrMaq); });
-
   var maquinas=filtrMaq==='todas'?['CXS','CX']:[filtrMaq];
   var pacProg=aFilt.reduce((s,a)=>s+(+a.programados||0),0);
   var pacAtend=aFilt.reduce((s,a)=>s+(+a.atendidos||0),0);
   var aderencia=pacProg>0?pacAtend/pacProg:0;
-
   // OEE = tempo de máquina em atendimento (t_atend, já pondera os tempos de protocolo
   //       enviados na programação) / tempo disponível (capacidade configurável, por
   //       máquina e por data — ver getCapacidade())
@@ -559,19 +543,15 @@ function analisar(){
   });
   var disp=maqN>0?dispSum/maqN:1;
   var oee=maqN>0?oeeGSum/maqN:1;
-
   setGauge('gauge-oee',oee,META_OEE,true);
   setGauge('gauge-disp',disp,0.9,true);
-
   document.getElementById('k-paradas').textContent=pFilt.length;
   document.getElementById('k-paradas-sub').textContent=fmtMin(tParTotal)+' de parada';
-
   document.getElementById('k-atendidos').textContent=pacAtend;
   document.getElementById('k-programados').textContent=pacProg;
   var adEl=document.getElementById('k-aderencia');
   adEl.textContent=pct(aderencia);
   adEl.style.color=aderencia>=0.95?'var(--gt)':aderencia>=0.85?'var(--at)':'var(--rt)';
-
   ['CXS','CX'].forEach(maq=>{
     var pm=paradas.filter(p=>{ var d=new Date(p.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&p.maquina===maq;});
     var am=atendimentos.filter(a=>{ var d=new Date(a.data);d.setHours(0,0,0,0);return d>=ini&&d<=fim&&a.maquina===maq;});
@@ -595,12 +575,10 @@ function analisar(){
   renderTipos(aFilt);
   renderTabelaParadas(pFilt);
 }
-
 function setKPI(id,val,cls){ var el=document.getElementById(id); el.textContent=val; el.className='kpi-val '+(cls||''); }
 function setValBar(id,val,p2,color){ var v=document.getElementById(id),b=document.getElementById(id+'-bar'); if(v)v.textContent=val; if(b){b.style.width=Math.min(100,Math.max(0,p2))+'%';b.style.background=color;} }
 function oeeColor(v,m){ m=m||META_OEE; return v>=m?'green':v>=m*0.85?'amber':'red'; }
 function pct(v){ return Math.round((v||0)*100)+'%'; }
-
 // ── PARETO ───────────────────────────────────────────────────────
 function renderPareto(pFilt){
   var body=document.getElementById('pareto-body');
@@ -613,7 +591,6 @@ function renderPareto(pFilt){
   body.innerHTML='';
   entries.forEach((e,i)=>{ var row=document.createElement('div');row.className='pareto-row'; row.innerHTML=`<span class="pareto-rank">${i+1}.</span><span class="pareto-label" title="${esc(e[0])}">${esc(e[0])}</span><span class="pareto-cat">${esc(e[1].cat)}</span><div class="pareto-track"><div class="pareto-fill" style="width:${Math.round(e[1].t/maxT*100)}%"></div></div><span class="pareto-n">${e[1].n}x</span><span class="pareto-t">${fmtMin(e[1].t)}</span>`; body.appendChild(row); });
 }
-
 // ── EVOLUÇÃO OEE ─────────────────────────────────────────────────
 function renderEvolucao(ini,fim){
   var dias=[]; var d=new Date(ini);
@@ -640,24 +617,54 @@ function renderEvolucao(ini,fim){
   if(charts['oee']) charts['oee'].destroy();
   charts['oee']=new Chart(canvas,{type:'line',data:{labels:dias.map(d=>{var p=d.split('-');return p[2]+'/'+p[1];}),datasets:[{label:'OEE (%)',data:oeeData,borderColor:'#3dd68c',backgroundColor:'rgba(29,158,117,.08)',pointRadius:2,tension:.3,spanGaps:true},{label:'Meta 80%',data:dias.map(()=>80),borderColor:'rgba(218,54,51,.4)',borderDash:[4,4],pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b949e',font:{size:10},boxWidth:12}}},scales:{x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#8b949e',font:{size:10},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.04)'},min:0,max:100}}}});
 }
-
+// ── FILTRO DE TIPOS ──────────────────────────────────────────────
+function normalizar(s){ return (s||'').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/º/g,'o'); }
+function getCategoriaTipo(tipo){ var idx=tipo.indexOf(' - '); return idx>=0?tipo.slice(0,idx).trim():tipo.trim(); }
+function filtrarTipoCat(btn){
+  document.querySelectorAll('[data-cat]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  filtrTipoCat=btn.dataset.cat;
+  renderTipos();
+}
 // ── GRÁFICO TIPOS ────────────────────────────────────────────────
 function renderTipos(aFilt){
+  if(aFilt) ultimoAFilt=aFilt;
+  var base=ultimoAFilt||[];
   var mapa={};
-  aFilt.forEach(a=>{
+  base.forEach(a=>{
     if(!a.tipos) return;
     Object.entries(a.tipos).forEach(([tipo,n])=>{ mapa[tipo]=(mapa[tipo]||0)+n; });
   });
-  var entries=Object.entries(mapa).sort((a,b)=>b[1]-a[1]).slice(0,20);
-  var total=entries.reduce((s,e)=>s+e[1],0);
-  document.getElementById('meta-tipos').textContent=total+' atendimentos · '+entries.length+' tipos';
+  var entriesAll=Object.entries(mapa);
+  var buscaEl=document.getElementById('tipo-busca');
+  var busca=normalizar(buscaEl?buscaEl.value:'');
+  var entriesFiltradas=entriesAll.filter(function(e){
+    var tipo=e[0];
+    var passaCat = filtrTipoCat==='todos' || normalizar(getCategoriaTipo(tipo))===normalizar(filtrTipoCat);
+    var passaBusca = !busca || normalizar(tipo).includes(busca);
+    return passaCat && passaBusca;
+  });
+  var totalGeral=entriesAll.reduce((s,e)=>s+e[1],0);
+  var totalFiltrado=entriesFiltradas.reduce((s,e)=>s+e[1],0);
+  var entries=entriesFiltradas.slice().sort((a,b)=>b[1]-a[1]).slice(0,30);
+  var sufixo=entriesFiltradas.length>30?' (top 30)':'';
+  var metaTxt = (filtrTipoCat==='todos'&&!busca)
+    ? totalGeral+' atendimentos · '+entriesAll.length+' tipos'
+    : totalFiltrado+' de '+totalGeral+' atendimentos · '+entriesFiltradas.length+' tipos'+sufixo;
+  document.getElementById('meta-tipos').textContent=metaTxt;
   var canvas=document.getElementById('chart-tipos');
+  var vazio=document.getElementById('tipos-vazio');
   if(charts['tipos']) charts['tipos'].destroy();
-  if(!entries.length) return;
+  if(!entries.length){
+    canvas.style.display='none';
+    if(vazio) vazio.style.display='block';
+    return;
+  }
+  canvas.style.display='';
+  if(vazio) vazio.style.display='none';
   var cores=['#388bfd','#3dd68c','#e3b341','#f85149','#d2a8ff','#79c0ff','#ff9a6c','#56d364','#ffa657','#ff7b72','#a5d6ff','#7ee787','#f2cc60','#ff6e40','#c9b1ff'];
-  charts['tipos']=new Chart(canvas,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Atendimentos',data:entries.map(e=>e[1]),backgroundColor:entries.map((_,i)=>cores[i%cores.length]+'99'),borderColor:entries.map((_,i)=>cores[i%cores.length]),borderWidth:1,borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){ return ' '+c.raw+' ('+Math.round(c.raw/total*100)+'%)'; }}}},scales:{x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#e6edf3',font:{size:10}},grid:{display:false}}}}});
+  charts['tipos']=new Chart(canvas,{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{label:'Atendimentos',data:entries.map(e=>e[1]),backgroundColor:entries.map((_,i)=>cores[i%cores.length]+'99'),borderColor:entries.map((_,i)=>cores[i%cores.length]),borderWidth:1,borderRadius:3}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){ var tt=totalFiltrado||1; return ' '+c.raw+' ('+Math.round(c.raw/tt*100)+'%)'; }}}},scales:{x:{ticks:{color:'#8b949e',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#e6edf3',font:{size:10}},grid:{display:false}}}}});
 }
-
 // ── TABELA PARADAS ───────────────────────────────────────────────
 function renderTabelaParadas(pFilt){
   var wrap=document.getElementById('paradas-tbl-wrap');
@@ -676,10 +683,8 @@ function renderTabelaParadas(pFilt){
   });
   tbl.appendChild(tbody); wrap.innerHTML=''; wrap.appendChild(tbl);
 }
-
 // ── MODAL PARADA ─────────────────────────────────────────────────
 var CATS={'Falha na lâmina (MLC/Colimador)':'Equipamento','HWFA (HardWare Fail/Alarm)':'Equipamento','Manutenção corretiva':'Equipamento','Partida da máquina':'Equipamento','Equipamento fora de parâmetro':'Equipamento','Interferência 4D':'Equipamento','Desconforto do paciente':'Paciente','Falta paciente (Absenteísmo)':'Paciente','Posicionamento do paciente':'Processo / Setup','Bólos (Ajuste/Colocação)':'Processo / Setup','Paciente não liberado':'Processo / Administrativo','Erro no plano':'Processo / Planejamento','Identificação do paciente':'Processo / Segurança','Teste de elétrons':'Processo / Segurança','Técnico de imagem':'Processo / Humano','Aguardando Físico':'Processo / Humano','Parada para refeição':'Processo / Humano','Outros':'Processo / Humano','Oscilação de temperatura (Chiller/Sala)':'Infraestrutura','Umidade':'Infraestrutura','Sistema (Software/Rede)':'Infraestrutura IT','Licença estação':'Administrativo'};
-
 function abrirModalParada(id){
   editId=id||null; var p=id?paradas.find(x=>x.id===id):null;
   document.getElementById('modal-parada-title').textContent=p?'Editar Parada':'Registrar Parada';
@@ -695,12 +700,10 @@ function abrirModalParada(id){
 }
 function fecharModalParada(){ document.getElementById('overlay-parada').classList.add('hidden'); editId=null; }
 document.getElementById('overlay-parada').addEventListener('click',function(e){if(e.target===this)fecharModalParada();});
-
 document.getElementById('p-fim').addEventListener('change',function(){
   var ini=document.getElementById('p-inicio').value,fim=this.value;
   if(ini&&fim){ var[ih,im]=ini.split(':').map(Number),[fh,fm]=fim.split(':').map(Number),dur=(fh*60+fm)-(ih*60+im); if(dur>0)document.getElementById('p-duracao').value=dur; }
 });
-
 async function salvarParada(){
   var tipo=document.getElementById('p-tipo').value;
   if(!tipo){alert('Selecione o tipo de parada.');return;}
@@ -734,7 +737,6 @@ async function salvarParada(){
   } catch(e){ setStatus('err','erro ao salvar'); alert('Erro: '+e.message); }
   btn.disabled=false; btn.textContent='Salvar parada';
 }
-
 async function excluirParada(){
   if(!editId||!confirm('Excluir esta parada?')) return;
   setStatus('saving','removendo');
@@ -744,33 +746,27 @@ async function excluirParada(){
     setStatus('ok','removida'); fecharModalParada(); analisar();
   } catch(e){ setStatus('err','erro'); alert('Erro: '+e.message); }
 }
-
 // ── UPLOAD XLS ───────────────────────────────────────────────────
 var MAQ_MAP={'CX1052':'CX','FSFX Clinac iX':'CXS'};
 function getTempoPadraoXLS(t){ return (typeof TEMPO_PADRAO!=='undefined'&&TEMPO_PADRAO.hasOwnProperty(t))?TEMPO_PADRAO[t]:15; }
 var STATUS_ATEND=new Set(['Concluído','Concluído manualmente']);
 var SKIP_ATIV=new Set(['RESERVADO!','FERIADO','MANUTENCAO PREVENTIVA','Troca Fonte Braquiterapia']);
-
 function dragOver(e){ e.preventDefault(); document.getElementById('upload-zone').classList.add('drag'); }
 function dragLeave(){ document.getElementById('upload-zone').classList.remove('drag'); }
 function dropFile(e){ e.preventDefault(); document.getElementById('upload-zone').classList.remove('drag'); var f=e.dataTransfer.files[0]; if(f) processarXLSFile(f); }
 function processarXLS(input){ var f=input.files[0]; if(!f) return; processarXLSFile(f); input.value=''; }
-
 function excelSerialToISO(serial){
   var d=new Date(Date.UTC(1899,11,30)+(serial*86400000));
   return d.toISOString().slice(0,10);
 }
-
 function processarXLSFile(f){
   var res=document.getElementById('upload-result');
   res.textContent='Lendo arquivo...'; res.className='upload-result ok'; res.classList.remove('hidden');
-
   var reader=new FileReader();
   reader.onload=async function(e){
     try{
       var wb=XLSX.read(e.target.result,{type:'binary'});
       var resumo={};
-
       wb.SheetNames.forEach(function(sname){
         if(sname==='Document map') return;
         var ws=wb.Sheets[sname];
@@ -779,7 +775,6 @@ function processarXLSFile(f){
         var maqRaw=String(rows[5][1]||'').trim();
         if(!MAQ_MAP[maqRaw]) return;
         var maq=MAQ_MAP[maqRaw];
-
         for(var i=7;i<rows.length;i++){
           var row=rows[i];
           var serial=row[0], atividade=String(row[3]||'').trim(), status=String(row[6]||'').trim();
@@ -802,10 +797,8 @@ function processarXLSFile(f){
           if(atividade) resumo[chave].tipos[atividade]=(resumo[chave].tipos[atividade]||0)+1;
         }
       });
-
       var novos=Object.values(resumo);
       if(!novos.length){ res.textContent='⚠ Nenhum dado reconhecido.'; res.className='upload-result err'; return; }
-
       setStatus('saving','importando');
       // Envia lotes de 2 dias COM tipos incluídos (~1200 chars/lote — seguro para Apps Script)
       var inseridos=0, atualizados=0;
@@ -827,7 +820,6 @@ function processarXLSFile(f){
         atualizados+=(r2.atualizados||0);
       }
       var r={inseridos:inseridos,atualizados:atualizados};
-
       var ts=new Date().toLocaleString('pt-BR');
       localStorage.setItem('rt_ultima_importacao',ts);
       document.getElementById('ultima-importacao').textContent=ts;
@@ -844,7 +836,6 @@ function processarXLSFile(f){
   };
   reader.readAsBinaryString(f);
 }
-
 // ── CONFIG TEMPO DISPONÍVEL (gear icon) ─────────────────────────
 function abrirConfigCap(){
   var senha=prompt('Senha de configuração:');
@@ -858,7 +849,6 @@ function abrirConfigCap(){
 }
 function fecharConfigCap(){ document.getElementById('overlay-config-cap').classList.add('hidden'); }
 document.getElementById('overlay-config-cap').addEventListener('click',function(e){if(e.target===this)fecharConfigCap();});
-
 async function salvarPadrao(maq){
   var val=+document.getElementById('cap-'+maq.toLowerCase()).value||0;
   if(!val){alert('Informe um valor válido em minutos.');return;}
@@ -869,7 +859,6 @@ async function salvarPadrao(maq){
     setStatus('ok','padrão salvo'); analisar();
   }catch(e){ setStatus('err','erro'); alert('Erro: '+e.message); }
 }
-
 async function salvarExcecao(){
   var data=document.getElementById('exc-data').value;
   var maq=document.getElementById('exc-maq').value;
@@ -882,7 +871,6 @@ async function salvarExcecao(){
     renderExcecoes(); setStatus('ok','exceção salva'); analisar();
   }catch(e){ setStatus('err','erro'); alert('Erro: '+e.message); }
 }
-
 async function excluirExcecao(chave){
   if(!confirm('Remover esta exceção e voltar ao padrão da máquina?')) return;
   var partes=chave.split('|'), data=partes[0], maq=partes[1];
@@ -893,14 +881,12 @@ async function excluirExcecao(chave){
     renderExcecoes(); setStatus('ok','removida'); analisar();
   }catch(e){ setStatus('err','erro'); alert('Erro: '+e.message); }
 }
-
 function editarExcecao(chave){
   var partes=chave.split('|'), data=partes[0], maq=partes[1];
   document.getElementById('exc-data').value=data;
   document.getElementById('exc-maq').value=maq;
   document.getElementById('exc-min').value=capacidadeExcecoes[chave];
 }
-
 function renderExcecoes(){
   var wrap=document.getElementById('exc-list');
   var chaves=Object.keys(capacidadeExcecoes).sort().reverse();
@@ -916,9 +902,7 @@ function renderExcecoes(){
   });
   tbl.appendChild(tbody); wrap.innerHTML=''; wrap.appendChild(tbl);
 }
-
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
 carregar();
 </script>
 </body>
