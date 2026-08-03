@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -101,6 +103,49 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
 /* ─── EMPTY ─── */
 .empty{text-align:center;padding:32px;font-size:12px;color:var(--tx3);font-family:var(--fm)}
 @media(max-width:820px){.row2,.row3{grid-template-columns:1fr}.kpi-bar{grid-template-columns:1fr 1fr}.etapas-grid{grid-template-columns:1fr 1fr}}
+/* ─── RELATÓRIO PDF (tema claro, A4) ─── */
+#rep-stage{position:fixed;left:-12000px;top:0;z-index:-1}
+.rep-page{width:794px;height:1123px;background:#fff;color:#1b2230;font-family:'Syne',sans-serif;position:relative;overflow:hidden}
+.rep-band{height:7px;background:linear-gradient(90deg,#1D9E75 0%,#388bfd 100%)}
+.rep-head{padding:20px 46px 13px;border-bottom:1px solid #e3e8ef;display:flex;align-items:flex-end;justify-content:space-between}
+.rep-brand{font-size:21px;font-weight:700;letter-spacing:-.02em;color:#0f1620;line-height:1}
+.rep-brand b{color:#1D9E75}
+.rep-brand-sub{font-size:8px;color:#8b96a6;letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+.rep-head-r{text-align:right}
+.rep-doc{font-size:12px;font-weight:600;color:#1b2230}
+.rep-per{font-size:10px;color:#8b96a6;font-family:'DM Mono',monospace;margin-top:3px}
+.rep-body{padding:24px 46px;height:952px;overflow:hidden}
+.rep-h2{font-size:15px;font-weight:700;color:#0f1620;margin-bottom:2px}
+.rep-h2s{font-size:10.5px;color:#8b96a6;margin-bottom:16px}
+.rep-foot{position:absolute;bottom:0;left:0;right:0;padding:9px 46px;border-top:1px solid #e3e8ef;display:flex;justify-content:space-between;font-size:8.5px;color:#a3adbb;font-family:'DM Mono',monospace}
+.rep-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:16px}
+.rep-kpi{border:1px solid #e3e8ef;border-radius:9px;padding:13px 15px;background:#fbfcfe}
+.rep-kpi-l{font-size:8.5px;text-transform:uppercase;letter-spacing:.09em;color:#8b96a6;margin-bottom:6px}
+.rep-kpi-v{font-size:27px;font-weight:700;line-height:1;font-family:'DM Mono',monospace}
+.rep-kpi-m{font-size:9.5px;color:#8b96a6;margin-top:5px;line-height:1.4}
+.rep-tag{display:inline-block;padding:1px 7px;border-radius:20px;font-size:8.5px;font-weight:700;font-family:'DM Mono',monospace}
+.rep-tg{background:#e4f5ee;color:#0f7b52}.rep-ta{background:#fdf1de;color:#a76a00}.rep-tr{background:#fdeaea;color:#bc2c2c}
+.rep-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.rep-tbl th{text-align:left;padding:7px 9px;font-size:8.5px;text-transform:uppercase;letter-spacing:.07em;color:#8b96a6;border-bottom:1.5px solid #dfe5ee;white-space:nowrap}
+.rep-tbl td{padding:7px 9px;border-bottom:1px solid #eef1f6;color:#2b3542}
+.rep-tbl tr:nth-child(even) td{background:#fafbfd}
+.rep-tbl .num{font-family:'DM Mono',monospace;text-align:right;white-space:nowrap}
+.rep-note{margin-top:15px;border-left:3px solid #1D9E75;background:#f5faf8;padding:11px 14px;font-size:10.5px;line-height:1.65;color:#38434f;border-radius:0 6px 6px 0}
+.rep-note b{color:#0f1620}
+.rep-bar{height:5px;background:#eef1f6;border-radius:3px;overflow:hidden;margin-top:3px}
+.rep-bar i{display:block;height:5px;border-radius:3px}
+.rep-cover{height:1123px;display:flex;flex-direction:column;justify-content:space-between;padding:0}
+.rep-cover-top{padding:64px 56px 0}
+.rep-cover-mid{padding:0 56px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.rep-cover-t1{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#1D9E75;font-weight:700;margin-bottom:14px}
+.rep-cover-t2{font-size:40px;font-weight:700;line-height:1.12;letter-spacing:-.02em;color:#0f1620}
+.rep-cover-rule{width:70px;height:4px;background:#1D9E75;border-radius:2px;margin:26px 0}
+.rep-cover-meta{font-size:12px;color:#5b6777;line-height:2}
+.rep-cover-meta b{color:#0f1620;font-family:'DM Mono',monospace;font-weight:500}
+.rep-cover-bot{padding:0 56px 52px}
+.rep-cover-box{border:1px solid #e3e8ef;border-radius:11px;background:#fbfcfe;padding:18px 22px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.rep-cb-l{font-size:8.5px;text-transform:uppercase;letter-spacing:.09em;color:#8b96a6;margin-bottom:5px}
+.rep-cb-v{font-size:21px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
 </style>
 </head>
 <body>
@@ -129,8 +174,20 @@ html,body{min-height:100vh;background:var(--bg);color:var(--tx);font-family:var(
     <span id="status-txt">carregando</span>
   </div>
 </div>
+<!-- EXPORTAR PDF -->
+<div class="filters" style="border-top:1px solid var(--b1)">
+  <span class="filter-label" style="text-transform:none">📄 Exportar relatório · Seção:</span>
+  <button class="btn-preset" onclick="exportarSecaoPDF('resumo')">Sumário executivo</button>
+  <button class="btn-preset" onclick="exportarSecaoPDF('etapas')">Tempo por etapa</button>
+  <button class="btn-preset" onclick="exportarSecaoPDF('evolucao')">Evolução diária</button>
+  <button class="btn-preset" onclick="exportarSecaoPDF('paradas')">Paradas</button>
+  <button class="btn-preset" onclick="exportarSecaoPDF('horas')">Pico por hora</button>
+  <span style="width:1px;height:20px;background:var(--b2);margin:0 4px"></span>
+  <button class="btn-analisar" id="btn-relatorio-dia" onclick="gerarRelatorioCompleto()">📄 Relatório completo (período selecionado)</button>
+</div>
+<div id="rep-stage"></div>
 <!-- KPIs -->
-<div class="kpi-bar">
+<div class="kpi-bar" id="bloco-kpi">
   <div class="kpi">
     <div class="kpi-label">TPF médio</div>
     <div class="kpi-val" id="k-tpf">—</div>
@@ -488,7 +545,9 @@ function calcularAnalise(regs, paradas, qtRows, ini, fim){
 // ═══════════════════════════════════
 //  RENDER
 // ═══════════════════════════════════
+var ultimaAnalise=null; // guardado para alimentar o relatório PDF
 function renderTudo(a, ini, fim){
+  ultimaAnalise={a:a,ini:ini,fim:fim};
   // KPIs
   var kTpf = document.getElementById('k-tpf');
   kTpf.textContent = fmtMin(a.tpfMed);
@@ -524,7 +583,7 @@ function renderTudo(a, ini, fim){
   // Resultado por fluxo removido
 }
 function buildEtapas(a){
-  var p=document.createElement('div'); p.className='panel';
+  var p=document.createElement('div'); p.className='panel'; p.id='panel-etapas';
   p.innerHTML='<div class="panel-hdr"><span class="panel-title">Tempo médio por etapa</span><span class="panel-meta">Separação → Disponível QT</span></div>';
   var body=document.createElement('div'); body.className='panel-body';
   var grid=document.createElement('div'); grid.className='etapas-grid';
@@ -546,7 +605,7 @@ function buildEtapas(a){
   return p;
 }
 function buildEvolucao(a){
-  var p=document.createElement('div'); p.className='panel';
+  var p=document.createElement('div'); p.className='panel'; p.id='panel-evolucao';
   p.innerHTML='<div class="panel-hdr"><span class="panel-title">Evolução diária</span><span class="panel-meta">TPF médio · liberações · paradas (dias úteis)</span></div>';
   var body=document.createElement('div'); body.className='panel-body';
   var wrap=document.createElement('div'); wrap.className='chart-wrap';
@@ -578,7 +637,7 @@ function buildEvolucao(a){
   return p;
 }
 function buildPareto(a){
-  var p=document.createElement('div'); p.className='panel';
+  var p=document.createElement('div'); p.className='panel'; p.id='panel-pareto';
   var entries=Object.entries(a.motivos).sort((x,y)=>y[1].n-x[1].n);
   var total=entries.reduce((s,e)=>s+e[1].n,0)||1;
   var totalMin=entries.reduce((s,e)=>s+e[1].tot,0);
@@ -603,7 +662,7 @@ function buildPareto(a){
   return p;
 }
 function buildPicoHoras(a){
-  var p=document.createElement('div'); p.className='panel';
+  var p=document.createElement('div'); p.className='panel'; p.id='panel-horas';
   p.innerHTML='<div class="panel-hdr"><span class="panel-title">Pico de liberações por hora</span><span class="panel-meta">média acumulada do período</span></div>';
   var body=document.createElement('div'); body.className='panel-body';
   var wrap=document.createElement('div'); wrap.className='chart-wrap-sm';
@@ -695,6 +754,304 @@ function buildFluxo(a){
   }
   p.appendChild(body);
   return p;
+}
+// ═══════════════════════════════════
+//  EXPORTAÇÃO PDF
+// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+//  RELATÓRIO PDF — documento A4 diagramado (capa, seções, rodapé)
+//  Não é screenshot do painel: os dados são re-renderizados em tema
+//  claro, próprio para impressão e envio ao cliente.
+// ═══════════════════════════════════════════════════════════════════
+var REP_TITULO='Relatório Gerencial — Farmácia Oncológica';
+var REP_UNIDADE='Farmácia Oncológica · Hospital Márcio Cunha';
+var SLA_TOTAL=SLA['Separação']+SLA['Pré QT']+SLA['Capela QT'];
+
+function repClasse(v,meta,inv){ if(inv) return v<=meta?'rep-tg':v<=meta*1.3?'rep-ta':'rep-tr'; return v>=meta?'rep-tg':v>=meta*0.85?'rep-ta':'rep-tr'; }
+function repCor(v,meta,inv){ if(inv) return v<=meta?'#0f7b52':v<=meta*1.3?'#a76a00':'#bc2c2c'; return v>=meta?'#0f7b52':v>=meta*0.85?'#a76a00':'#bc2c2c'; }
+function repEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function repPeriodo(){
+  var d=ultimaAnalise;
+  return fmtBR(d.ini)+'/'+d.ini.getFullYear()+' a '+fmtBR(d.fim)+'/'+d.fim.getFullYear();
+}
+
+function repGraficoEvolucao(a){
+  return new Promise(function(resolve){
+    if(!a.dias.length){ resolve(null); return; }
+    var cv=document.createElement('canvas');
+    cv.width=1300; cv.height=620; cv.style.width='650px'; cv.style.height='310px';
+    var stage=document.getElementById('rep-stage');
+    var box=document.createElement('div'); box.style.cssText='width:650px;height:310px';
+    box.appendChild(cv); stage.appendChild(box);
+    var ch=new Chart(cv,{
+      type:'bar',
+      data:{labels:a.dias.map(function(d){return d.label;}),
+        datasets:[
+          {label:'TPF médio (min)',data:a.dias.map(function(d){return d.tpf;}),
+           backgroundColor:'rgba(56,139,253,.55)',borderColor:'#2f6fc4',borderWidth:1,borderRadius:2,yAxisID:'y'},
+          {label:'Paradas',data:a.dias.map(function(d){return d.paradas;}),
+           backgroundColor:'rgba(186,117,23,.5)',borderColor:'#a76a00',borderWidth:1,borderRadius:2,yAxisID:'y'},
+          {label:'Liberações',type:'line',data:a.dias.map(function(d){return d.lib;}),
+           borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,.10)',borderWidth:2,pointRadius:2.5,
+           pointBackgroundColor:'#1D9E75',tension:.32,yAxisID:'y2'}
+        ]},
+      options:{responsive:false,animation:false,devicePixelRatio:2,
+        plugins:{legend:{labels:{color:'#5b6777',font:{size:11,family:'Syne'},boxWidth:14,usePointStyle:true}}},
+        scales:{
+          x:{ticks:{color:'#8b96a6',font:{size:9}},grid:{color:'#eef1f6'},border:{color:'#dfe5ee'}},
+          y:{ticks:{color:'#8b96a6',font:{size:9}},grid:{color:'#eef1f6'},border:{color:'#dfe5ee'},
+             title:{display:true,text:'min / paradas',color:'#8b96a6',font:{size:9}}},
+          y2:{position:'right',ticks:{color:'#0f7b52',font:{size:9}},grid:{display:false},border:{color:'#dfe5ee'},
+             title:{display:true,text:'liberações',color:'#0f7b52',font:{size:9}}}
+        }}
+    });
+    setTimeout(function(){ var u=ch.toBase64Image(); ch.destroy(); stage.removeChild(box); resolve(u); },120);
+  });
+}
+
+function repPagina(conteudo){
+  return '<div class="rep-page"><div class="rep-band"></div>'
+    +'<div class="rep-head">'
+      +'<div><div class="rep-brand">i<b>-</b>OMT</div><div class="rep-brand-sub">Intelligence Operations Management Technology</div></div>'
+      +'<div class="rep-head-r"><div class="rep-doc">'+REP_TITULO+'</div>'
+        +'<div class="rep-per">'+repPeriodo()+'</div></div>'
+    +'</div>'
+    +'<div class="rep-body">'+conteudo+'</div>'
+    +'<div class="rep-foot"><span>'+REP_UNIDADE+'</span><span class="rep-pg"></span></div></div>';
+}
+
+function repCapa(a){
+  var h=new Date();
+  var dt=String(h.getDate()).padStart(2,'0')+'/'+String(h.getMonth()+1).padStart(2,'0')+'/'+h.getFullYear();
+  return '<div class="rep-page"><div class="rep-band"></div><div class="rep-cover">'
+    +'<div class="rep-cover-top"><div class="rep-brand" style="font-size:26px">i<b>-</b>OMT</div>'
+      +'<div class="rep-brand-sub">Intelligence Operations Management Technology</div></div>'
+    +'<div class="rep-cover-mid">'
+      +'<div class="rep-cover-t1">Relatório Gerencial</div>'
+      +'<div class="rep-cover-t2">Farmácia Oncológica<br>Desempenho Operacional</div>'
+      +'<div class="rep-cover-rule"></div>'
+      +'<div class="rep-cover-meta">'
+        +'Período analisado &nbsp;<b>'+repPeriodo()+'</b><br>'
+        +'Dias úteis analisados &nbsp;<b>'+a.nDias+'</b><br>'
+        +'Atendimentos no período &nbsp;<b>'+a.totalAtends+'</b><br>'
+        +'Emitido em &nbsp;<b>'+dt+'</b></div>'
+    +'</div>'
+    +'<div class="rep-cover-bot"><div class="rep-cover-box">'
+      +'<div><div class="rep-cb-l">TPF médio</div><div class="rep-cb-v" style="color:'+repCor(a.tpfMed,45,true)+'">'+fmtMin(a.tpfMed)+'</div></div>'
+      +'<div><div class="rep-cb-l">No SLA</div><div class="rep-cb-v" style="color:'+repCor(a.pctSLA,0.8)+'">'+pct(a.pctSLA)+'</div></div>'
+      +'<div><div class="rep-cb-l">Com parada</div><div class="rep-cb-v" style="color:'+repCor(a.pctParada,0.3,true)+'">'+pct(a.pctParada)+'</div></div>'
+      +'<div><div class="rep-cb-l">Liberações</div><div class="rep-cb-v" style="color:#1b2230">'+a.liberados+'</div></div>'
+    +'</div>'
+    +'<div style="margin-top:14px;font-size:8.5px;color:#a3adbb;font-family:\'DM Mono\',monospace">'
+      +REP_UNIDADE+' · Documento gerado automaticamente pela plataforma i-OMT</div></div>'
+    +'</div></div>';
+}
+
+function repSecResumo(a){
+  var mediaDia=a.nDias?Math.round(a.liberados/a.nDias):0;
+  var totPar=Object.values(a.motivos).reduce(function(s,v){return s+v.n;},0);
+  var topMot=Object.entries(a.motivos).sort(function(x,y){return y[1].n-x[1].n;})[0];
+  var c='<div class="rep-h2">Sumário executivo</div>'
+    +'<div class="rep-h2s">Indicadores consolidados do período · '+repPeriodo()+'</div>'
+    +'<div class="rep-kpis">'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">TPF médio</div>'
+        +'<div class="rep-kpi-v" style="color:'+repCor(a.tpfMed,45,true)+'">'+fmtMin(a.tpfMed)+'</div>'
+        +'<div class="rep-kpi-m">Meta ≤ 45min · <span class="rep-tag '+repClasse(a.tpfMed,45,true)+'">'+(a.tpfMed<=45?'dentro da meta':'acima da meta')+'</span></div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Entregas no SLA</div>'
+        +'<div class="rep-kpi-v" style="color:'+repCor(a.pctSLA,0.8)+'">'+pct(a.pctSLA)+'</div>'
+        +'<div class="rep-kpi-m">Meta ≥ 80% · SLA total de '+fmtMin(SLA_TOTAL)+'</div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Atendimentos com parada</div>'
+        +'<div class="rep-kpi-v" style="color:'+repCor(a.pctParada,0.3,true)+'">'+pct(a.pctParada)+'</div>'
+        +'<div class="rep-kpi-m">'+a.comParada+' de '+a.totalAtends+' atendimentos</div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Liberações</div>'
+        +'<div class="rep-kpi-v" style="color:#1b2230">'+a.liberados+'</div>'
+        +'<div class="rep-kpi-m">média de '+mediaDia+' por dia útil</div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Ocorrências de parada</div>'
+        +'<div class="rep-kpi-v" style="color:'+(totPar>0?'#bc2c2c':'#0f7b52')+'">'+totPar+'</div>'
+        +'<div class="rep-kpi-m">'+Object.keys(a.motivos).length+' motivos distintos</div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Dias úteis analisados</div>'
+        +'<div class="rep-kpi-v" style="color:#1b2230">'+a.nDias+'</div>'
+        +'<div class="rep-kpi-m">fins de semana excluídos da análise</div></div>'
+    +'</div>';
+  c+='<div class="rep-note"><b>Leitura do período.</b> '
+    +'O tempo de preparo e fornecimento (TPF) médio foi de <b>'+fmtMin(a.tpfMed)+'</b>, '
+    +(a.tpfMed<=45?'dentro':'acima')+' da meta de 45min, com <b>'+pct(a.pctSLA)+'</b> das entregas dentro do SLA. '
+    +'Foram liberados <b>'+a.liberados+'</b> atendimentos em <b>'+a.nDias+'</b> dias úteis (média de '+mediaDia+'/dia). '
+    +(totPar>0
+      ? '<b>'+pct(a.pctParada)+'</b> dos atendimentos sofreram alguma parada'
+        +(topMot?', sendo <b>'+repEsc(topMot[0])+'</b> o motivo mais recorrente ('+topMot[1].n+' ocorrências)':'')+'.'
+      : 'Não houve registro de paradas no período.')
+    +'</div>';
+  return [c];
+}
+
+function repSecEtapas(a){
+  var c='<div class="rep-h2">Tempo médio por etapa</div>'
+    +'<div class="rep-h2s">Comparativo com o SLA definido para cada etapa do fluxo</div>'
+    +'<table class="rep-tbl"><thead><tr><th>Etapa</th><th class="num">Tempo médio</th><th class="num">SLA</th>'
+    +'<th class="num">Desvio</th><th>Status</th><th style="width:150px">Aderência ao SLA</th></tr></thead><tbody>';
+  ETAPAS.filter(function(e){return e!=='Disponível QT'&&e!=='Disponível pré QT';}).forEach(function(e){
+    var med=a.medEtapa[e]||0, sla=SLA[e]||0;
+    var desvio=med-sla;
+    var ok=med<=sla;
+    c+='<tr><td><b>'+repEsc(e)+'</b></td>'
+      +'<td class="num" style="font-weight:700;color:'+repCor(med,sla,true)+'">'+fmtMin(med)+'</td>'
+      +'<td class="num">'+fmtMin(sla)+'</td>'
+      +'<td class="num" style="color:'+(desvio<=0?'#0f7b52':'#bc2c2c')+'">'+(desvio>0?'+':'')+Math.round(desvio)+'min</td>'
+      +'<td><span class="rep-tag '+repClasse(med,sla,true)+'">'+(ok?'no prazo':'acima')+'</span></td>'
+      +'<td><div class="rep-bar"><i style="width:'+Math.min(Math.round(med/Math.max(sla,1)*100),100)+'%;background:'+repCor(med,sla,true)+'"></i></div></td></tr>';
+  });
+  c+='</tbody></table>';
+  var somaMed=ETAPAS.filter(function(e){return e!=='Disponível QT'&&e!=='Disponível pré QT';})
+    .reduce(function(s,e){return s+(a.medEtapa[e]||0);},0);
+  c+='<div class="rep-note"><b>Somatório do fluxo.</b> As etapas de preparo somam <b>'+fmtMin(somaMed)+'</b> '
+    +'contra um SLA acumulado de <b>'+fmtMin(SLA_TOTAL)+'</b>. '
+    +'O TPF real medido ponta a ponta (Separação → Disponível QT) foi de <b>'+fmtMin(a.tpfMed)+'</b>, '
+    +'diferença que corresponde às esperas entre etapas — principal alvo de melhoria.</div>';
+  return [c];
+}
+
+function repSecEvolucao(a,img){
+  var c='<div class="rep-h2">Evolução diária</div>'
+    +'<div class="rep-h2s">TPF médio, paradas e liberações por dia útil</div>'
+    +'<div style="border:1px solid #e3e8ef;border-radius:10px;padding:14px;background:#fff;text-align:center">'
+    +(img?'<img src="'+img+'" style="width:650px;height:310px">':'<div style="color:#8b96a6;font-size:11px;padding:40px">Sem dados no período</div>')
+    +'</div>';
+  if(a.dias.length){
+    var comTpf=a.dias.filter(function(d){return d.tpf>0;});
+    var pior=comTpf.slice().sort(function(x,y){return y.tpf-x.tpf;})[0];
+    var melhor=comTpf.slice().sort(function(x,y){return x.tpf-y.tpf;})[0];
+    var maisLib=a.dias.slice().sort(function(x,y){return y.lib-x.lib;})[0];
+    c+='<div class="rep-kpis" style="margin-top:18px">'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Melhor TPF</div>'
+        +'<div class="rep-kpi-v" style="color:#0f7b52">'+(melhor?fmtMin(melhor.tpf):'—')+'</div>'
+        +'<div class="rep-kpi-m">'+(melhor?melhor.label:'—')+'</div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Pior TPF</div>'
+        +'<div class="rep-kpi-v" style="color:#bc2c2c">'+(pior?fmtMin(pior.tpf):'—')+'</div>'
+        +'<div class="rep-kpi-m">'+(pior?pior.label:'—')+'</div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Maior volume</div>'
+        +'<div class="rep-kpi-v" style="color:#1b2230">'+(maisLib?maisLib.lib:'—')+'</div>'
+        +'<div class="rep-kpi-m">liberações em '+(maisLib?maisLib.label:'—')+'</div></div>'
+      +'</div>';
+    if(pior) c+='<div class="rep-note"><b>Observação.</b> O pior desempenho ocorreu em <b>'+pior.label
+      +'</b> ('+fmtMin(pior.tpf)+', com '+pior.paradas+' paradas registradas). '
+      +'Recomenda-se revisar a programação e as ocorrências dessa data.</div>';
+  }
+  return [c];
+}
+
+function repSecParadas(a){
+  var entries=Object.entries(a.motivos).sort(function(x,y){return y[1].n-x[1].n;});
+  if(!entries.length){
+    return ['<div class="rep-h2">Análise de paradas</div><div class="rep-h2s">Ranking de motivos</div>'
+      +'<div class="rep-note">Não houve registro de paradas no período analisado.</div>'];
+  }
+  var totalN=entries.reduce(function(s,e){return s+e[1].n;},0)||1;
+  var totalT=entries.reduce(function(s,e){return s+e[1].tot;},0);
+  var porPag=18, pgs=[], acum=0;
+  for(var i=0;i<entries.length;i+=porPag){
+    var lote=entries.slice(i,i+porPag);
+    var c='<div class="rep-h2">Análise de paradas'+(i>0?' (continuação)':'')+'</div>'
+      +'<div class="rep-h2s">Ranking por ocorrências · '+totalN+' paradas · '+fmtMin(totalT)+' acumulados</div>'
+      +'<table class="rep-tbl"><thead><tr><th style="width:26px">#</th><th>Motivo</th>'
+      +'<th class="num">Ocorr.</th><th class="num">Tempo</th><th class="num">% do total</th><th class="num">% acum.</th></tr></thead><tbody>';
+    lote.forEach(function(e,j){
+      acum+=e[1].n;
+      c+='<tr><td style="color:#a3adbb">'+(i+j+1)+'</td><td><b>'+repEsc(e[0])+'</b></td>'
+        +'<td class="num" style="font-weight:700">'+e[1].n+'x</td>'
+        +'<td class="num">'+(e[1].tot>0?fmtMin(e[1].tot):'—')+'</td>'
+        +'<td class="num">'+Math.round(e[1].n/totalN*100)+'%</td>'
+        +'<td class="num" style="color:#7a8698">'+Math.round(acum/totalN*100)+'%</td></tr>';
+    });
+    c+='</tbody></table>';
+    if(i===0){
+      var top3=entries.slice(0,3), s3=top3.reduce(function(s,e){return s+e[1].n;},0);
+      c+='<div class="rep-note"><b>Concentração (Pareto).</b> Os '+top3.length+' principais motivos respondem por '
+        +'<b>'+Math.round(s3/totalN*100)+'%</b> das ocorrências. '
+        +'Atacar <b>'+repEsc(top3[0][0])+'</b> ('+top3[0][1].n+'x) tende a gerar o maior ganho no TPF.</div>';
+    }
+    pgs.push(c);
+  }
+  return pgs;
+}
+
+function repSecHoras(a){
+  var horas=['07h','08h','09h','10h','11h','12h','13h','14h','15h','16h','17h','18h'];
+  var max=Math.max.apply(null,a.horasLib)||1;
+  var total=a.horasLib.reduce(function(s,v){return s+v;},0);
+  var picoIdx=a.horasLib.indexOf(max);
+  var c='<div class="rep-h2">Distribuição de liberações por hora</div>'
+    +'<div class="rep-h2s">Volume acumulado do período · identifica a janela de maior demanda</div>'
+    +'<table class="rep-tbl"><thead><tr><th>Hora</th><th class="num">Liberações</th>'
+    +'<th class="num">% do total</th><th style="width:300px">Distribuição</th></tr></thead><tbody>';
+  a.horasLib.forEach(function(v,i){
+    var isPico=i===picoIdx&&v>0;
+    c+='<tr><td'+(isPico?' style="font-weight:700;color:#a76a00"':'')+'>'+horas[i]+(isPico?' · pico':'')+'</td>'
+      +'<td class="num" style="font-weight:700'+(isPico?';color:#a76a00':'')+'">'+v+'</td>'
+      +'<td class="num">'+(total?Math.round(v/total*100):0)+'%</td>'
+      +'<td><div class="rep-bar"><i style="width:'+Math.round(v/max*100)+'%;background:'+(isPico?'#BA7517':'#388bfd')+'"></i></div></td></tr>';
+  });
+  c+='</tbody></table>';
+  if(total) c+='<div class="rep-note"><b>Janela de pico.</b> O maior volume de liberações concentra-se às <b>'
+    +horas[picoIdx]+'</b> ('+max+' liberações, '+Math.round(max/total*100)+'% do total). '
+    +'Dimensionar a equipe para essa faixa tende a reduzir o TPF médio do dia.</div>';
+  return [c];
+}
+
+async function repRenderizarPDF(paginasHtml,nomeArquivo){
+  var jsPDFCtor=(window.jspdf||{}).jsPDF;
+  if(!jsPDFCtor){alert('Biblioteca de PDF não carregou. Verifique sua conexão e tente de novo.');return;}
+  var stage=document.getElementById('rep-stage');
+  var pdf=new jsPDFCtor({orientation:'portrait',unit:'pt',format:'a4'});
+  var pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight();
+  for(var i=0;i<paginasHtml.length;i++){
+    var wrap=document.createElement('div');
+    wrap.innerHTML=paginasHtml[i];
+    var pg=wrap.querySelector('.rep-pg');
+    if(pg) pg.textContent='Página '+(i+1)+' de '+paginasHtml.length;
+    stage.appendChild(wrap);
+    var canvas=await html2canvas(wrap.firstChild,{backgroundColor:'#ffffff',scale:2,width:794,height:1123,windowWidth:794});
+    if(i>0) pdf.addPage('a4','portrait');
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,pw,ph);
+    stage.removeChild(wrap);
+  }
+  pdf.save(nomeArquivo);
+}
+
+function repNomeArq(sufixo){
+  return sufixo+'-'+document.getElementById('dt-ini').value+'_a_'+document.getElementById('dt-fim').value+'.pdf';
+}
+
+async function exportarSecaoPDF(secao){
+  if(!ultimaAnalise){alert('Clique em Analisar antes de exportar.');return;}
+  var btns=document.querySelectorAll('[onclick^="exportarSecaoPDF"]');
+  btns.forEach(function(b){b.disabled=true;});
+  try{
+    var a=ultimaAnalise.a, pgs;
+    if(secao==='resumo')        pgs=repSecResumo(a);
+    else if(secao==='etapas')   pgs=repSecEtapas(a);
+    else if(secao==='evolucao') pgs=repSecEvolucao(a,await repGraficoEvolucao(a));
+    else if(secao==='paradas')  pgs=repSecParadas(a);
+    else if(secao==='horas')    pgs=repSecHoras(a);
+    else return;
+    await repRenderizarPDF(pgs.map(repPagina),repNomeArq('Farmacia-'+secao));
+  }catch(ex){alert('Erro ao gerar PDF: '+ex.message);console.error(ex);}
+  finally{ btns.forEach(function(b){b.disabled=false;}); }
+}
+
+async function gerarRelatorioCompleto(){
+  if(!ultimaAnalise){alert('Clique em Analisar antes de gerar o relatório.');return;}
+  var btn=document.getElementById('btn-relatorio-dia');
+  btn.disabled=true; var t0=btn.textContent; btn.textContent='Gerando relatório...';
+  try{
+    var a=ultimaAnalise.a;
+    var img=await repGraficoEvolucao(a);
+    var paginas=[repCapa(a)];
+    [].concat(repSecResumo(a),repSecEtapas(a),repSecEvolucao(a,img),repSecParadas(a),repSecHoras(a))
+      .forEach(function(c){ paginas.push(repPagina(c)); });
+    await repRenderizarPDF(paginas,repNomeArq('Relatorio-Farmacia'));
+  }catch(ex){alert('Erro ao gerar relatório: '+ex.message);console.error(ex);}
+  finally{ btn.disabled=false; btn.textContent=t0; }
 }
 // ═══════════════════════════════════
 //  INIT
