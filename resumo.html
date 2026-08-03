@@ -574,10 +574,8 @@ function analisarDia(rows,diaStr){
     s.paradas.forEach(function(p){
       if(!p.fim||p.dur<=0)return;
       nPar++;totParado+=p.dur;
-      var k=p.mot.includes('Manipul')?'Farmacia':
-        (p.mot.includes('édica')||p.mot.includes('edica'))?'Lib. Medica':
-        (p.mot.includes('Conv')||p.mot.includes('conv'))?'Lib. Convenio':
-        (p.mot.includes('intercorr')||p.mot.includes('devolu'))?'Interc./Dev.':'Outros';
+     // Usa a nomenclatura real da parada, sem agrupar em categorias genéricas
+      var k=String(p.mot||'').trim()||'Sem motivo registrado';
       if(!porMot[k])porMot[k]={n:0,tot:0};
       porMot[k].n++;porMot[k].tot+=p.dur;
     });
@@ -706,12 +704,9 @@ function lineChartTUE(resDias){
 }
 
 function classificarMotivo(mot){
-  mot=mot||'';
-  if(mot.includes('Manipul'))return 'Farmacia';
-  if(mot.includes('édica')||mot.includes('edica'))return 'Lib. Medica';
-  if(mot.includes('Conv')||mot.includes('conv'))return 'Lib. Convenio';
-  if(mot.includes('intercorr')||mot.includes('devolu'))return 'Interc./Dev.';
-  return 'Outros';
+  // Sem agrupamento: o próprio texto do motivo é a chave, para o clique no
+  // Pareto abrir exatamente as ocorrências daquela nomenclatura.
+  return String(mot||'').trim()||'Sem motivo registrado';
 }
 
 function coletarParadas(categoriaAlvo){
