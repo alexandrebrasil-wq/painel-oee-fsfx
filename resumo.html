@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=1920">
 <title>Painel Gerencial - Centro de Infusao QT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{background:#0d1117;color:#fff;font-family:'Segoe UI',Arial,sans-serif;min-height:100vh;}
@@ -133,6 +138,49 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:20p
 .parada-close{position:sticky;top:0;float:right;background:none;border:none;color:#8b949e;font-size:16px;cursor:pointer;}
 .parada-close:hover{color:#fff;}
 .parada-sub{font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px;}
+/* ─── RELATÓRIO PDF (tema claro, A4) ─── */
+#rep-stage{position:fixed;left:-12000px;top:0;z-index:-1}
+.rep-page{width:794px;height:1123px;background:#fff;color:#1b2230;font-family:'Syne',sans-serif;position:relative;overflow:hidden}
+.rep-band{height:7px;background:linear-gradient(90deg,#1D9E75 0%,#388bfd 100%)}
+.rep-head{padding:20px 46px 13px;border-bottom:1px solid #e3e8ef;display:flex;align-items:flex-end;justify-content:space-between}
+.rep-brand{font-size:21px;font-weight:700;letter-spacing:-.02em;color:#0f1620;line-height:1}
+.rep-brand b{color:#1D9E75}
+.rep-brand-sub{font-size:8px;color:#8b96a6;letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+.rep-head-r{text-align:right}
+.rep-doc{font-size:12px;font-weight:600;color:#1b2230}
+.rep-per{font-size:10px;color:#8b96a6;font-family:'DM Mono',monospace;margin-top:3px}
+.rep-body{padding:24px 46px;height:952px;overflow:hidden}
+.rep-h2{font-size:15px;font-weight:700;color:#0f1620;margin-bottom:2px}
+.rep-h2s{font-size:10.5px;color:#8b96a6;margin-bottom:16px}
+.rep-foot{position:absolute;bottom:0;left:0;right:0;padding:9px 46px;border-top:1px solid #e3e8ef;display:flex;justify-content:space-between;font-size:8.5px;color:#a3adbb;font-family:'DM Mono',monospace}
+.rep-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:16px}
+.rep-kpi{border:1px solid #e3e8ef;border-radius:9px;padding:13px 15px;background:#fbfcfe}
+.rep-kpi-l{font-size:8.5px;text-transform:uppercase;letter-spacing:.09em;color:#8b96a6;margin-bottom:6px}
+.rep-kpi-v{font-size:27px;font-weight:700;line-height:1;font-family:'DM Mono',monospace}
+.rep-kpi-m{font-size:9.5px;color:#8b96a6;margin-top:5px;line-height:1.4}
+.rep-tag{display:inline-block;padding:1px 7px;border-radius:20px;font-size:8.5px;font-weight:700;font-family:'DM Mono',monospace}
+.rep-tg{background:#e4f5ee;color:#0f7b52}.rep-ta{background:#fdf1de;color:#a76a00}.rep-tr{background:#fdeaea;color:#bc2c2c}
+.rep-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.rep-tbl th{text-align:left;padding:7px 9px;font-size:8.5px;text-transform:uppercase;letter-spacing:.07em;color:#8b96a6;border-bottom:1.5px solid #dfe5ee;white-space:nowrap}
+.rep-tbl td{padding:7px 9px;border-bottom:1px solid #eef1f6;color:#2b3542}
+.rep-tbl tr:nth-child(even) td{background:#fafbfd}
+.rep-tbl .num{font-family:'DM Mono',monospace;text-align:right;white-space:nowrap}
+.rep-note{margin-top:15px;border-left:3px solid #1D9E75;background:#f5faf8;padding:11px 14px;font-size:10.5px;line-height:1.65;color:#38434f;border-radius:0 6px 6px 0}
+.rep-note b{color:#0f1620}
+.rep-bar{height:5px;background:#eef1f6;border-radius:3px;overflow:hidden;margin-top:3px}
+.rep-bar i{display:block;height:5px;border-radius:3px}
+.rep-cover{height:1123px;display:flex;flex-direction:column;justify-content:space-between;padding:0}
+.rep-cover-top{padding:64px 56px 0}
+.rep-cover-mid{padding:0 56px;flex:1;display:flex;flex-direction:column;justify-content:center}
+.rep-cover-t1{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:#1D9E75;font-weight:700;margin-bottom:14px}
+.rep-cover-t2{font-size:40px;font-weight:700;line-height:1.12;letter-spacing:-.02em;color:#0f1620}
+.rep-cover-rule{width:70px;height:4px;background:#1D9E75;border-radius:2px;margin:26px 0}
+.rep-cover-meta{font-size:12px;color:#5b6777;line-height:2}
+.rep-cover-meta b{color:#0f1620;font-family:'DM Mono',monospace;font-weight:500}
+.rep-cover-bot{padding:0 56px 52px}
+.rep-cover-box{border:1px solid #e3e8ef;border-radius:11px;background:#fbfcfe;padding:18px 22px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.rep-cb-l{font-size:8.5px;text-transform:uppercase;letter-spacing:.09em;color:#8b96a6;margin-bottom:5px}
+.rep-cb-v{font-size:21px;font-weight:700;font-family:'DM Mono',monospace;line-height:1}
 </style>
 </head>
 <body>
@@ -219,6 +267,19 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:20p
   <div class="vsep"></div>
   <span class="fonte" id="fonte-badge">Carregando...</span>
 </div>
+<div class="ctrl" style="flex-wrap:wrap">
+  <label style="text-transform:none;color:#8b949e;font-size:11px">📄 Exportar relatório · Seção</label>
+  <button class="sec" onclick="exportarSecaoPDF('resumo')">Sumário executivo</button>
+  <button class="sec" onclick="exportarSecaoPDF('evolucao')">Evolução diária</button>
+  <button class="sec" onclick="exportarSecaoPDF('paradas')">Paradas</button>
+  <button class="sec" onclick="exportarSecaoPDF('infusao')">Tempo de infusão</button>
+  <button class="sec" onclick="exportarSecaoPDF('fluxo')">Resultado por fluxo</button>
+  <button class="sec" onclick="exportarSecaoPDF('horas')">Demanda por hora</button>
+  <button class="sec" onclick="exportarSecaoPDF('dias')">Detalhe dia a dia</button>
+  <div class="vsep"></div>
+  <button id="btn-relatorio-dia" onclick="gerarRelatorioCompleto()">📄 Relatório completo (período selecionado)</button>
+</div>
+<div id="rep-stage"></div>
 <div class="content" id="content">
   <div style="text-align:center;padding:60px;color:#8b949e;font-size:14px;">Selecione um periodo e clique em Analisar</div>
 </div>
@@ -772,7 +833,7 @@ function renderAll(resDias,dias){
 
   // VELOCIMETROS
   html+='<div class="sec-hdr"><span style="color:#8b949e">Consolidado do periodo</span><hr></div>';
-  html+='<div class="gauges-row">';
+  html+='<div class="gauges-row" id="bloco-gauges">';
   var gauges=[
     {lbl:'TUE',val:oeeM,meta:META_OEE,desc:'Tempo de atendimento / Tempo disponivel',metaLbl:'Meta TUE'},
     {lbl:'TD',val:dispM,meta:META_DISP,desc:'(Tempo disponivel - Tempo em paradas) / Tempo disponivel',metaLbl:'Meta TD'},
@@ -805,7 +866,7 @@ function renderAll(resDias,dias){
   html+='<div class="charts-row">';
 
   // TUE, TD e TUT por dia - grafico de linha unico (antes eram 2 paineis de barras duplas, poluidos)
-  html+='<div class="panel"><div class="phdr" style="color:#a78bfa">TUE, TD e TUT por dia'
+  html+='<div class="panel" id="panel-linha-tue"><div class="phdr" style="color:#a78bfa">TUE, TD e TUT por dia'
     +'<span style="font-weight:400;font-size:10px;text-transform:none;color:#8b949e">'
     +'<span style="display:inline-block;width:10px;height:10px;background:#a78bfa;border-radius:2px;margin-right:3px"></span>TUE &nbsp;'
     +'<span style="display:inline-block;width:10px;height:10px;background:#3fb950;border-radius:2px;margin-right:3px"></span>TD &nbsp;'
@@ -815,7 +876,7 @@ function renderAll(resDias,dias){
   html+='</div></div>';
 
   // Atendimentos por dia - painel simples (1 metrica so, sem sobreposicao)
-  html+='<div class="panel"><div class="phdr" style="color:#60a5fa">Atendimentos por dia</div><div class="pbody">';
+  html+='<div class="panel" id="panel-atend-dia"><div class="phdr" style="color:#60a5fa">Atendimentos por dia</div><div class="pbody">';
   var maxPac=Math.max.apply(null,resDias.map(function(x){return x.res.totPac;}))||1;
   html+='<div style="display:flex;align-items:flex-end;gap:6px;height:110px;padding-top:4px;position:relative;">';
   resDias.forEach(function(x){
@@ -841,7 +902,7 @@ function renderAll(resDias,dias){
   var totMotTot=Object.values(porMotTot).reduce(function(a,v){return a+v.tot;},0)||1;
   var sortedMot=Object.entries(porMotTot).sort(function(a,b){return b[1].tot-a[1].tot;});
   var acum=0;
-  html+='<div class="panel"><div class="phdr" style="color:#f85149">Pareto de Paradas<span style="font-weight:400;font-size:10px;text-transform:none;color:#8b949e">'+nPar+' ocorr. · '+fmtMin(totParado)+' total</span></div><div class="pbody">';
+  html+='<div class="panel" id="panel-pareto"><div class="phdr" style="color:#f85149">Pareto de Paradas<span style="font-weight:400;font-size:10px;text-transform:none;color:#8b949e">'+nPar+' ocorr. · '+fmtMin(totParado)+' total</span></div><div class="pbody">';
   sortedMot.forEach(function(e,i){
     var k=e[0],v=e[1];
     acum+=v.tot;
@@ -866,7 +927,7 @@ function renderAll(resDias,dias){
   var CORS={'Rapida':'#60a5fa','Rápida':'#60a5fa','Curta':'#3b82f6','Media':'#f97316','Média':'#f97316','Longa':'#a78bfa','Longuissima':'#7c3aed','Longuísima':'#7c3aed'};
   var sortedTipo=Object.entries(porTipoTot).sort(function(a,b){return(IDEAL[b[0]]||0)-(IDEAL[a[0]]||0);});
   var maxMed=Math.max.apply(null,sortedTipo.map(function(e){return e[1].tot/e[1].n;}))||1;
-  html+='<div class="panel"><div class="phdr" style="color:#fb923c">Tempo Medio por Infusao</div><div class="pbody">';
+  html+='<div class="panel" id="panel-infusao"><div class="phdr" style="color:#fb923c">Tempo Medio por Infusao</div><div class="pbody">';
   sortedTipo.forEach(function(e){
     var t=e[0],v=e[1];var med=v.tot/v.n;var cor=CORS[t]||'#60a5fa';var ideal=IDEAL[t]||240;
     var perf2=Math.min(ideal/Math.max(med,1),1);
@@ -906,7 +967,7 @@ function renderAll(resDias,dias){
     porFluxoTotal[fl.idx].paradas++;
   });
 
-  html+='<div class="panel"><div class="phdr" style="color:#a78bfa">Resultado por Fluxo</div><div class="pbody">';
+  html+='<div class="panel" id="panel-fluxo"><div class="phdr" style="color:#a78bfa">Resultado por Fluxo</div><div class="pbody">';
   html+='<table class="t"><thead><tr><th>Fluxo</th><th>Pac.</th><th>Paradas</th><th>Par/Atend</th><th>TUE</th></tr></thead><tbody>';
   FLUXOS.forEach(function(fl){
     if(fluxoAtivo!==-1&&fluxoAtivo!==fl.idx)return;
@@ -936,7 +997,7 @@ function renderAll(resDias,dias){
   var maxHora=Math.max.apply(null,ocupHTotal)||1;
   var picoHoraIdx=ocupHTotal.indexOf(maxHora);
   html+='<div class="sec-hdr" style="margin-top:4px"><span style="color:#f59e0b">&#9200; Demanda por hora do dia</span><hr></div>';
-  html+='<div class="panel" style="margin-bottom:10px"><div class="phdr" style="color:#f59e0b">Check-ins por hora do turno <span style="font-weight:400;font-size:10px;color:#8b949e;text-transform:none">(total do período · '+diasComDadosN+' dias úteis)</span></div><div class="pbody" style="padding:6px 14px 10px">';
+  html+='<div class="panel" id="panel-horas" style="margin-bottom:10px"><div class="phdr" style="color:#f59e0b">Check-ins por hora do turno <span style="font-weight:400;font-size:10px;color:#8b949e;text-transform:none">(total do período · '+diasComDadosN+' dias úteis)</span></div><div class="pbody" style="padding:6px 14px 10px">';
   // tabela header
   html+='<div style="display:grid;grid-template-columns:64px 52px 1fr;gap:0;margin-bottom:4px">'
     +'<div style="font-size:9px;color:#8b949e;font-weight:600;text-transform:uppercase;letter-spacing:.05em">Hora</div>'
@@ -962,7 +1023,7 @@ function renderAll(resDias,dias){
 
   // CARDS POR DIA
   html+='<div class="sec-hdr" style="margin-top:4px"><span style="color:#8b949e">Detalhe dia a dia</span><hr></div>';
-  html+='<div class="dias-grid">';
+  html+='<div class="dias-grid" id="bloco-dias">';
   resDias.forEach(function(x){
     var r=x.res,d=x.dia;
     var cor=r.temDados?oeeColor(r.oee,META_OEE):'#444';
@@ -977,8 +1038,18 @@ function renderAll(resDias,dias){
   html+='</div>';
 
   c.innerHTML=html;
+  // Guarda os agregados do periodo para alimentar o relatorio PDF
+  ultimoRelatorio={
+    dias:dias,resDias:resDias,diasComDados:diasComDados,dn:dn,
+    oeeM:oeeM,dispM:dispM,ocupM:ocupM,eficM:eficM,
+    totPac:totPac,totParado:totParado,nPar:nPar,tempoAtend:tempoAtend,
+    porMotTot:porMotTot,porTipoTot:porTipoTot,porFluxoTotal:porFluxoTotal,
+    ocupHTotal:ocupHTotal,diasComDadosN:diasComDadosN,horasLabels:horasLabels,
+    fluxoAtivo:fluxoAtivo
+  };
   document.getElementById('fmsg').textContent='Periodo: '+dias[0]+' a '+dias[dias.length-1]+' ('+diasComDados.length+' dias com dados) - '+allRows.length+' registros';
 }
+var ultimoRelatorio=null;
 
 function analisar(){
   var d1=document.getElementById('dp1').value;
@@ -1011,6 +1082,374 @@ function setMes(){
   document.getElementById('dp1').value=fmt(ini);document.getElementById('dp2').value=fmt(n);
 }
 
+// ── EXPORTAÇÃO PDF ────────────────────────────────────────────────
+// Exporta um único bloco (gauges, linha TUE/TD/TUT, atendimentos por dia,
+// pareto, tempo de infusão, fluxo, horas ou detalhe dia a dia) como PDF.
+// ═══════════════════════════════════════════════════════════════════
+//  RELATORIO PDF — documento A4 diagramado (capa, secoes, rodape)
+//  Nao e screenshot do painel: os dados sao re-renderizados em tema
+//  claro, proprio para impressao e envio ao cliente.
+// ═══════════════════════════════════════════════════════════════════
+var REP_TITULO='Relatório Gerencial — Centro de Infusão QT';
+var REP_UNIDADE='Centro de Infusão de Quimioterapia · Hospital Márcio Cunha';
+
+function repClasse(v,meta){ return v>=meta?'rep-tg':v>=meta*0.85?'rep-ta':'rep-tr'; }
+function repCor(v,meta){ return v>=meta?'#0f7b52':v>=meta*0.85?'#a76a00':'#bc2c2c'; }
+function repEsc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function repBR(iso){ var p=String(iso).split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:iso; }
+function repPeriodo(){ var d=ultimoRelatorio.dias; return repBR(d[0])+' a '+repBR(d[d.length-1]); }
+
+function repGraficoTUE(){
+  return new Promise(function(resolve){
+    var R=ultimoRelatorio;
+    var pontos=R.resDias.filter(function(x){return x.res.temDados;});
+    if(!pontos.length){resolve(null);return;}
+    var cv=document.createElement('canvas');
+    cv.width=1300;cv.height=620;cv.style.width='650px';cv.style.height='310px';
+    var stage=document.getElementById('rep-stage');
+    var box=document.createElement('div');box.style.cssText='width:650px;height:310px';
+    box.appendChild(cv);stage.appendChild(box);
+    var ch=new Chart(cv,{type:'line',
+      data:{labels:pontos.map(function(x){return x.dia.slice(0,5);}),
+        datasets:[
+          {label:'TUE',data:pontos.map(function(x){return Math.round(x.res.oee*100);}),
+           borderColor:'#7F77DD',backgroundColor:'rgba(127,119,221,.08)',borderWidth:2,pointRadius:2,tension:.3},
+          {label:'TD',data:pontos.map(function(x){return Math.round(x.res.disp*100);}),
+           borderColor:'#1D9E75',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:.3},
+          {label:'TUT',data:pontos.map(function(x){return Math.round(x.res.ocup*100);}),
+           borderColor:'#BA7517',backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:.3}
+        ]},
+      options:{responsive:false,animation:false,devicePixelRatio:2,
+        plugins:{legend:{labels:{color:'#5b6777',font:{size:11,family:'Syne'},boxWidth:14,usePointStyle:true}}},
+        scales:{x:{ticks:{color:'#8b96a6',font:{size:9}},grid:{color:'#eef1f6'},border:{color:'#dfe5ee'}},
+          y:{min:0,max:100,ticks:{color:'#8b96a6',font:{size:9},callback:function(v){return v+'%';}},
+             grid:{color:'#eef1f6'},border:{color:'#dfe5ee'}}}}
+    });
+    setTimeout(function(){var u=ch.toBase64Image();ch.destroy();stage.removeChild(box);resolve(u);},120);
+  });
+}
+
+function repPagina(conteudo){
+  return '<div class="rep-page"><div class="rep-band"></div>'
+    +'<div class="rep-head">'
+      +'<div><div class="rep-brand">i<b>-</b>OMT</div><div class="rep-brand-sub">Intelligence Operations Management Technology</div></div>'
+      +'<div class="rep-head-r"><div class="rep-doc">'+REP_TITULO+'</div>'
+        +'<div class="rep-per">'+repPeriodo()+'</div></div>'
+    +'</div>'
+    +'<div class="rep-body">'+conteudo+'</div>'
+    +'<div class="rep-foot"><span>'+REP_UNIDADE+'</span><span class="rep-pg"></span></div></div>';
+}
+
+function repCapa(){
+  var R=ultimoRelatorio, h=new Date();
+  var dt=String(h.getDate()).padStart(2,'0')+'/'+String(h.getMonth()+1).padStart(2,'0')+'/'+h.getFullYear();
+  var fl=FLUXOS.find(function(f){return f.idx===R.fluxoAtivo;});
+  return '<div class="rep-page"><div class="rep-band"></div><div class="rep-cover">'
+    +'<div class="rep-cover-top"><div class="rep-brand" style="font-size:26px">i<b>-</b>OMT</div>'
+      +'<div class="rep-brand-sub">Intelligence Operations Management Technology</div></div>'
+    +'<div class="rep-cover-mid">'
+      +'<div class="rep-cover-t1">Relatório Gerencial</div>'
+      +'<div class="rep-cover-t2">Centro de Infusão<br>Desempenho Operacional</div>'
+      +'<div class="rep-cover-rule"></div>'
+      +'<div class="rep-cover-meta">'
+        +'Período analisado &nbsp;<b>'+repPeriodo()+'</b><br>'
+        +'Escopo &nbsp;<b>'+(fl?fl.nome:'Todos os fluxos')+'</b><br>'
+        +'Turno &nbsp;<b>'+String(TURNO_INI).padStart(2,'0')+':00 às '+String(TURNO_FIM).padStart(2,'0')+':00</b><br>'
+        +'Dias com dados &nbsp;<b>'+R.diasComDados.length+'</b><br>'
+        +'Emitido em &nbsp;<b>'+dt+'</b></div>'
+    +'</div>'
+    +'<div class="rep-cover-bot"><div class="rep-cover-box">'
+      +'<div><div class="rep-cb-l">TUE</div><div class="rep-cb-v" style="color:'+repCor(R.oeeM,META_OEE)+'">'+pct(R.oeeM)+'</div></div>'
+      +'<div><div class="rep-cb-l">TD</div><div class="rep-cb-v" style="color:'+repCor(R.dispM,META_DISP)+'">'+pct(R.dispM)+'</div></div>'
+      +'<div><div class="rep-cb-l">TUT</div><div class="rep-cb-v" style="color:'+repCor(R.ocupM,META_OCUP)+'">'+pct(R.ocupM)+'</div></div>'
+      +'<div><div class="rep-cb-l">Pacientes</div><div class="rep-cb-v" style="color:#1b2230">'+R.totPac+'</div></div>'
+    +'</div>'
+    +'<div style="margin-top:14px;font-size:8.5px;color:#a3adbb;font-family:\'DM Mono\',monospace">'
+      +REP_UNIDADE+' · Documento gerado automaticamente pela plataforma i-OMT</div></div>'
+    +'</div></div>';
+}
+
+function repSecResumo(){
+  var R=ultimoRelatorio;
+  var mediaDia=R.dn?Math.round(R.totPac/R.dn):0;
+  var topMot=Object.entries(R.porMotTot).sort(function(a,b){return b[1].tot-a[1].tot;})[0];
+  var c='<div class="rep-h2">Sumário executivo</div>'
+    +'<div class="rep-h2s">Indicadores consolidados do período · '+repPeriodo()+'</div>'
+    +'<div class="rep-kpis">'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">TUE · Taxa de uso efetivo</div>'
+        +'<div class="rep-kpi-v" style="color:'+repCor(R.oeeM,META_OEE)+'">'+pct(R.oeeM)+'</div>'
+        +'<div class="rep-kpi-m">Meta ≥ '+pct(META_OEE)+' · <span class="rep-tag '+repClasse(R.oeeM,META_OEE)+'">'+(R.oeeM>=META_OEE?'dentro da meta':'abaixo da meta')+'</span></div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">TD · Taxa de disponibilidade</div>'
+        +'<div class="rep-kpi-v" style="color:'+repCor(R.dispM,META_DISP)+'">'+pct(R.dispM)+'</div>'
+        +'<div class="rep-kpi-m">Meta ≥ '+pct(META_DISP)+' · <span class="rep-tag '+repClasse(R.dispM,META_DISP)+'">'+(R.dispM>=META_DISP?'dentro da meta':'abaixo da meta')+'</span></div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">TUT · Taxa de uso total</div>'
+        +'<div class="rep-kpi-v" style="color:'+repCor(R.ocupM,META_OCUP)+'">'+pct(R.ocupM)+'</div>'
+        +'<div class="rep-kpi-m">Meta ≥ '+pct(META_OCUP)+' · atendimento + paradas</div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Pacientes atendidos</div>'
+        +'<div class="rep-kpi-v" style="color:#1b2230">'+R.totPac+'</div>'
+        +'<div class="rep-kpi-m">média de '+mediaDia+' por dia útil</div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Ocorrências de parada</div>'
+        +'<div class="rep-kpi-v" style="color:'+(R.nPar>0?'#bc2c2c':'#0f7b52')+'">'+R.nPar+'</div>'
+        +'<div class="rep-kpi-m">'+fmtMin(R.totParado)+' de indisponibilidade</div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Dias analisados</div>'
+        +'<div class="rep-kpi-v" style="color:#1b2230">'+R.diasComDados.length+'</div>'
+        +'<div class="rep-kpi-m">dias úteis com registro no período</div></div>'
+    +'</div>';
+  c+='<div class="rep-note"><b>Leitura do período.</b> '
+    +'A taxa de uso efetivo (TUE) foi de <b>'+pct(R.oeeM)+'</b> ('+(R.oeeM>=META_OEE?'dentro':'abaixo')+' da meta de '+pct(META_OEE)+'), '
+    +'com disponibilidade de <b>'+pct(R.dispM)+'</b> e uso total de <b>'+pct(R.ocupM)+'</b>. '
+    +'Foram atendidos <b>'+R.totPac+'</b> pacientes em <b>'+R.diasComDados.length+'</b> dias (média de '+mediaDia+'/dia). '
+    +(R.nPar>0
+      ? 'Registraram-se <b>'+R.nPar+'</b> paradas somando <b>'+fmtMin(R.totParado)+'</b>'
+        +(topMot?', lideradas por <b>'+repEsc(topMot[0])+'</b> ('+topMot[1].n+' ocorrências · '+fmtMin(topMot[1].tot)+')':'')+'.'
+      : 'Não houve registro de paradas no período.')
+    +'</div>';
+  return [c];
+}
+
+function repSecEvolucao(img){
+  var R=ultimoRelatorio;
+  var pts=R.resDias.filter(function(x){return x.res.temDados;});
+  var c='<div class="rep-h2">Evolução diária</div>'
+    +'<div class="rep-h2s">TUE, TD e TUT ao longo do período</div>'
+    +'<div style="border:1px solid #e3e8ef;border-radius:10px;padding:14px;background:#fff;text-align:center">'
+    +(img?'<img src="'+img+'" style="width:650px;height:310px">':'<div style="color:#8b96a6;font-size:11px;padding:40px">Sem dados no período</div>')
+    +'</div>';
+  if(pts.length){
+    var melhor=pts.slice().sort(function(a,b){return b.res.oee-a.res.oee;})[0];
+    var pior=pts.slice().sort(function(a,b){return a.res.oee-b.res.oee;})[0];
+    var acima=pts.filter(function(x){return x.res.oee>=META_OEE;}).length;
+    var maisPac=pts.slice().sort(function(a,b){return b.res.totPac-a.res.totPac;})[0];
+    c+='<div class="rep-kpis" style="margin-top:18px">'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Dias na meta</div>'
+        +'<div class="rep-kpi-v" style="color:'+(acima>=pts.length/2?'#0f7b52':'#a76a00')+'">'+acima
+        +'<span style="font-size:14px;color:#8b96a6">/'+pts.length+'</span></div>'
+        +'<div class="rep-kpi-m">dias com TUE ≥ '+pct(META_OEE)+'</div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Melhor dia</div>'
+        +'<div class="rep-kpi-v" style="color:#0f7b52">'+pct(melhor.res.oee)+'</div>'
+        +'<div class="rep-kpi-m">'+melhor.dia+' · '+melhor.res.totPac+' pacientes</div></div>'
+      +'<div class="rep-kpi"><div class="rep-kpi-l">Pior dia</div>'
+        +'<div class="rep-kpi-v" style="color:#bc2c2c">'+pct(pior.res.oee)+'</div>'
+        +'<div class="rep-kpi-m">'+pior.dia+' · '+pior.res.totPac+' pacientes</div></div>'
+      +'</div>';
+    c+='<div class="rep-note"><b>Observação.</b> '+acima+' de '+pts.length+' dias atingiram a meta de TUE. '
+      +'O maior volume ocorreu em <b>'+maisPac.dia+'</b> ('+maisPac.res.totPac+' pacientes) e a maior queda de TUE em '
+      +'<b>'+pior.dia+'</b> ('+pct(pior.res.oee)+'), data que merece análise das paradas registradas.</div>';
+  }
+  return [c];
+}
+
+function repSecParadas(){
+  var R=ultimoRelatorio;
+  var ent=Object.entries(R.porMotTot).sort(function(a,b){return b[1].tot-a[1].tot;});
+  if(!ent.length){
+    return ['<div class="rep-h2">Análise de paradas</div><div class="rep-h2s">Ranking por tempo de indisponibilidade</div>'
+      +'<div class="rep-note">Não houve registro de paradas no período analisado.</div>'];
+  }
+  var totT=ent.reduce(function(s,e){return s+e[1].tot;},0)||1;
+  var porPag=18,pgs=[],acum=0;
+  for(var i=0;i<ent.length;i+=porPag){
+    var lote=ent.slice(i,i+porPag);
+    var c='<div class="rep-h2">Análise de paradas'+(i>0?' (continuação)':'')+'</div>'
+      +'<div class="rep-h2s">Ranking por tempo · '+R.nPar+' ocorrências · '+fmtMin(R.totParado)+' no total</div>'
+      +'<table class="rep-tbl"><thead><tr><th style="width:26px">#</th><th>Motivo</th>'
+      +'<th class="num">Ocorr.</th><th class="num">Tempo</th><th class="num">Média</th>'
+      +'<th class="num">% total</th><th class="num">% acum.</th></tr></thead><tbody>';
+    lote.forEach(function(e,j){
+      acum+=e[1].tot;
+      c+='<tr><td style="color:#a3adbb">'+(i+j+1)+'</td><td><b>'+repEsc(e[0])+'</b></td>'
+        +'<td class="num">'+e[1].n+'x</td>'
+        +'<td class="num" style="font-weight:700">'+fmtMin(e[1].tot)+'</td>'
+        +'<td class="num" style="color:#7a8698">'+fmtMin(e[1].tot/e[1].n)+'</td>'
+        +'<td class="num">'+Math.round(e[1].tot/totT*100)+'%</td>'
+        +'<td class="num" style="color:#7a8698">'+Math.round(acum/totT*100)+'%</td></tr>';
+    });
+    c+='</tbody></table>';
+    if(i===0){
+      var t3=ent.slice(0,3),s3=t3.reduce(function(s,e){return s+e[1].tot;},0);
+      c+='<div class="rep-note"><b>Concentração (Pareto).</b> Os '+t3.length+' principais motivos respondem por '
+        +'<b>'+Math.round(s3/totT*100)+'%</b> de todo o tempo parado ('+fmtMin(s3)+' de '+fmtMin(totT)+'). '
+        +'Priorizar <b>'+repEsc(t3[0][0])+'</b> tende a gerar o maior ganho de disponibilidade.</div>';
+    }
+    pgs.push(c);
+  }
+  return pgs;
+}
+
+function repSecInfusao(){
+  var R=ultimoRelatorio;
+  var ent=Object.entries(R.porTipoTot).sort(function(a,b){return (IDEAL[b[0]]||0)-(IDEAL[a[0]]||0);});
+  if(!ent.length){
+    return ['<div class="rep-h2">Tempo médio por tipo de infusão</div><div class="rep-h2s">Comparativo com o tempo de referência</div>'
+      +'<div class="rep-note">Sem dados de infusão no período.</div>'];
+  }
+  var maxMed=Math.max.apply(null,ent.map(function(e){return e[1].tot/e[1].n;}))||1;
+  var totN=ent.reduce(function(s,e){return s+e[1].n;},0)||1;
+  var c='<div class="rep-h2">Tempo médio por tipo de infusão</div>'
+    +'<div class="rep-h2s">'+totN+' infusões · comparativo com o tempo de referência de cada protocolo</div>'
+    +'<table class="rep-tbl"><thead><tr><th>Tipo de infusão</th><th class="num">Qtd.</th>'
+    +'<th class="num">Tempo médio</th><th class="num">Referência</th><th class="num">Desvio</th>'
+    +'<th style="width:150px">Comparativo</th></tr></thead><tbody>';
+  ent.forEach(function(e){
+    var med=e[1].tot/e[1].n, ideal=IDEAL[e[0]]||0;
+    var desv=ideal?med-ideal:null;
+    c+='<tr><td><b>'+repEsc(e[0])+'</b></td><td class="num">'+e[1].n+'x</td>'
+      +'<td class="num" style="font-weight:700">'+fmtMin(med)+'</td>'
+      +'<td class="num" style="color:#7a8698">'+(ideal?fmtMin(ideal):'—')+'</td>'
+      +'<td class="num" style="color:'+(desv===null?'#7a8698':desv<=0?'#0f7b52':'#bc2c2c')+'">'
+        +(desv===null?'—':(desv>0?'+':'')+Math.round(desv)+'min')+'</td>'
+      +'<td><div class="rep-bar"><i style="width:'+Math.round(med/maxMed*100)+'%;background:#7F77DD"></i></div></td></tr>';
+  });
+  c+='</tbody></table>';
+  var acima=ent.filter(function(e){var i=IDEAL[e[0]];return i&&(e[1].tot/e[1].n)>i;});
+  c+='<div class="rep-note"><b>Aderência ao protocolo.</b> '
+    +(acima.length
+      ? '<b>'+acima.length+'</b> de '+ent.length+' tipos ficaram acima do tempo de referência, com destaque para <b>'
+        +repEsc(acima[0][0])+'</b>. Desvios sistemáticos indicam necessidade de revisar o tempo padrão ou o processo de infusão.'
+      : 'Todos os tipos ficaram dentro do tempo de referência no período.')
+    +'</div>';
+  return [c];
+}
+
+function repSecFluxo(){
+  var R=ultimoRelatorio;
+  var c='<div class="rep-h2">Resultado por fluxo</div>'
+    +'<div class="rep-h2s">Distribuição de pacientes e paradas entre os fluxos de atendimento</div>'
+    +'<table class="rep-tbl"><thead><tr><th>Fluxo</th><th class="num">Pacientes</th><th class="num">% do total</th>'
+    +'<th class="num">Paradas</th><th class="num">Paradas/atend.</th><th>Status</th></tr></thead><tbody>';
+  var totPacF=FLUXOS.reduce(function(s,f){return s+((R.porFluxoTotal[f.idx]||{}).pac||0);},0)||1;
+  FLUXOS.forEach(function(f){
+    var v=R.porFluxoTotal[f.idx]||{pac:0,paradas:0};
+    if(!v.pac&&!v.paradas) return;
+    var ratio=v.pac>0?v.paradas/v.pac:0;
+    var cls=ratio<=0.3?'rep-tg':ratio<=0.5?'rep-ta':'rep-tr';
+    c+='<tr><td><b>'+repEsc(f.nome)+'</b></td>'
+      +'<td class="num" style="font-weight:700">'+v.pac+'</td>'
+      +'<td class="num">'+Math.round(v.pac/totPacF*100)+'%</td>'
+      +'<td class="num" style="color:#bc2c2c">'+v.paradas+'</td>'
+      +'<td class="num">'+Math.round(ratio*100)+'%</td>'
+      +'<td><span class="rep-tag '+cls+'">'+(ratio<=0.3?'controlado':ratio<=0.5?'atenção':'crítico')+'</span></td></tr>';
+  });
+  c+='</tbody></table>';
+  var pior=FLUXOS.map(function(f){
+    var v=R.porFluxoTotal[f.idx]||{pac:0,paradas:0};
+    return {nome:f.nome,r:v.pac>0?v.paradas/v.pac:0,pac:v.pac};
+  }).filter(function(x){return x.pac>0;}).sort(function(a,b){return b.r-a.r;})[0];
+  if(pior) c+='<div class="rep-note"><b>Fluxo mais impactado.</b> <b>'+repEsc(pior.nome)+'</b> apresenta a maior razão '
+    +'de paradas por atendimento (<b>'+Math.round(pior.r*100)+'%</b>), concentrando o maior potencial de ganho '
+    +'caso as causas de parada desse fluxo sejam tratadas.</div>';
+  return [c];
+}
+
+function repSecHoras(){
+  var R=ultimoRelatorio;
+  var max=Math.max.apply(null,R.ocupHTotal)||1;
+  var total=R.ocupHTotal.reduce(function(s,v){return s+v;},0);
+  var pico=R.ocupHTotal.indexOf(max);
+  var c='<div class="rep-h2">Demanda por hora do turno</div>'
+    +'<div class="rep-h2s">Check-ins acumulados no período · '+R.diasComDadosN+' dias úteis</div>'
+    +'<table class="rep-tbl"><thead><tr><th>Hora</th><th class="num">Check-ins</th>'
+    +'<th class="num">Média/dia</th><th class="num">% do total</th><th style="width:260px">Distribuição</th></tr></thead><tbody>';
+  R.ocupHTotal.forEach(function(v,i){
+    var isP=i===pico&&v>0;
+    c+='<tr><td'+(isP?' style="font-weight:700;color:#a76a00"':'')+'>'+(R.horasLabels[i]||'')+(isP?' · pico':'')+'</td>'
+      +'<td class="num" style="font-weight:700'+(isP?';color:#a76a00':'')+'">'+v+'</td>'
+      +'<td class="num" style="color:#7a8698">'+(R.diasComDadosN?(v/R.diasComDadosN).toFixed(1):'0')+'</td>'
+      +'<td class="num">'+(total?Math.round(v/total*100):0)+'%</td>'
+      +'<td><div class="rep-bar"><i style="width:'+Math.round(v/max*100)+'%;background:'+(isP?'#BA7517':'#378ADD')+'"></i></div></td></tr>';
+  });
+  c+='</tbody></table>';
+  if(total) c+='<div class="rep-note"><b>Janela de pico.</b> A maior concentração de check-ins ocorre às <b>'
+    +R.horasLabels[pico]+'</b> ('+max+' check-ins, '+Math.round(max/total*100)+'% do total, média de '
+    +(R.diasComDadosN?(max/R.diasComDadosN).toFixed(1):'0')+'/dia). '
+    +'Ajustar a escala de enfermagem e a chegada de medicação para essa faixa reduz a fila e melhora o TUE.</div>';
+  return [c];
+}
+
+function repSecDias(){
+  var R=ultimoRelatorio;
+  var pts=R.resDias.filter(function(x){return x.res.temDados;});
+  if(!pts.length) return ['<div class="rep-h2">Detalhe dia a dia</div><div class="rep-note">Sem dados no período.</div>'];
+  var porPag=20,pgs=[];
+  for(var i=0;i<pts.length;i+=porPag){
+    var lote=pts.slice(i,i+porPag);
+    var c='<div class="rep-h2">Detalhe dia a dia'+(i>0?' (continuação)':'')+'</div>'
+      +'<div class="rep-h2s">Indicadores individuais por data · '+pts.length+' dias com registro</div>'
+      +'<table class="rep-tbl"><thead><tr><th>Data</th><th class="num">TUE</th><th class="num">TD</th>'
+      +'<th class="num">TUT</th><th class="num">Pacientes</th><th class="num">Paradas</th>'
+      +'<th class="num">Tempo parado</th><th>Status</th></tr></thead><tbody>';
+    lote.forEach(function(x){
+      var r=x.res;
+      c+='<tr><td><b>'+x.dia+'</b></td>'
+        +'<td class="num" style="font-weight:700;color:'+repCor(r.oee,META_OEE)+'">'+pct(r.oee)+'</td>'
+        +'<td class="num" style="color:'+repCor(r.disp,META_DISP)+'">'+pct(r.disp)+'</td>'
+        +'<td class="num" style="color:'+repCor(r.ocup,META_OCUP)+'">'+pct(r.ocup)+'</td>'
+        +'<td class="num">'+r.totPac+'</td><td class="num">'+r.nPar+'</td>'
+        +'<td class="num">'+fmtMin(r.totParado)+'</td>'
+        +'<td><span class="rep-tag '+repClasse(r.oee,META_OEE)+'">'+(r.oee>=META_OEE?'na meta':'abaixo')+'</span></td></tr>';
+    });
+    c+='</tbody></table>';
+    pgs.push(c);
+  }
+  return pgs;
+}
+
+async function repRenderizarPDF(paginasHtml,nomeArquivo){
+  var jsPDFCtor=(window.jspdf||{}).jsPDF;
+  if(!jsPDFCtor){alert('Biblioteca de PDF nao carregou. Verifique sua conexao e tente de novo.');return;}
+  var stage=document.getElementById('rep-stage');
+  var pdf=new jsPDFCtor({orientation:'portrait',unit:'pt',format:'a4'});
+  var pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+  for(var i=0;i<paginasHtml.length;i++){
+    var wrap=document.createElement('div');
+    wrap.innerHTML=paginasHtml[i];
+    var pg=wrap.querySelector('.rep-pg');
+    if(pg) pg.textContent='Página '+(i+1)+' de '+paginasHtml.length;
+    stage.appendChild(wrap);
+    var canvas=await html2canvas(wrap.firstChild,{backgroundColor:'#ffffff',scale:2,width:794,height:1123,windowWidth:794});
+    if(i>0) pdf.addPage('a4','portrait');
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,pw,ph);
+    stage.removeChild(wrap);
+  }
+  pdf.save(nomeArquivo);
+}
+
+function repNomeArq(sufixo){
+  return sufixo+'-'+document.getElementById('dp1').value+'_a_'+document.getElementById('dp2').value+'.pdf';
+}
+
+async function exportarSecaoPDF(secao){
+  if(!ultimoRelatorio){alert('Clique em Analisar antes de exportar.');return;}
+  var btns=document.querySelectorAll('[onclick^="exportarSecaoPDF"]');
+  btns.forEach(function(b){b.disabled=true;});
+  try{
+    var pgs;
+    if(secao==='resumo')        pgs=repSecResumo();
+    else if(secao==='evolucao') pgs=repSecEvolucao(await repGraficoTUE());
+    else if(secao==='paradas')  pgs=repSecParadas();
+    else if(secao==='infusao')  pgs=repSecInfusao();
+    else if(secao==='fluxo')    pgs=repSecFluxo();
+    else if(secao==='horas')    pgs=repSecHoras();
+    else if(secao==='dias')     pgs=repSecDias();
+    else return;
+    await repRenderizarPDF(pgs.map(repPagina),repNomeArq('QT-'+secao));
+  }catch(ex){alert('Erro ao gerar PDF: '+ex.message);console.error(ex);}
+  finally{ btns.forEach(function(b){b.disabled=false;}); }
+}
+
+async function gerarRelatorioCompleto(){
+  if(!ultimoRelatorio){alert('Clique em Analisar antes de gerar o relatorio.');return;}
+  var btn=document.getElementById('btn-relatorio-dia');
+  btn.disabled=true;var t0=btn.textContent;btn.textContent='Gerando relatório...';
+  try{
+    var img=await repGraficoTUE();
+    var paginas=[repCapa()];
+    [].concat(repSecResumo(),repSecEvolucao(img),repSecParadas(),repSecInfusao(),repSecFluxo(),repSecHoras(),repSecDias())
+      .forEach(function(c){ paginas.push(repPagina(c)); });
+    await repRenderizarPDF(paginas,repNomeArq('Relatorio-QT'));
+  }catch(ex){alert('Erro ao gerar relatorio: '+ex.message);console.error(ex);}
+  finally{ btn.disabled=false;btn.textContent=t0; }
+}
 function fetchRows(){
   return fetch(PUB_URL,{cache:'no-store'})
     .then(function(r){if(!r.ok)throw new Error();return r.text();})
