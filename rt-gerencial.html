@@ -145,6 +145,8 @@ select option{background:var(--s2)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .empty{text-align:center;padding:24px;font-size:12px;color:var(--tx3);font-family:var(--fm)}
 .hidden{display:none}
+.obs-req{border-color:var(--rt)!important}
+.obs-hint{font-size:10px;color:var(--at);font-family:var(--fm);margin-top:2px}
 @media(max-width:820px){.row2,.row13{grid-template-columns:1fr}.kpi-bar{grid-template-columns:1fr 1fr}.maquinas-bar{grid-template-columns:1fr}.oee-grid{grid-template-columns:repeat(2,1fr)}.field-row{grid-template-columns:1fr}}
 /* ─── RELATÓRIO PDF (tema claro, A4) ─── */
 #rep-stage{position:fixed;left:-12000px;top:0;z-index:-1}
@@ -339,7 +341,7 @@ select option{background:var(--s2)}
         </div>
       </div>
       <div class="field"><label>Tipo de Parada</label>
-        <select id="p-tipo">
+        <select id="p-tipo" onchange="atualizarDicaObs()">
           <option value="">Selecione...</option>
           <optgroup label="Equipamento">
             <option>Falha na lâmina (MLC/Colimador)</option>
@@ -347,6 +349,7 @@ select option{background:var(--s2)}
             <option>Manutenção corretiva</option>
             <option>Partida da máquina</option>
             <option>Equipamento fora de parâmetro</option>
+            <option>Erro de dosimetria</option>
             <option>Interferência 4D</option>
           </optgroup>
           <optgroup label="Paciente">
@@ -371,6 +374,7 @@ select option{background:var(--s2)}
             <option>Técnico de imagem</option>
             <option>Aguardando Físico</option>
             <option>Parada para refeição</option>
+            <option>Café</option>
             <option>Outros</option>
           </optgroup>
           <optgroup label="Infraestrutura">
@@ -379,6 +383,7 @@ select option{background:var(--s2)}
           </optgroup>
           <optgroup label="Infraestrutura IT">
             <option>Sistema (Software/Rede)</option>
+            <option>Falha de comunicação</option>
           </optgroup>
           <optgroup label="Administrativo">
             <option>Licença estação</option>
@@ -390,7 +395,9 @@ select option{background:var(--s2)}
         <div class="field"><label>Hora Fim</label><input type="time" id="p-fim"></div>
       </div>
       <div class="field"><label>Duração (min)</label><input type="number" id="p-duracao" placeholder="calculada automaticamente ou informe" min="1"></div>
-      <div class="field"><label>Observações</label><textarea id="p-obs" placeholder="Detalhes, código de erro, lâmina específica..."></textarea></div>
+      <div class="field"><label id="lbl-obs">Observações</label><textarea id="p-obs" placeholder="Detalhes, código de erro, lâmina específica..."></textarea>
+        <div class="obs-hint hidden" id="obs-hint">Obrigatório para "Outros" — descreva o motivo real da parada.</div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-delete hidden" id="btn-delete-parada" onclick="excluirParada()">Excluir</button>
@@ -776,7 +783,20 @@ function renderTabelaParadas(pFilt){
   tbl.appendChild(tbody); wrap.innerHTML=''; wrap.appendChild(tbl);
 }
 // ── MODAL PARADA ─────────────────────────────────────────────────
-var CATS={'Falha na lâmina (MLC/Colimador)':'Equipamento','HWFA (HardWare Fail/Alarm)':'Equipamento','Manutenção corretiva':'Equipamento','Partida da máquina':'Equipamento','Equipamento fora de parâmetro':'Equipamento','Interferência 4D':'Equipamento','Desconforto do paciente':'Paciente','Falta paciente (Absenteísmo)':'Paciente','Posicionamento do paciente':'Processo / Setup','Bólos (Ajuste/Colocação)':'Processo / Setup','Paciente não liberado':'Processo / Administrativo','Erro no plano':'Processo / Planejamento','Identificação do paciente':'Processo / Segurança','Teste de elétrons':'Processo / Segurança','Técnico de imagem':'Processo / Humano','Aguardando Físico':'Processo / Humano','Parada para refeição':'Processo / Humano','Outros':'Processo / Humano','Oscilação de temperatura (Chiller/Sala)':'Infraestrutura','Umidade':'Infraestrutura','Sistema (Software/Rede)':'Infraestrutura IT','Licença estação':'Administrativo'};
+// Tipologia canônica: tipo → categoria. Mantenha em sincronia com a aba
+// de tipologia da planilha e com o script rt-corrigir-paradas.gs.
+var CATS={'Falha na lâmina (MLC/Colimador)':'Equipamento','HWFA (HardWare Fail/Alarm)':'Equipamento','Manutenção corretiva':'Equipamento','Partida da máquina':'Equipamento','Equipamento fora de parâmetro':'Equipamento','Erro de dosimetria':'Equipamento','Interferência 4D':'Equipamento','Desconforto do paciente':'Paciente','Falta paciente (Absenteísmo)':'Paciente','Posicionamento do paciente':'Processo / Setup','Bólos (Ajuste/Colocação)':'Processo / Setup','Paciente não liberado':'Processo / Administrativo','Erro no plano':'Processo / Planejamento','Identificação do paciente':'Processo / Segurança','Teste de elétrons':'Processo / Segurança','Técnico de imagem':'Processo / Humano','Aguardando Físico':'Processo / Humano','Parada para refeição':'Processo / Humano','Café':'Processo / Humano','Outros':'Processo / Humano','Oscilação de temperatura (Chiller/Sala)':'Infraestrutura','Umidade':'Infraestrutura','Sistema (Software/Rede)':'Infraestrutura IT','Falha de comunicação':'Infraestrutura IT','Licença estação':'Administrativo'};
+// Mostra/esconde a dica de observação obrigatória conforme o tipo escolhido
+function atualizarDicaObs(){
+  var tipo=document.getElementById('p-tipo').value;
+  var hint=document.getElementById('obs-hint');
+  var lbl=document.getElementById('lbl-obs');
+  var obs=document.getElementById('p-obs');
+  var ehOutros=(tipo==='Outros');
+  hint.classList.toggle('hidden',!ehOutros);
+  lbl.textContent=ehOutros?'Observações *':'Observações';
+  if(!ehOutros) obs.classList.remove('obs-req');
+}
 function abrirModalParada(id){
   editId=id||null; var p=id?paradas.find(x=>x.id===id):null;
   document.getElementById('modal-parada-title').textContent=p?'Editar Parada':'Registrar Parada';
@@ -788,6 +808,8 @@ function abrirModalParada(id){
   document.getElementById('p-fim').value=p?(p.horaFim||''):'';
   document.getElementById('p-duracao').value=p?(p.duracao||''):'';
   document.getElementById('p-obs').value=p?(p.obs||''):'';
+  document.getElementById('p-obs').classList.remove('obs-req');
+  atualizarDicaObs();
   document.getElementById('overlay-parada').classList.remove('hidden');
 }
 function fecharModalParada(){ document.getElementById('overlay-parada').classList.add('hidden'); editId=null; }
@@ -801,6 +823,16 @@ async function salvarParada(){
   if(!tipo){alert('Selecione o tipo de parada.');return;}
   var dur=+document.getElementById('p-duracao').value||0;
   if(!dur){alert('Informe a duração em minutos.');return;}
+  // "Outros" exige descrição — sem isso a parada vira tempo perdido sem
+  // rastreabilidade e não dá para reclassificar depois.
+  var obsEl=document.getElementById('p-obs');
+  var obsVal=obsEl.value.trim();
+  if(tipo==='Outros'&&!obsVal){
+    alert('Para o tipo "Outros" é obrigatório descrever o motivo em Observações.\n\nSe o motivo já existir na lista, prefira selecioná-lo em vez de usar "Outros".');
+    obsEl.classList.add('obs-req'); obsEl.focus();
+    return;
+  }
+  obsEl.classList.remove('obs-req');
   var btn=document.getElementById('btn-save-parada');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Salvando...';
   setStatus('saving','salvando');
@@ -813,7 +845,7 @@ async function salvarParada(){
       horaInicio:  document.getElementById('p-inicio').value,
       horaFim:     document.getElementById('p-fim').value,
       duracao:     dur,
-      obs:         document.getElementById('p-obs').value.trim()
+      obs:         obsVal
     };
     if(editId){
       params.acao='atualizar_parada'; params.id=editId;
@@ -1033,8 +1065,6 @@ function renderDiasExcluidos(){
   tbl.appendChild(tbody); wrap.innerHTML=''; wrap.appendChild(tbl);
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-// ── EXPORTAÇÃO PDF ────────────────────────────────────────────────
-// Exporta um único bloco (KPI, máquinas, evolução, pareto ou tipos) como PDF.
 // ═══════════════════════════════════════════════════════════════════
 //  RELATÓRIO PDF — documento A4 diagramado (capa, seções, rodapé)
 //  Não é screenshot do painel: os dados são recoletados e re-renderizados
@@ -1042,26 +1072,21 @@ function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
 // ═══════════════════════════════════════════════════════════════════
 var REP_TITULO='Relatório Gerencial — Radioterapia';
 var REP_UNIDADE='Centro de Radioterapia · Hospital Márcio Cunha';
-
 function repClasse(v,meta){ return v>=meta?'rep-tg':v>=meta*0.85?'rep-ta':'rep-tr'; }
 function repCor(v,meta){ return v>=meta?'#0f7b52':v>=meta*0.85?'#a76a00':'#bc2c2c'; }
-
 // ── Recoleta os mesmos números do painel, sem depender do DOM ──────
 function coletarDadosRelatorio(){
   var iniV=document.getElementById('dt-ini').value, fimV=document.getElementById('dt-fim').value;
   var ini=new Date(iniV); ini.setHours(0,0,0,0);
   var fim=new Date(fimV); fim.setHours(23,59,59);
   var noPer=function(d){ var x=new Date(d); x.setHours(0,0,0,0); return x>=ini&&x<=fim; };
-
   var pFilt=paradas.filter(function(p){ return noPer(p.data)&&(filtrMaq==='todas'||p.maquina===filtrMaq)&&!isDiaExcluido(p.data); });
   var aFilt=atendimentos.filter(function(a){ return noPer(a.data)&&(filtrMaq==='todas'||a.maquina===filtrMaq)&&!isDiaExcluido(a.data); });
   var maquinas=filtrMaq==='todas'?['CXS','CX']:[filtrMaq];
-
   var pacProg=aFilt.reduce(function(s,a){return s+(+a.programados||0);},0);
   var pacAtend=aFilt.reduce(function(s,a){return s+(+a.atendidos||0);},0);
   var aderencia=pacProg>0?pacAtend/pacProg:0;
   var tParTotal=pFilt.reduce(function(s,p){return s+(+p.duracao||0);},0);
-
   var porMaq=[], oeeSum=0, dispSum=0, n=0;
   maquinas.forEach(function(maq){
     var pm=paradas.filter(function(p){ return noPer(p.data)&&p.maquina===maq&&!isDiaExcluido(p.data); });
@@ -1078,7 +1103,6 @@ function coletarDadosRelatorio(){
       nPar:pm.length,tPar:tpar,prog:pp,atend:pa,tDisp:tDisp,dias:datas.length});
     oeeSum+=oeeM; dispSum+=dispM; n++;
   });
-
   // evolução diária (dias úteis, sem dias excluídos)
   var dias=[], d=new Date(ini);
   while(d<=fim){
@@ -1100,7 +1124,6 @@ function coletarDadosRelatorio(){
     });
     return {dia:dia,oee:c?s/c:null};
   });
-
   // pareto
   var mapaP={};
   pFilt.forEach(function(p){
@@ -1110,7 +1133,6 @@ function coletarDadosRelatorio(){
   });
   var pareto=Object.entries(mapaP).sort(function(a,b){return b[1].t-a[1].t;})
     .map(function(e){ return {tipo:e[0],n:e[1].n,t:e[1].t,cat:e[1].cat}; });
-
   // tipos de atendimento
   var mapaT={};
   aFilt.forEach(function(a){
@@ -1119,7 +1141,6 @@ function coletarDadosRelatorio(){
   });
   var tipos=Object.entries(mapaT).sort(function(a,b){return b[1]-a[1];})
     .map(function(e){ return {tipo:e[0],n:e[1]}; });
-
   var comDados=evolucao.filter(function(x){return x.oee!==null;}).length;
   return {
     iniISO:iniV, fimISO:fimV,
@@ -1131,7 +1152,6 @@ function coletarDadosRelatorio(){
     diasAnalisados:comDados, diasExcluidosPeriodo:Object.keys(diasExcluidos).filter(function(k){return k>=iniV&&k<=fimV;})
   };
 }
-
 // ── Gráfico de evolução re-renderizado em tema claro ──────────────
 function repGraficoEvolucao(dados){
   return new Promise(function(resolve){
@@ -1168,7 +1188,6 @@ function repGraficoEvolucao(dados){
     },120);
   });
 }
-
 // ── Moldura padrão de página ──────────────────────────────────────
 function repPagina(conteudo,dados){
   return '<div class="rep-page">'
@@ -1182,7 +1201,6 @@ function repPagina(conteudo,dados){
     +'<div class="rep-foot"><span>'+REP_UNIDADE+'</span><span class="rep-pg"></span></div>'
     +'</div>';
 }
-
 // ── Capa ──────────────────────────────────────────────────────────
 function repCapa(dados){
   var hoje=new Date();
@@ -1216,7 +1234,6 @@ function repCapa(dados){
       +'</div>'
     +'</div></div>';
 }
-
 // ── Seções ────────────────────────────────────────────────────────
 function repSecResumo(dados){
   var statusOee=dados.oee>=META_OEE?'dentro da meta':'abaixo da meta';
@@ -1265,7 +1282,6 @@ function repSecResumo(dados){
   }
   return [c];
 }
-
 function repSecMaquinas(dados){
   var c='<div class="rep-h2">Desempenho por equipamento</div>'
     +'<div class="rep-h2s">Comparativo de OEE, disponibilidade, aderência e paradas</div>';
@@ -1295,7 +1311,6 @@ function repSecMaquinas(dados){
   c+='</div>';
   return [c];
 }
-
 function repSecEvolucao(dados,imgEvo){
   var vals=dados.evolucao.filter(function(x){return x.oee!==null;});
   var melhor=vals.slice().sort(function(a,b){return b.oee-a.oee;})[0];
@@ -1324,7 +1339,6 @@ function repSecEvolucao(dados,imgEvo){
   }
   return [c];
 }
-
 function repSecParadas(dados){
   if(!dados.pareto.length){
     return ['<div class="rep-h2">Análise de paradas</div>'
@@ -1359,7 +1373,6 @@ function repSecParadas(dados){
   }
   return pgs;
 }
-
 function repSecTipos(dados){
   if(!dados.tipos.length){
     return ['<div class="rep-h2">Atendimentos por tipo</div><div class="rep-h2s">Distribuição de procedimentos</div>'
@@ -1391,7 +1404,6 @@ function repSecTipos(dados){
   }
   return pgs;
 }
-
 // ── Renderiza páginas HTML → PDF ──────────────────────────────────
 async function repRenderizarPDF(paginasHtml,nomeArquivo){
   var jsPDFCtor=(window.jspdf||{}).jsPDF;
@@ -1412,7 +1424,6 @@ async function repRenderizarPDF(paginasHtml,nomeArquivo){
   }
   pdf.save(nomeArquivo);
 }
-
 // ── Exportar uma seção isolada ────────────────────────────────────
 async function exportarSecaoPDF(secao){
   if(!document.getElementById('dt-ini').value||!document.getElementById('dt-fim').value){
@@ -1434,7 +1445,6 @@ async function exportarSecaoPDF(secao){
   }catch(ex){ alert('Erro ao gerar PDF: '+ex.message); console.error(ex); }
   finally{ btns.forEach(function(b){b.disabled=false;}); }
 }
-
 // ── Relatório completo (capa + todas as seções) ───────────────────
 async function gerarRelatorioCompleto(){
   if(!document.getElementById('dt-ini').value||!document.getElementById('dt-fim').value){
