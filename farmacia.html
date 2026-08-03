@@ -46,6 +46,12 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
 .kcol-name{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx2)}
 .kcol-avg{font-size:10px;color:var(--tx3);margin-top:2px}
 .kcol-count{font-size:10px;font-weight:600;font-family:var(--fm);border-radius:20px;padding:2px 8px;background:var(--s2);color:var(--tx2);border:1px solid var(--b2)}
+.kcol-r{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.kcol-med{font-size:11px;font-weight:700;font-family:var(--fm);white-space:nowrap}
+.kcol-meta{font-size:9px;color:var(--tx3);font-family:var(--fm);white-space:nowrap}
+.kcol-track{height:3px;background:var(--b2);border-radius:2px;overflow:hidden}
+.kcol-track i{display:block;height:3px;border-radius:2px;transition:width .4s}
+.kcol-wip{font-size:9px;font-family:var(--fm);white-space:nowrap}
 .kcol-count.has-red{background:var(--rd);color:var(--rt);border-color:rgba(218,54,51,.3)}
 .kcol-count.has-items{background:var(--gd);color:var(--gt);border-color:rgba(29,158,117,.3)}
 .kcol-body{padding:5px;display:flex;flex-direction:column;gap:3px;min-height:20px;overflow:hidden}
@@ -280,6 +286,11 @@ function processFarm(rows){
   // contar duas vezes o mesmo atendimento que reentrou na mesma etapa.
   var exec={};
   STAGES.forEach(function(s){ exec[s]=new Set(); });
+  // seq = sequência de transições de hoje por protocolo, usada para medir quanto
+  // tempo cada um REALMENTE ficou em cada etapa (entrada na etapa → saída para a
+  // próxima). É esse número que se compara com a meta — diferente da idade dos
+  // cards ainda parados na coluna, que só diz há quanto tempo estão esperando.
+  var seq={};
   rows.filter(function(r){
     var ts=new Date(r['Timestamp']||r['timestamp']||0),tipo=r['Tipo']||r['tipo']||'transicao';
     return ts.toISOString().slice(0,10)===hoje&&tipo!=='parada'&&tipo!=='encerramento';
@@ -293,19 +304,33 @@ function processFarm(rows){
       // atendimento — fica só registrada à parte pra virar um selo no card.
       // Conta como execução separada (chave própria) pois é medicação adicional preparada.
       if(etapa&&exec[etapa])exec[etapa].add(a+'|int');
+      if(etapa){ var ki=a+'|int'; if(!seq[ki])seq[ki]=[]; seq[ki].push({etapa:etapa,ts:ts}); }
       if(!interc[a]||ts>new Date(interc[a].ts))interc[a]={etapa:etapa,ts:r['Timestamp']||r['timestamp']||''};
       return;
     }
     if(etapa&&exec[etapa])exec[etapa].add(a);
+    if(etapa){ if(!seq[a])seq[a]=[]; seq[a].push({etapa:etapa,ts:ts}); }
     if(!pos[a]||ts>new Date(pos[a].ts))pos[a]={etapa:etapa,ts:r['Timestamp']||r['timestamp']||'',just:r['Justificativa']||r['justificativa']||''};
+  });
+  // Tempo médio real por etapa: para cada protocolo, a diferença entre uma
+  // transição e a seguinte é o tempo que ele passou na etapa da transição atual.
+  var tempos={};
+  STAGES.forEach(function(s){ tempos[s]={n:0,soma:0}; });
+  Object.keys(seq).forEach(function(k){
+    var arr=seq[k].sort(function(x,y){ return x.ts-y.ts; });
+    for(var i=0;i<arr.length-1;i++){
+      var e=arr[i].etapa;
+      var d=(arr[i+1].ts-arr[i].ts)/60000;
+      if(tempos[e]&&d>0&&d<600){ tempos[e].n++; tempos[e].soma+=d; }
+    }
   });
   var execN={};
   STAGES.forEach(function(s){ execN[s]=exec[s].size; });
-  return {pos:pos,interc:interc,exec:execN};
+  return {pos:pos,interc:interc,exec:execN,tempos:tempos};
 }
 // ── RENDER KANBAN ───────────────────────────────────────────
-function renderKanban(pos,interc,exec){
-  interc=interc||{}; exec=exec||{};
+function renderKanban(pos,interc,exec,tempos){
+  interc=interc||{}; exec=exec||{}; tempos=tempos||{};
   var grid=document.getElementById('kanban-grid');grid.innerHTML='';var prepaTotal=0;
   STAGES.forEach(function(etapa){
     var cards=Object.entries(pos).filter(function(e){return e[1].etapa===etapa;});
@@ -313,32 +338,39 @@ function renderKanban(pos,interc,exec){
     var isDisp=etapa==='Disponível QT';
     var temRed=!isDisp&&cards.some(function(e){return minutosDesde(e[1].ts)>LIMITES[etapa];});
     var col=document.createElement('div');col.className='kcol';
-    // Calcula tempo médio dos cards ativos nesta etapa
-    var minsArr=cards.filter(function(e){return e[1].etapa!=='Disponível QT';}).map(function(e){return minutosDesde(e[1].ts);});
-    var medEtapa=minsArr.length?Math.round(minsArr.reduce(function(a,b){return a+b;},0)/minsArr.length):null;
-    var meta=LIMITES[etapa];
-    var metaStr=meta?fmtMin(meta):'—';
-    var metaCor=medEtapa===null?'var(--tx3)':medEtapa<=meta?'var(--gt)':'var(--rt)';
-    // Badge principal = protocolos EXECUTADOS na etapa hoje (acumulado do dia)
+    // ── Liberações do dia (throughput acumulado) ──────────────────
     var nExec=exec[etapa]||0;
-    var execCls=nExec>0?'has-items':'';
-    var topRow='<div style="display:flex;align-items:center;justify-content:space-between">'
+    // ── Tempo médio REAL do dia nesta etapa (entrada → saída) ─────
+    var t=tempos[etapa]||{n:0,soma:0};
+    var med=t.n?Math.round(t.soma/t.n):null;
+    var meta=LIMITES[etapa]||0;
+    var corMed=med===null?'var(--tx3)'
+      :(!meta?'var(--tx2)'
+      :med<=meta*0.6?'var(--gt)'
+      :med<=meta?'var(--at)':'var(--rt)');
+    var pctBar=(med!==null&&meta)?Math.min(Math.round(med/meta*100),100):0;
+    // Linha 1 — nome da etapa + liberações concluídas hoje
+    var linha1='<div class="kcol-r">'
       +'<span class="kcol-name">'+etapa+'</span>'
-      +'<span class="kcol-count '+execCls+'" title="Protocolos executados nesta etapa hoje">'+nExec+'</span>'
+      +'<span class="kcol-count '+(nExec>0?'has-items':'')+'" title="Liberações concluídas nesta etapa hoje">'+nExec+'</span>'
       +'</div>';
-    // Linha inferior: WIP atual (quantos estão na etapa agora) + média + meta
+    // Linha 2 — tempo médio do dia x meta da etapa
+    var linha2='<div class="kcol-r">'
+      +'<span class="kcol-med" style="color:'+corMed+'" title="Tempo médio real de permanência nesta etapa hoje ('+t.n+' medições)">'
+        +'⌀ '+(med!==null?fmtMin(med):'—')+'</span>'
+      +'<span class="kcol-meta">'+(meta?'meta '+fmtMin(meta):'sem meta')+'</span>'
+      +'</div>';
+    // Linha 3 — barra comparando média x meta
+    var linha3=meta
+      ? '<div class="kcol-track"><i style="width:'+pctBar+'%;background:'+(med===null?'var(--b2)':corMed)+'"></i></div>'
+      : '';
+    // Linha 4 — quantos estão parados na etapa neste momento
     var wipCor=temRed?'var(--rt)':cards.length?'var(--tx2)':'var(--tx3)';
-    var wipStr='<span style="font-size:9px;color:'+wipCor+';font-family:var(--fm)" title="Em curso nesta etapa agora">'+cards.length+' em curso</span>';
-    var botRow=isDisp
-      ? '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px">'
-          +wipStr
-          +'<span style="font-size:9px;color:var(--tx3);font-family:var(--fm)">entregues hoje</span>'
-        +'</div>'
-      : '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px">'
-          +'<span style="font-size:9px;color:'+metaCor+';font-family:var(--fm)">⌀ '+(medEtapa!==null?fmtMin(medEtapa):'—')+' · '+cards.length+' em curso</span>'
-          +'<span style="font-size:9px;color:var(--tx3);font-family:var(--fm)">meta: '+metaStr+'</span>'
-        +'</div>';
-    col.innerHTML='<div class="kcol-hdr">'+topRow+botRow+'</div><div class="kcol-body" id="kc_'+etapa.replace(/[^a-z]/gi,'')+'"></div>';
+    var linha4='<div class="kcol-r"><span class="kcol-wip" style="color:'+wipCor+'" title="Aguardando nesta etapa neste momento">'
+      +cards.length+' em curso</span>'
+      +(isDisp?'<span class="kcol-meta">entregues hoje</span>':'')
+      +'</div>';
+    col.innerHTML='<div class="kcol-hdr">'+linha1+linha2+linha3+linha4+'</div><div class="kcol-body" id="kc_'+etapa.replace(/[^a-z]/gi,'')+'"></div>';
     grid.appendChild(col);
     var body=col.querySelector('.kcol-body');
     if(!cards.length){body.innerHTML='<div class="kempty">vazio</div>';return;}
@@ -511,7 +543,7 @@ function carregar(){
     var farmRegs=res[0].rows||[],qtRowsArr=res[1]?parseCSV(res[1]):[];
     var qtData=processQT(qtRowsArr),posResult=processFarm(farmRegs),pos=posResult.pos;
     farmParadas=calcFarmParadas(farmRegs);
-    renderKanban(pos,posResult.interc,posResult.exec);
+    renderKanban(pos,posResult.interc,posResult.exec,posResult.tempos);
     renderQT(qtData,'Ao vivo - Sheets');
     renderPareto(farmRegs);
     renderFarmParadasAbertas(farmParadas);
