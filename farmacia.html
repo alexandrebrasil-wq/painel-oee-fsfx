@@ -46,12 +46,6 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
 .kcol-name{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx2)}
 .kcol-avg{font-size:10px;color:var(--tx3);margin-top:2px}
 .kcol-count{font-size:10px;font-weight:600;font-family:var(--fm);border-radius:20px;padding:2px 8px;background:var(--s2);color:var(--tx2);border:1px solid var(--b2)}
-.kcol-r{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.kcol-med{font-size:11px;font-weight:700;font-family:var(--fm);white-space:nowrap}
-.kcol-meta{font-size:9px;color:var(--tx3);font-family:var(--fm);white-space:nowrap}
-.kcol-track{height:3px;background:var(--b2);border-radius:2px;overflow:hidden}
-.kcol-track i{display:block;height:3px;border-radius:2px;transition:width .4s}
-.kcol-wip{font-size:9px;font-family:var(--fm);white-space:nowrap}
 .kcol-count.has-red{background:var(--rd);color:var(--rt);border-color:rgba(218,54,51,.3)}
 .kcol-count.has-items{background:var(--gd);color:var(--gt);border-color:rgba(29,158,117,.3)}
 .kcol-body{padding:5px;display:flex;flex-direction:column;gap:3px;min-height:20px;overflow:hidden}
@@ -69,7 +63,6 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
 .kbadge-receb{background:rgba(210,153,34,.18);border:1px solid rgba(210,153,34,.4);color:var(--at)}
 .kbadge-ok{background:var(--gd);border:1px solid rgba(29,158,117,.35);color:var(--gt)}
 .kbadge-farm-stop{background:rgba(210,153,34,.22);border:1px solid rgba(210,153,34,.5);color:var(--at);animation:blink .9s step-start infinite}
-.kbadge-interc{background:rgba(210,168,255,.18);border:1px solid rgba(210,168,255,.45);color:#d2a8ff}
 .kempty{font-size:11px;color:var(--tx3);text-align:center;padding:14px 0;font-family:var(--fm)}
 .ftable{width:100%;border-collapse:collapse;font-size:12px}
 .ftable th{padding:5px 7px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);border-bottom:1px solid var(--b1);text-align:left}
@@ -105,6 +98,7 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
 </style>
 </head>
 <body style="display:flex;flex-direction:column;height:100vh;overflow:hidden">
+
 <div class="hdr">
   <div class="hdr-left">
     <a href="central.html" title="Voltar para a Central"><img src="https://painel.i-omt.com/logo_iomt_branco.png" class="logo" alt="i-OMT"></a>
@@ -112,6 +106,9 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
   </div>
   <div style="text-align:right"><div class="clock" id="clock">--:--:--</div><div class="dateStr" id="dateStr"></div></div>
 </div>
+
+
+
 <div class="kpi-bar">
   <div class="kpi"><div class="kpi-label">Aguardando agora</div><div class="kpi-value" id="k-fila" style="color:var(--rt)">-</div><div class="kpi-sub">poltronas na fila</div></div>
   <div class="kpi"><div class="kpi-label">Tempo médio espera</div><div class="kpi-value" id="k-tmedio" style="color:var(--at)">-</div><div class="kpi-sub">minutos</div></div>
@@ -121,6 +118,7 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
   <div class="kpi"><div class="kpi-label">Em preparo agora</div><div class="kpi-value" id="k-preparo" style="color:var(--bt)">-</div><div class="kpi-sub">no kanban</div></div>
   <div class="kpi"><div class="kpi-label">Alerta</div><span class="alert-badge alert-ok" id="k-alerta">Normal</span><br><span class="fbadge flocal" id="k-fonte" style="margin-top:4px">Local</span></div>
 </div>
+
 <div class="main" style="flex:1;min-height:0;overflow:hidden">
   <div class="kanban-grid" id="kanban-grid"></div>
   <div class="panel">
@@ -139,16 +137,18 @@ nav a:hover{color:var(--tx)} nav a.active{color:var(--gt);border-bottom-color:va
     <div class="pbody" id="pareto-list"></div>
   </div>
   <div class="panel">
-    <div class="phdr" style="color:var(--rt)">⏸ Paradas abertas — Farmácia<span id="farmparadas-count" style="font-weight:400;color:var(--tx3);font-size:10px;text-transform:none"></span></div>
-    <div class="pbody" id="farmparadas-list"></div>
+    <div class="phdr" style="color:var(--at)">Ranking — Maior espera hoje<span style="font-weight:400;color:var(--tx3);font-size:10px;text-transform:none">top 6</span></div>
+    <div class="pbody" id="rank-list"></div>
   </div>
 </div>
+
 <div class="status-bar">
   <div><span class="sdot" id="sdot"></span><span id="status-txt">carregando...</span></div>
   <div id="fmsg">Aguardando...</div>
   <div id="cr-yr" style="font-size:9px;color:var(--tx3)"></div>
 </div>
 <script>document.getElementById("cr-yr").textContent="© "+new Date().getFullYear()+" i-OMT · Intelligence Operations Management Technology";</script>
+
 <script>
 var APPS_URL='https://script.google.com/macros/s/AKfycbwulrdZyfww-3ejAoGIwrGewM2eAmgCYFSY9SUKmJSU9uiGCtnTiGZT9EZxn8j3lgImhA/exec';
 var QT_CSV='https://docs.google.com/spreadsheets/d/e/2PACX-1vSap2eZ_RANJMRkRQg34TPyHmUO-KHrxO8hMazvmfampJkKpFBGtG3VKB76q3EdRwcDMJqOL30TQ1ZA/pub?gid=1304195408&single=true&output=csv';
@@ -162,9 +162,11 @@ var FLUXOS=[
   {idx:3,nome:'Convenio',poltronas:[34,35,36,37,38,39,40,41,42,43]},
   {idx:4,nome:'Leito',poltronas:[44,45,46,47]},
 ];
-var qtAguardando=new Set();var farmParadas={};
+var qtAguardando=new Set();var farmParadas={};var farmPos={};
+
 function tick(){var n=new Date();document.getElementById('clock').textContent=n.toLocaleTimeString('pt-BR');document.getElementById('dateStr').textContent=n.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});}
 setInterval(tick,1000);tick();
+
 function fmtMin(m){if(!m||m<1)return'<1min';if(m<60)return Math.round(m)+'min';return Math.floor(m/60)+'h'+String(Math.round(m%60)).padStart(2,'0')+'min';}
 function fmtHora(ts){
   try{
@@ -189,6 +191,7 @@ function parseDtQT(ts){try{var p=String(ts).split(' '),dp=p[0].split('/'),hp=(p[
 function minutosDesde(ts){var d=new Date(ts);if(isNaN(d))return 0;return Math.round((Date.now()-d)/60000);}
 function setStatus(t,txt){var dot=document.getElementById('sdot'),s=document.getElementById('status-txt');dot.className='sdot'+(t==='ok'?' ok':t==='err'?' err':'');s.textContent=txt;}
 function getFluxo(n){return FLUXOS.find(function(f){return f.poltronas.indexOf(n)>=0;})||FLUXOS[0];}
+
 function parseCSV(txt){
   var linhas=txt.trim().split('\n');if(linhas.length<2)return[];
   return linhas.slice(1).map(function(l){
@@ -197,6 +200,7 @@ function parseCSV(txt){
     cols.push(cur.trim());return cols;
   }).filter(function(r){return r.length>=3&&r[0];});
 }
+
 // ── PROCESSA DADOS QT ───────────────────────────────────────
 function processQT(rows){
   var hoje=new Date().toLocaleDateString('pt-BR'),now=new Date(),st={};
@@ -232,7 +236,16 @@ function processQT(rows){
   qtAguardando=new Set();qtRecebimento=new Set();
   Object.keys(st).forEach(function(num){
     var s=st[num],pA=s.paradas.filter(function(p){return !p.fim&&p.isFarm;}).pop();
-    if(pA){var ini=parseDtQT(pA.ini);if(ini){var dur=(now-ini)/60000;if(dur>0&&dur<=720){var fl=getFluxo(parseInt(num));fila.push({num:num,dur:dur,ini:pA.ini,fi:fl.idx,fnome:fl.nome,mot:pA.mot,numAtend:pA.numAtend||s.numAtend||''});var na=String(pA.numAtend||s.numAtend||'');if(na){if(pA.mot.indexOf('recebimento')>=0)qtRecebimento.add(na);else qtAguardando.add(na);}}}}
+    if(pA){
+      // Se a medicação já está Disponível (QT ou pré QT), não entra na fila —
+      // a parada de farmácia é considerada encerrada visualmente
+      var na=String(pA.numAtend||s.numAtend||'');
+      var etapaAtual=na&&farmPos&&farmPos[na]?farmPos[na].etapa:'';
+      var medicDisponivel=etapaAtual==='Disponível QT'||etapaAtual==='Disponível pré QT';
+      if(!medicDisponivel){
+        var ini=parseDtQT(pA.ini);if(ini){var dur=(now-ini)/60000;if(dur>0&&dur<=720){var fl=getFluxo(parseInt(num));fila.push({num:num,dur:dur,ini:pA.ini,fi:fl.idx,fnome:fl.nome,mot:pA.mot,numAtend:na});if(na){if(pA.mot.indexOf('recebimento')>=0)qtRecebimento.add(na);else qtAguardando.add(na);}}}
+      }
+    }
     s.sessoes.forEach(function(sess){if(sess.espFarm>0)rankMap[num]=(rankMap[num]||0)+sess.espFarm;});
     if(pA){var ini2=parseDtQT(pA.ini);if(ini2){var d2=(now-ini2)/60000;if(d2>0&&d2<=240)rankMap[num]=(rankMap[num]||0)+d2;}}
   });
@@ -244,12 +257,14 @@ function processQT(rows){
   var totalAtend=historico.length,comFarm=historico.filter(function(h){return h.temFarm;}).length;
   return{fila:fila,historico:historico,ranking:ranking,totalAtend:totalAtend,comFarm:comFarm,pctFarm:totalAtend?Math.round(comFarm/totalAtend*100):0,tmed:fila.length?Math.round(fila.reduce(function(a,f){return a+f.dur;},0)/fila.length):0};
 }
+
 // ── PROCESSA KANBAN FARMÁCIA ────────────────────────────────
 // ── PARADAS ATIVAS DA FARMÁCIA ─────────────────────────────
 // Retorna Map: atendimento → motivo da parada ativa (sem encerramento)
 function calcFarmParadas(rows){
   var hoje=new Date().toISOString().slice(0,10);
   var map={}; // atendimento -> {ts, just}
+
   // Ordena tudo por timestamp para processar em ordem cronológica
   var hojeRows=rows.filter(function(r){
     var ts=new Date(r['Timestamp']||r['timestamp']||0);
@@ -257,6 +272,7 @@ function calcFarmParadas(rows){
   }).sort(function(a,b){
     return new Date(a['Timestamp']||a['timestamp']||0)-new Date(b['Timestamp']||b['timestamp']||0);
   });
+
   hojeRows.forEach(function(r){
     var a=String(r['Nº Atendimento']||r['atendimento']||'').trim();
     var tipo=String(r['Tipo']||r['tipo']||'').trim();
@@ -264,13 +280,14 @@ function calcFarmParadas(rows){
     var fim=String(r['Encerramento']||r['encerramento']||'').trim();
     var etapa=String(r['Etapa']||r['etapa']||'').trim();
     if(!a) return;
+
     if(tipo==='parada'){
       if(fim && fim!==''){
         // parada explicitamente encerrada
         delete map[a];
       } else {
         // abre parada
-        map[a]={just:j||'Parada',ts:r['Timestamp']||r['timestamp']||'',etapa:etapa};
+        map[a]=j||'Parada';
       }
     } else if(tipo!=='encerramento' && etapa){
       // Movimentação de etapa — fecha parada ativa do atendimento
@@ -279,98 +296,53 @@ function calcFarmParadas(rows){
   });
   return map;
 }
+
 function processFarm(rows){
-  var hoje=new Date().toISOString().slice(0,10),pos={},interc={};
-  // exec = protocolos que JÁ PASSARAM por cada etapa hoje (throughput acumulado
-  // do dia), diferente de "quantos estão na etapa agora" (WIP). Usa Set para não
-  // contar duas vezes o mesmo atendimento que reentrou na mesma etapa.
-  var exec={};
-  STAGES.forEach(function(s){ exec[s]=new Set(); });
-  // seq = sequência de transições de hoje por protocolo, usada para medir quanto
-  // tempo cada um REALMENTE ficou em cada etapa (entrada na etapa → saída para a
-  // próxima). É esse número que se compara com a meta — diferente da idade dos
-  // cards ainda parados na coluna, que só diz há quanto tempo estão esperando.
-  var seq={};
+  var hoje=new Date().toISOString().slice(0,10);
+  var ontem=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  var pos={};
   rows.filter(function(r){
     var ts=new Date(r['Timestamp']||r['timestamp']||0),tipo=r['Tipo']||r['tipo']||'transicao';
-    return ts.toISOString().slice(0,10)===hoje&&tipo!=='parada'&&tipo!=='encerramento';
+    var tsISO=ts.toISOString().slice(0,10);
+    // Aceita hoje E ontem (antecipações D-1)
+    return (tsISO===hoje||tsISO===ontem)&&tipo!=='parada'&&tipo!=='encerramento';
   }).forEach(function(r){
     var a=r['Nº Atendimento']||r['atendimento']||'';if(!a)return;
-    var tipo=r['Tipo']||r['tipo']||'transicao';
     var ts=new Date(r['Timestamp']||r['timestamp']||0);
-    var etapa=r['Etapa']||r['etapa']||'';
-    if(tipo==='transicao_intercorrencia'){
-      // Medicação de intercorrência: NÃO deve sobrescrever a posição do card principal do
-      // atendimento — fica só registrada à parte pra virar um selo no card.
-      // Conta como execução separada (chave própria) pois é medicação adicional preparada.
-      if(etapa&&exec[etapa])exec[etapa].add(a+'|int');
-      if(etapa){ var ki=a+'|int'; if(!seq[ki])seq[ki]=[]; seq[ki].push({etapa:etapa,ts:ts}); }
-      if(!interc[a]||ts>new Date(interc[a].ts))interc[a]={etapa:etapa,ts:r['Timestamp']||r['timestamp']||''};
-      return;
-    }
-    if(etapa&&exec[etapa])exec[etapa].add(a);
-    if(etapa){ if(!seq[a])seq[a]=[]; seq[a].push({etapa:etapa,ts:ts}); }
-    if(!pos[a]||ts>new Date(pos[a].ts))pos[a]={etapa:etapa,ts:r['Timestamp']||r['timestamp']||'',just:r['Justificativa']||r['justificativa']||''};
+    if(!pos[a]||ts>new Date(pos[a].ts))pos[a]={etapa:r['Etapa']||r['etapa']||'',ts:r['Timestamp']||r['timestamp']||'',just:r['Justificativa']||r['justificativa']||''};
   });
-  // Tempo médio real por etapa: para cada protocolo, a diferença entre uma
-  // transição e a seguinte é o tempo que ele passou na etapa da transição atual.
-  var tempos={};
-  STAGES.forEach(function(s){ tempos[s]={n:0,soma:0}; });
-  Object.keys(seq).forEach(function(k){
-    var arr=seq[k].sort(function(x,y){ return x.ts-y.ts; });
-    for(var i=0;i<arr.length-1;i++){
-      var e=arr[i].etapa;
-      var d=(arr[i+1].ts-arr[i].ts)/60000;
-      if(tempos[e]&&d>0&&d<600){ tempos[e].n++; tempos[e].soma+=d; }
-    }
-  });
-  var execN={};
-  STAGES.forEach(function(s){ execN[s]=exec[s].size; });
-  return {pos:pos,interc:interc,exec:execN,tempos:tempos};
+  return pos;
 }
+
 // ── RENDER KANBAN ───────────────────────────────────────────
-function renderKanban(pos,interc,exec,tempos){
-  interc=interc||{}; exec=exec||{}; tempos=tempos||{};
+function renderKanban(pos){
   var grid=document.getElementById('kanban-grid');grid.innerHTML='';var prepaTotal=0;
   STAGES.forEach(function(etapa){
     var cards=Object.entries(pos).filter(function(e){return e[1].etapa===etapa;});
     if(etapa!=='Disponível QT')prepaTotal+=cards.length;
     var isDisp=etapa==='Disponível QT';
     var temRed=!isDisp&&cards.some(function(e){return minutosDesde(e[1].ts)>LIMITES[etapa];});
+    var cCls=temRed?'has-red':cards.length?'has-items':'';
     var col=document.createElement('div');col.className='kcol';
-    // ── Liberações do dia (throughput acumulado) ──────────────────
-    var nExec=exec[etapa]||0;
-    // ── Tempo médio REAL do dia nesta etapa (entrada → saída) ─────
-    var t=tempos[etapa]||{n:0,soma:0};
-    var med=t.n?Math.round(t.soma/t.n):null;
-    var meta=LIMITES[etapa]||0;
-    var corMed=med===null?'var(--tx3)'
-      :(!meta?'var(--tx2)'
-      :med<=meta*0.6?'var(--gt)'
-      :med<=meta?'var(--at)':'var(--rt)');
-    var pctBar=(med!==null&&meta)?Math.min(Math.round(med/meta*100),100):0;
-    // Linha 1 — nome da etapa + liberações concluídas hoje
-    var linha1='<div class="kcol-r">'
+    // Calcula tempo médio dos cards ativos nesta etapa
+    var minsArr=cards.filter(function(e){return e[1].etapa!=='Disponível QT';}).map(function(e){return minutosDesde(e[1].ts);});
+    var medEtapa=minsArr.length?Math.round(minsArr.reduce(function(a,b){return a+b;},0)/minsArr.length):null;
+    var medStr=medEtapa!==null?fmtMin(medEtapa):'—';
+    var medCor=medEtapa===null?'var(--tx3)':medEtapa<=LIMITES[etapa]*.6?'var(--gt)':medEtapa<=LIMITES[etapa]?'var(--at)':'var(--rt)';
+    var avgHtml=isDisp?'':'<span style="font-size:9px;color:'+medCor+';font-family:var(--fm);margin-left:6px">⌀ '+medStr+'</span>';
+    var meta=LIMITES[etapa];
+    var metaStr=meta?fmtMin(meta):'—';
+    var metaCor=medEtapa===null?'var(--tx3)':medEtapa<=meta?'var(--gt)':'var(--rt)';
+    var topRow='<div style="display:flex;align-items:center;justify-content:space-between">'
       +'<span class="kcol-name">'+etapa+'</span>'
-      +'<span class="kcol-count '+(nExec>0?'has-items':'')+'" title="Liberações concluídas nesta etapa hoje">'+nExec+'</span>'
+      +'<span class="kcol-count '+cCls+'">'+cards.length+'</span>'
       +'</div>';
-    // Linha 2 — tempo médio do dia x meta da etapa
-    var linha2='<div class="kcol-r">'
-      +'<span class="kcol-med" style="color:'+corMed+'" title="Tempo médio real de permanência nesta etapa hoje ('+t.n+' medições)">'
-        +'⌀ '+(med!==null?fmtMin(med):'—')+'</span>'
-      +'<span class="kcol-meta">'+(meta?'meta '+fmtMin(meta):'sem meta')+'</span>'
+    var botRow=isDisp?'':
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px">'
+        +'<span style="font-size:9px;color:'+metaCor+';font-family:var(--fm)">⌀ '+(medEtapa!==null?fmtMin(medEtapa):'—')+'</span>'
+        +'<span style="font-size:9px;color:var(--tx3);font-family:var(--fm)">meta: '+metaStr+'</span>'
       +'</div>';
-    // Linha 3 — barra comparando média x meta
-    var linha3=meta
-      ? '<div class="kcol-track"><i style="width:'+pctBar+'%;background:'+(med===null?'var(--b2)':corMed)+'"></i></div>'
-      : '';
-    // Linha 4 — quantos estão parados na etapa neste momento
-    var wipCor=temRed?'var(--rt)':cards.length?'var(--tx2)':'var(--tx3)';
-    var linha4='<div class="kcol-r"><span class="kcol-wip" style="color:'+wipCor+'" title="Aguardando nesta etapa neste momento">'
-      +cards.length+' em curso</span>'
-      +(isDisp?'<span class="kcol-meta">entregues hoje</span>':'')
-      +'</div>';
-    col.innerHTML='<div class="kcol-hdr">'+linha1+linha2+linha3+linha4+'</div><div class="kcol-body" id="kc_'+etapa.replace(/[^a-z]/gi,'')+'"></div>';
+    col.innerHTML='<div class="kcol-hdr">'+topRow+botRow+'</div><div class="kcol-body" id="kc_'+etapa.replace(/[^a-z]/gi,'')+'"></div>';
     grid.appendChild(col);
     var body=col.querySelector('.kcol-body');
     if(!cards.length){body.innerHTML='<div class="kempty">vazio</div>';return;}
@@ -379,10 +351,11 @@ function renderKanban(pos,interc,exec,tempos){
       var tc=isDisp?'green':(mins<=LIMITES[etapa]*.6?'green':mins<=LIMITES[etapa]?'yellow':'red');
       var na=String(atend);
       var qtBadge='';
-      var farmStop=farmParadas[na]?farmParadas[na].just:'';
+      var farmStop=farmParadas[na]||'';
       if(qtAguardando.has(na))qtBadge='<div class="kbadge kbadge-wait">⚠ Parada na QT</div>';
       else if(farmStop)qtBadge='<div class="kbadge kbadge-farm-stop">⏸ '+farmStop+'</div>';
       else if(isDisp)qtBadge='<div class="kbadge kbadge-ok">✓ Entregue</div>';
+      var timerHtml=isDisp?qtBadge:'<div class="tbadge '+tc+'">⏱ '+fmtMin(mins)+'</div>'+(qtBadge?'<br>'+qtBadge:'');
       var justHtml=info.just?'<span style="color:var(--at);font-size:9px"> ⚠ '+info.just+'</span>':'';
       var card=document.createElement('div');
       card.className='kcard'+(tc==='red'&&!isDisp?' red-card':'');
@@ -390,52 +363,23 @@ function renderKanban(pos,interc,exec,tempos){
       var timerInline = isDisp ? qtBadge
         : '<span class="tbadge '+tc+'">⏱ '+fmtMin(mins)+'</span>'+(qtBadge?qtBadge:'');
       var etapaLabel=etapa;
-      // Selo de medicação de intercorrência (não sobrescreve a etapa do card, só sinaliza)
-      var intercInfo=interc[na];
-      var intercDisp=intercInfo&&(intercInfo.etapa==='Disponível QT'||intercInfo.etapa==='Disponível pré QT');
-      var intercBadge=intercInfo?'<div class="kbadge kbadge-interc">⚠ Intercorrência'+(intercDisp?' entregue':(': '+(intercInfo.etapa||'')))+'</div>':'';
       card.innerHTML='<span class="kcard-id">▍ '+atend+'</span>'
         +'<span class="kcard-time">'+fmtHora(info.ts)+(justHtml?'<span style="color:var(--at);font-size:8px"> ⚠</span>':'')+'</span>'
         +timerInline
-        +intercBadge
         +'<button class="kcard-del" title="Excluir atendimento '+atend+'" onclick="event.stopPropagation();excluirAtendimento(\''+atend+'\',\''+etapaLabel+'\')">✕</button>';
       body.appendChild(card);
     });
   });
   document.getElementById('k-preparo').textContent=prepaTotal;
 }
-// ── RENDER PARADAS ABERTAS NA FARMÁCIA ──────────────────────
-// Lista atendimentos com parada ainda sem encerramento (calcFarmParadas),
-// ordenados pela mais antiga primeiro — ajuda a priorizar o encerramento.
-function renderFarmParadasAbertas(map){
-  var lista=Object.entries(map).map(function(e){
-    return{atend:e[0],just:e[1].just,etapa:e[1].etapa,mins:minutosDesde(e[1].ts)};
-  }).sort(function(a,b){return b.mins-a.mins;});
-  var cEl=document.getElementById('farmparadas-count'),lEl=document.getElementById('farmparadas-list');
-  cEl.textContent=lista.length?lista.length+' aberta'+(lista.length>1?'s':''):'';
-  if(!lista.length){
-    lEl.innerHTML='<div style="padding:24px;text-align:center;color:var(--tx3);font-size:12px;font-family:var(--fm)">Nenhuma parada aberta na farmácia</div>';
-    return;
-  }
-  lEl.innerHTML=lista.slice(0,8).map(function(p){
-    var tc=p.mins<=15?'green':p.mins<=30?'yellow':'red';
-    var cor=tc==='green'?'var(--gt)':tc==='yellow'?'var(--at)':'var(--rt)';
-    return'<div style="padding:7px 0;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:8px">'
-      +'<span style="font-size:12px;font-weight:700;flex-shrink:0">▍ '+p.atend+'</span>'
-      +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:11px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.just+'</div>'
-        +'<div style="font-size:9px;color:var(--tx3);font-family:var(--fm)">'+p.etapa+'</div>'
-      +'</div>'
-      +'<span style="font-size:12px;font-family:var(--fm);font-weight:700;color:'+cor+';flex-shrink:0">'+fmtMin(p.mins)+'</span>'
-    +'</div>';
-  }).join('');
-}
+
 // ── RENDER QT (fila, historico, ranking, KPIs) ─────────────
 // ── PARETO EM TEMPO REAL (paradas da farmácia hoje) ──────────
 function renderPareto(farmRegs){
   var hoje=new Date().toISOString().slice(0,10);
   var now=new Date();
   var motivos={};
+
   // Constrói mapa de encerramentos manuais: atendimento → timestamp mais recente de encerramento
   var encMap={};
   farmRegs.forEach(function(r){
@@ -446,6 +390,7 @@ function renderPareto(farmRegs){
       if(!encMap[a] || ts > encMap[a]) encMap[a]=ts;
     }
   });
+
   farmRegs.filter(function(r){
     var ts=new Date(r['Timestamp']||r['timestamp']||0);
     var tipo=String(r['Tipo']||r['tipo']||'').trim();
@@ -488,6 +433,7 @@ function renderPareto(farmRegs){
     +'</div>';
   }).join('');
 }
+
 function renderQT(data,fonte){
   document.getElementById('k-fila').textContent=data.fila.length||'0';
   document.getElementById('k-tmedio').textContent=data.fila.length?data.tmed:'-';
@@ -513,7 +459,15 @@ function renderQT(data,fonte){
       return'<tr><td><span class="badge-pol">P'+f.num+'</span></td><td>'+na+'</td><td><span class="bf f'+f.fi+'">'+f.fnome+'</span></td><td class="'+tc+'" style="font-weight:600">'+fmtMin(f.dur)+motSuf+'</td><td style="color:var(--tx3);font-size:10px">'+fmtHora(f.ini)+'</td></tr>';
     }).join('');
   }
+
+  // Ranking
+  var maxTot=data.ranking[0]?data.ranking[0].tot:1;
+  document.getElementById('rank-list').innerHTML=data.ranking.slice(0,5).map(function(r,i){
+    var pc=i===0?'gold':i===1?'silver':i===2?'bronze':'',pct=Math.round(r.tot/maxTot*100);
+    return'<div class="rank-item"><span class="rank-pos '+pc+'">'+(i+1)+'</span><div style="flex:1"><div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><span style="font-weight:700;font-size:12px">P'+r.num+'</span><span class="bf f'+r.fi+'">'+r.fnome+'</span></div><div class="rank-bar-wrap"><div class="rank-bar" style="width:'+pct+'%"></div></div></div><span class="rank-val '+tClass(r.tot)+'">'+fmtMin(r.tot)+'</span></div>';
+  }).join('');
 }
+
 // ── CICLO PRINCIPAL ─────────────────────────────────────────
 // ── EXCLUIR ATENDIMENTO ──────────────────────────────────────────
 function excluirAtendimento(atend, etapa){
@@ -534,6 +488,7 @@ function excluirAtendimento(atend, etapa){
     })
     .catch(function(e){ alert('Erro de rede: '+e.message); dot.className='sdot err'; });
 }
+
 function carregar(){
   setStatus('loading','atualizando...');
   Promise.all([
@@ -541,17 +496,18 @@ function carregar(){
     fetch(QT_CSV,{cache:'no-store'}).then(function(r){return r.text();}).catch(function(){return null;})
   ]).then(function(res){
     var farmRegs=res[0].rows||[],qtRowsArr=res[1]?parseCSV(res[1]):[];
-    var qtData=processQT(qtRowsArr),posResult=processFarm(farmRegs),pos=posResult.pos;
+    farmPos=processFarm(farmRegs); // global — usado por processQT para remover da fila quando disponível
+    var qtData=processQT(qtRowsArr),pos=farmPos;
     farmParadas=calcFarmParadas(farmRegs);
-    renderKanban(pos,posResult.interc,posResult.exec,posResult.tempos);
+    renderKanban(pos);
     renderQT(qtData,'Ao vivo - Sheets');
     renderPareto(farmRegs);
-    renderFarmParadasAbertas(farmParadas);
     setStatus('ok','ao vivo');
     document.getElementById('fmsg').textContent=farmRegs.length+' reg. farm. · '+qtRowsArr.length+' reg. QT · '+new Date().toLocaleTimeString('pt-BR');
     document.getElementById('hdr-sub').textContent='Centro de Infusão QT · '+new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
   }).catch(function(e){setStatus('err','erro: '+e.message);console.error(e);});
 }
+
 carregar();
 setInterval(carregar,30000);
 </script>
