@@ -8,7 +8,6 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{width:100%;height:100%;overflow:hidden;}
 body{background:#0d1117;color:#fff;font-family:'Segoe UI',Arial,sans-serif;display:flex;flex-direction:column;height:100vh;}
-
 header{background:#0d1419;border-bottom:2px solid #1b2e6b;padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .hl{display:flex;align-items:center;gap:14px;}
 .htitle{font-size:15px;font-weight:600;}
@@ -18,7 +17,6 @@ header{background:#0d1419;border-bottom:2px solid #1b2e6b;padding:0 20px;height:
 .date-str{font-size:10px;color:#8b949e;text-align:right;}
 .dot{width:8px;height:8px;border-radius:50%;background:#3fb950;animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
-
 .kpi-bar{background:#111820;border-bottom:1px solid #21262d;padding:0 20px;height:36px;display:flex;gap:14px;align-items:center;flex-shrink:0;}
 .kpi{display:flex;flex-direction:column;align-items:center;min-width:58px;}
 .kpi-label{font-size:8px;color:#8b949e;text-transform:uppercase;letter-spacing:.04em;}
@@ -29,27 +27,22 @@ header{background:#0d1419;border-bottom:2px solid #1b2e6b;padding:0 20px;height:
 .legend{display:flex;gap:10px;margin-left:auto;align-items:center;}
 .leg{display:flex;align-items:center;gap:4px;font-size:9px;color:#8b949e;white-space:nowrap;}
 .ld{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
-
 .main{flex:1;padding:7px 14px;display:flex;flex-direction:column;gap:5px;overflow:hidden;}
 .fb{display:flex;flex-direction:column;gap:4px;}
 .fh{display:flex;align-items:center;gap:8px;padding:3px 10px;border-radius:5px;height:22px;}
 .fl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;}
 .fg{display:flex;flex-wrap:wrap;gap:5px;}
-
 .card{border-radius:8px;width:116px;height:92px;flex-shrink:0;position:relative;padding:16px 7px 4px 7px;display:flex;flex-direction:column;justify-content:flex-end;transition:transform .15s;overflow:hidden;}
 .card:hover{transform:translateY(-1px);}
-
 .cn{position:absolute;top:4px;left:7px;font-size:11px;font-weight:700;letter-spacing:.03em;}
 .cb{display:flex;flex-direction:column;gap:1px;margin-top:auto;}
 .cs{font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;line-height:1.2;}
 .cd{font-size:8px;line-height:1.2;color:rgba(255,255,255,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;}
 .ct{font-size:8.5px;font-weight:600;font-variant-numeric:tabular-nums;}
-
 .card.ocupada{background:#1a4731;border:1.5px solid #3fb950;}
 .card.parada{background:#3d1a1a;border:1.5px solid #f85149;}
 .card.ocupada .cn,.card.ocupada .cs,.card.ocupada .ct{color:#3fb950;}
 .card.parada .cn,.card.parada .cs,.card.parada .ct{color:#f85149;}
-
 .card.livre.f0{background:#1a1232;border:1.5px solid #7c3aed;}
 .card.livre.f1{background:#2a1800;border:1.5px solid #f97316;}
 .card.livre.f2{background:#0a1e30;border:1.5px solid #3b82f6;}
@@ -62,20 +55,15 @@ header{background:#0d1419;border-bottom:2px solid #1b2e6b;padding:0 20px;height:
 .card.livre.f4 .cn,.card.livre.f4 .cs{color:#888;}
 .card.livre .cd{color:rgba(255,255,255,.38);}
 .card.livre .ct{color:rgba(255,255,255,.3);}
-
 .blink{animation:blink .9s step-start infinite;}
 @keyframes blink{50%{opacity:0}}
 .med-badge{display:block;margin:4px 6px 2px;font-size:7px;font-weight:700;padding:2px 5px;border-radius:3px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.med-wait{background:rgba(56,139,253,.18);color:#79c0ff;}
-.med-disp{background:rgba(29,158,117,.25);color:#3dd68c;animation:blink .9s step-start infinite;}
 .med-disp{background:rgba(29,158,117,0.25);color:#3fb950;border:1px solid rgba(29,158,117,0.4);}
 .med-wait{background:rgba(218,54,51,0.25);color:#f85149;border:1px solid rgba(218,54,51,0.4);}
-
 footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:22px;display:flex;align-items:center;justify-content:space-between;font-size:9px;color:#8b949e;flex-shrink:0;}
 </style>
 </head>
 <body>
-
 <header>
   <div class="hl">
     <a href="central.html" title="Voltar para a Central"><img src="https://painel.i-omt.com/logo_iomt_branco.png" style="height:28px;margin-right:12px" alt="i-OMT"></a>
@@ -92,7 +80,6 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:22p
     </div>
   </div>
 </header>
-
 <div class="kpi-bar">
   <div class="kpi"><span class="kpi-label">Total</span><span class="kpi-value" style="color:#8b949e">47</span></div>
   <div class="sep"></div>
@@ -116,27 +103,20 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:22p
     <div class="leg"><div class="ld" style="background:#555"></div>Maca</div>
   </div>
 </div>
-
 <div class="main" id="main"></div>
-
 <footer>
   <span>i-OMT · Intelligence Operations Management Technology</span>
   <span id="fmsg">Aguardando...</span>
   <span style="color:#555;font-size:9px"><span id="cr-year"></span> i-OMT · Todos os direitos reservados</span>
 </footer>
-
 <script>
 document.getElementById("cr-year").textContent="© "+new Date().getFullYear();
-
 const SHEET_ID='1wDkI4jw6mzAE08kab6GhDf5H7zMq4fRw21AHg4d5JFo',GID='1304195408';
-const FARM_URL='https://script.google.com/macros/s/AKfycbwulrdZyfww-3ejAoGIwrGewM2eAmgCYFSY9SUKmJSU9uiGCtnTiGZT9EZxn8j3lgImhA/exec?acao=registros'; // registros brutos da farmácia — calculamos a etapa aqui pra poder ignorar medicação de intercorrência (não deve aparecer no painel da QT)
-// ── URL da nova API do Sheets QT (Apps Script) ────────────────────────────────
-// Substitua pelo URL gerado ao implantar o Code_QT_API.gs no Sheets QT
+const FARM_URL='https://script.google.com/macros/s/AKfycbwulrdZyfww-3ejAoGIwrGewM2eAmgCYFSY9SUKmJSU9uiGCtnTiGZT9EZxn8j3lgImhA/exec?acao=registros';
 const QT_API_URL='https://script.google.com/macros/s/AKfycbz-wiMFjIy65nSK_n6ukvV-wZE5h_SqhOdLcztXh6DOSCqgnbZbzHSAqM5JURHhp5qf/exec';
 const QT_CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vSap2eZ_RANJMRkRQg34TPyHmUO-KHrxO8hMazvmfampJkKpFBGtG3VKB76q3EdRwcDMJqOL30TQ1ZA/pub?gid=1304195408&single=true&output=csv';
-let farmDisponivel=new Set(); // atendimentos com "Disponível QT" na farmácia
-let farmEtapa=new Map();      // atendimento → etapa atual na farmácia
-let poltronaAtend={};         // poltrona → atendimento (construído no process())
+let farmDisponivel=new Set();
+let farmEtapa=new Map();
 const FLUXOS=[
   {idx:0,label:'Fluxo Longa / Longuíssima',cor:'#7c3aed',fundo:'#2a1a50',poltronas:Array.from({length:14},(_,i)=>i+1),tipo:'Longa · Longuíssima'},
   {idx:1,label:'Fluxo Média',              cor:'#f97316',fundo:'#3d2000',poltronas:Array.from({length:10},(_,i)=>i+15),tipo:'Média'},
@@ -144,159 +124,117 @@ const FLUXOS=[
   {idx:3,label:'Convênio',                 cor:'#888',fundo:'#181818',poltronas:Array.from({length:10},(_,i)=>i+34),tipo:'Convênio'},
   {idx:4,label:'Leito / Maca',              cor:'#888',fundo:'#181818',poltronas:[44,45,46,47,48,49],tipo:'Leito',macas:[48,49]},
 ];
-
-// ── DADOS LOCAIS (fallback) ──────────────────────────────────────────────────
-const DADOS=[["17/04/2026 08:03:21","Poltrona 01","Check In Paciente","","Média"],["17/04/2026 10:41:29","Poltrona 02","Check In Paciente","","Longa"],["17/04/2026 11:54:48","Poltrona 01","Check In Paciente","","Curta"],["22/04/2026 08:21:48","Poltrona 35","Check In Paciente","","Longa"],["22/04/2026 08:44:25","Poltrona 38","Check In Paciente","","Longa"],["22/04/2026 08:57:13","Poltrona 01","Check In Paciente","","Curta"],["22/04/2026 09:55:07","Poltrona 40","Check In Paciente","","Longa"],["22/04/2026 10:49:43","Poltrona 39","Check In Paciente","","Longa"],["22/04/2026 11:50:45","Poltrona 34","Check In Paciente","","Rápida"],["22/04/2026 11:52:01","Poltrona 37","Check In Paciente","","Média"],["22/04/2026 12:52:27","Poltrona 01","Check Out Paciente","",""],["22/04/2026 14:48:59","Poltrona 01","Check In Paciente","","Média"],["22/04/2026 16:26:05","Poltrona 01","Check Out Paciente","",""],["22/04/2026 16:46:34","Poltrona 35","Check In Paciente","","Rápida"]];
-
+const DADOS=[["17/04/2026 08:03:21","Poltrona 01","Check In Paciente","","Média"],["17/04/2026 10:41:29","Poltrona 02","Check In Paciente","","Longa"]];
 let live=false;
-
 function tick(){
   const n=new Date();
   document.getElementById('clock').textContent=n.toLocaleTimeString('pt-BR');
   document.getElementById('dateStr').textContent=n.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
 }
 setInterval(tick,1000);tick();
-
 function build(){
   const main=document.getElementById('main');main.innerHTML='';
   FLUXOS.forEach(fl=>{
     const blk=document.createElement('div');blk.className='fb';
     const hdr=document.createElement('div');hdr.className='fh';
     hdr.style.cssText='background:'+fl.fundo+';border-left:3px solid '+fl.cor;
-    const subtitulo=fl.macas
-      ?(fl.poltronas.length-fl.macas.length)+' leitos · '+fl.macas.length+' macas'
-      :fl.tipo+'  ·  '+fl.poltronas.length+' poltronas';
-    hdr.innerHTML='<span class="fl" style="color:'+fl.cor+'">'+fl.label+'</span>'
-      +'<span style="font-size:9px;color:rgba(255,255,255,.3)">'+subtitulo+'</span>';
+    const sub=fl.macas?(fl.poltronas.length-fl.macas.length)+' leitos · '+fl.macas.length+' macas':fl.tipo+'  ·  '+fl.poltronas.length+' poltronas';
+    hdr.innerHTML='<span class="fl" style="color:'+fl.cor+'">'+fl.label+'</span><span style="font-size:9px;color:rgba(255,255,255,.3)">'+sub+'</span>';
     const grid=document.createElement('div');grid.className='fg';
     fl.poltronas.forEach(n=>{
       const num=String(n).padStart(2,'0');
       const isMaca=fl.macas&&fl.macas.includes(n);
       const prefix=isMaca?'M':'P';
-      const tipoCard=isMaca?'Maca':fl.tipo;
       const c=document.createElement('div');
       c.className='card livre f'+fl.idx;c.id='c'+num;
-      c.innerHTML='<div class="cn">'+prefix+num+'</div>'
-        +'<div class="cb">'
-        +'<div class="cs">Disponível</div>'
-        +'<div class="cd">'+tipoCard+'</div>'
-        +'<div class="ct"></div>'
-        +'</div>';
+      c.innerHTML='<div class="cn">'+prefix+num+'</div><div class="cb"><div class="cs">Disponível</div><div class="cd">'+(isMaca?'Maca':fl.tipo)+'</div><div class="ct"></div></div>';
       grid.appendChild(c);
     });
     blk.appendChild(hdr);blk.appendChild(grid);main.appendChild(blk);
   });
 }
-
 function getFluxo(n){return FLUXOS.find(f=>f.poltronas.includes(n))||FLUXOS[0];}
-
-const ABREV={
-  'Aguardando Manipulação (Farmácia)':'[Farm.]',
-  'Aguardando Liberação Médica':      '[Med.]',
-  'Aguardando liberação do convênio': '[Conv.]',
-};
+const ABREV={'Aguardando Manipulação (Farmácia)':'[Farm.]','Aguardando Liberação Médica':'[Med.]','Aguardando liberação do convênio':'[Conv.]'};
 function abrevMot(mot){return ABREV[mot]||mot||'Parada';}
-
 function tsToDate(ts){
   try{
-    if(!ts) return null;
+    if(!ts)return null;
     const s=String(ts).trim();
-    // ISO: "2026-06-02T09:15:01.000Z" ou "2026-06-02 09:15:01"
-    if(s.includes('T') || /^\d{4}-/.test(s)){
-      const d=new Date(s);
-      return isNaN(d)?null:d;
-    }
-    // pt-BR: "02/06/2026 09:15:01"
+    if(s.includes('T')||/^\d{4}-/.test(s)){const d=new Date(s);return isNaN(d)?null:d;}
     const[d,h]=s.split(' ');
     const[dd,mm,aa]=d.split('/');
     const[hh,mi,ss]=(h||'00:00:00').split(':');
     return new Date(+aa,+mm-1,+dd,+hh,+mi,+(ss||0));
   }catch{return null;}
 }
-
+function isoDateBR(ts){
+  // Retorna "YYYY-MM-DD" independente do formato de entrada
+  const d=tsToDate(ts);
+  if(!d||isNaN(d))return'';
+  return d.toISOString().slice(0,10);
+}
 function process(rows){
-  const hoje=new Date().toLocaleDateString('pt-BR');
+  const hojeISO=new Date().toISOString().slice(0,10);
   const st={};
   for(let n=1;n<=47;n++){
     const fl=getFluxo(n);
-    st[String(n).padStart(2,'0')]={s:'livre',d:fl.tipo,mot:'',ts:null,t:'',fi:fl.idx,paciente:false,atend:''};
+    st[String(n).padStart(2,'0')]={s:'livre',d:fl.tipo,mot:'',ts:null,fi:fl.idx,paciente:false,atend:''};
   }
 
-  // ── ORDENAÇÃO POR TIMESTAMP ──────────────────────────────────
-  // O appendRow do Apps Script insere no final da planilha independente
-  // do timestamp — sem ordenar, eventos automáticos mais antigos ficam
-  // depois de eventos mais recentes e corrompem o estado da poltrona.
-  const rowsOrdenados = rows.slice().sort(function(a, b){
-    const da = tsToDate(a[0]), db = tsToDate(b[0]);
-    if(!da && !db) return 0;
-    if(!da) return 1;
-    if(!db) return -1;
-    return da - db;
+  // Ordena todos os registros por timestamp crescente
+  const sorted=rows.slice().sort((a,b)=>{
+    const da=tsToDate(a[0]),db=tsToDate(b[0]);
+    if(!da&&!db)return 0;if(!da)return 1;if(!db)return -1;
+    return da-db;
   });
 
-  rowsOrdenados.forEach(r=>{
+  sorted.forEach(r=>{
     const[ts,pol,ev,mot,tipo]=r;
-
-    // ── CORREÇÃO 1: ignora linhas sem poltrona OU sem evento ─────────────────
-    if(!pol || !ev) return;
-
+    if(!pol||!ev)return;
     const num=pol.replace('Poltrona ','').trim().padStart(2,'0');
-    if(!st[num]) return;
+    if(!st[num])return;
 
-    // filtra somente registros de hoje — aceita formato pt-BR e ISO
-    const tsPart=ts.split(' ')[0];
-    const tsDate=tsPart.includes('-')?tsPart.split('T')[0]:tsPart; // "2026-06-02" ou "02/06/2026"
-    let dataHoje;
-    if(tsDate.includes('-')){
-      const [ay,am,ad]=tsDate.split('-');
-      dataHoje=String(+ad).padStart(2,'0')+'/'+String(+am).padStart(2,'0')+'/'+ay;
-    } else {
-      dataHoje=tsDate;
-    }
-    if(dataHoje !== hoje) return;
-
+    const tsD=tsToDate(ts);
+    const tsISO=tsD?tsD.toISOString().slice(0,10):'';
     const fi=st[num].fi;
     const fl=FLUXOS[fi];
 
-    // ── CORREÇÃO 2: deduplicação de duplo Check In (< 90 segundos) ───────────
-    if(ev==='Check In Paciente' && st[num].s==='ocupada' && st[num].ts){
-      const anterior=tsToDate(st[num].ts);
-      const atual=tsToDate(ts);
-      if(anterior && atual && (atual - anterior)/1000 < 90){
-        return; // ignora submit duplicado
-      }
-    }
+    // CORREÇÃO PRINCIPAL:
+    // Check In e Check Out de QUALQUER dia são processados (constroem estado base)
+    // Início/Fim de Parada só são relevantes se forem de hoje
+    // Isso permite que antecipações (D-1) sejam reconhecidas corretamente
+    const isHoje=tsISO===hojeISO;
 
-    // processa evento normalmente
     if(ev==='Check In Paciente'){
-      const atendN=(r[5]||'').trim();st[num]={s:'ocupada',d:tipo||fl.tipo,mot:'',ts,t:tipo||'',fi,paciente:true,atend:atendN};
-      // Rastreia vínculo poltrona → atendimento para integração com farmácia
-      const atendQT=(r[5]||'').trim();
-      if(atendQT) poltronaAtend[`Poltrona ${num.replace(/^0/,'')}`]=atendQT;
+      // Deduplicação: ignora check-in se já ocupada há < 90s
+      if(st[num].s==='ocupada'&&st[num].ts){
+        const ant=tsToDate(st[num].ts);
+        if(ant&&tsD&&(tsD-ant)/1000<90)return;
+      }
+      const atendN=(r[5]||'').trim();
+      st[num]={s:'ocupada',d:tipo||fl.tipo,mot:'',ts,fi,paciente:true,atend:atendN};
     } else if(ev==='Check Out Paciente'){
-      st[num]={s:'livre',d:fl.tipo,mot:'',ts,t:'',fi,paciente:false,atend:''};
-    } else if(ev==='Início da Parada'){
-      st[num]={s:'parada',d:abrevMot(mot),mot:mot||'',ts,t:st[num].t,fi,paciente:st[num].paciente,atend:st[num].atend||''};
-    } else if(ev==='Fim da parada'){
+      st[num]={s:'livre',d:fl.tipo,mot:'',ts,fi,paciente:false,atend:''};
+    } else if(ev==='Início da Parada'&&isHoje){
+      st[num]={s:'parada',d:abrevMot(mot),mot:mot||'',ts,fi,paciente:st[num].paciente,atend:st[num].atend||''};
+    } else if(ev==='Fim da parada'&&isHoje){
       const pac=st[num].paciente;
-      const t=st[num].t;
-      const atendFim=st[num].atend||'';st[num]={s:pac?'ocupada':'livre',d:pac?(t||fl.tipo):fl.tipo,mot:'',ts,t:pac?t:'',fi,paciente:pac,atend:pac?atendFim:''};
+      const atendFim=st[num].atend||'';
+      const t=st[num].d;
+      st[num]={s:pac?'ocupada':'livre',d:pac?t:fl.tipo,mot:'',ts,fi,paciente:pac,atend:pac?atendFim:''};
     }
   });
   return st;
 }
-
 function el(ts){
-  if(!ts) return'';
+  if(!ts)return'';
   try{
-    const d=tsToDate(ts);
-    if(!d) return'';
+    const d=tsToDate(ts);if(!d)return'';
     const diff=Math.floor((new Date()-d)/60000);
-    if(diff<0||diff>1440) return'';
+    if(diff<0||diff>1440)return'';
     return diff<60?diff+'min':Math.floor(diff/60)+'h'+(diff%60?String(diff%60).padStart(2,'0')+'min':'');
   }catch{return'';}
 }
-
 function render(st,fonte){
   let nO=0,nP=0,nL=0;
   Object.entries(st).forEach(([num,s])=>{
@@ -304,22 +242,23 @@ function render(st,fonte){
     const lbl={livre:'Disponível',ocupada:'Em atendimento',parada:'Em parada'};
     const t=s.ts?el(s.ts):'';
     c.className='card '+s.s+(s.s==='livre'?' f'+s.fi:'');
-    // Badge de medicação — só relevante quando poltrona está em parada aguardando farmácia
-    const pNome=`Poltrona ${num.replace(/^0/,'')}`;
-    const atendNum=poltronaAtend[pNome]||'';
-    const estaAguardandoFarm = s.s==='parada' && (s.mot||'').indexOf('Manipul')>=0;
-    const etapaFarm = estaAguardandoFarm && s.atend ? (farmEtapa.get(s.atend)||'') : '';
-    const medicacaoDisp = etapaFarm === 'Disponível QT' || etapaFarm === 'Disponível pré QT';
-    const ETAPA_LABEL = {'Separação':'📦 Separação','Pré QT':'🔬 Pré QT','Capela QT':'⚗️ Capela QT','Disponível QT':'💊 Disponível','Disponível pré QT':'💊 Disponível (pré)'};
-    const ETAPA_COR   = {'Separação':'#79c0ff','Pré QT':'#e3b341','Capela QT':'#f97316','Disponível QT':'#3dd68c','Disponível pré QT':'#3dd68c'};
-    const etapaLabel = ETAPA_LABEL[etapaFarm] || '';
-    const etapaCor   = ETAPA_COR[etapaFarm] || '#8b949e';
-    const medBadge = estaAguardandoFarm
-      ? (etapaLabel
-          ? '<div class="med-badge" style="background:rgba(0,0,0,.3);color:'+etapaCor+';border:1px solid '+etapaCor+'">'+etapaLabel+'</div>'
-          : '<div class="med-badge med-wait">⏳ Aguard. farmácia</div>')
-      : '';
-    c.innerHTML='<div class="cn">P'+num+'</div>'
+
+    // Badge de medicação — só quando em parada aguardando farmácia
+    const estaAguardandoFarm=s.s==='parada'&&(s.mot||'').indexOf('Manipul')>=0;
+    const etapaFarm=estaAguardandoFarm&&s.atend?(farmEtapa.get(s.atend)||''):'';
+    const ETAPA_LABEL={'Separação':'📦 Separação','Pré QT':'🔬 Pré QT','Capela QT':'⚗️ Capela QT','Disponível QT':'💊 Disponível','Disponível pré QT':'💊 Disponível (pré)'};
+    const ETAPA_COR={'Separação':'#79c0ff','Pré QT':'#e3b341','Capela QT':'#f97316','Disponível QT':'#3dd68c','Disponível pré QT':'#3dd68c'};
+    const etapaLabel=ETAPA_LABEL[etapaFarm]||'';
+    const etapaCor=ETAPA_COR[etapaFarm]||'#8b949e';
+    const medBadge=estaAguardandoFarm
+      ?(etapaLabel
+        ?'<div class="med-badge" style="background:rgba(0,0,0,.3);color:'+etapaCor+';border:1px solid '+etapaCor+'">'+etapaLabel+'</div>'
+        :'<div class="med-badge med-wait">⏳ Aguard. farmácia</div>')
+      :'';
+
+    const isMaca=FLUXOS[s.fi]&&FLUXOS[s.fi].macas&&FLUXOS[s.fi].macas.includes(+num);
+    const prefix=isMaca?'M':'P';
+    c.innerHTML='<div class="cn">'+prefix+num+'</div>'
       +'<div class="cb">'
       +'<div class="cs'+(s.s==='parada'?' blink':'')+'">'+lbl[s.s]+'</div>'
       +'<div class="cd">'+s.d+'</div>'
@@ -336,18 +275,13 @@ function render(st,fonte){
   const b=document.getElementById('k-fonte');
   b.textContent=fonte;b.className='fbadge '+(live?'flive':'flocal');
 }
-
 async function loadFarmData(){
   try{
-    // Busca os registros brutos (mesma fonte do painel da farmácia) e calcula a posição
-    // aqui mesmo, pegando a movimentação mais recente de HOJE por atendimento.
-    // Ignora por completo linhas tipo=transicao_intercorrencia: medicação de intercorrência
-    // não deve influenciar nem aparecer no painel de poltronas da QT.
     const r=await fetch(FARM_URL,{cache:'no-store'});
     if(!r.ok)return;
     const data=await r.json();
     const rows=data.rows||[];
-    const hoje=new Date().toISOString().slice(0,10);
+    const hojeISO=new Date().toISOString().slice(0,10);
     const pos={};
     rows.forEach(row=>{
       const tipo=String(row['Tipo']||row['tipo']||'transicao').trim();
@@ -355,11 +289,18 @@ async function loadFarmData(){
       const a=String(row['Nº Atendimento']||row['atendimento']||'').trim();
       if(!a)return;
       const ts=new Date(row['Timestamp']||row['timestamp']||0);
-      if(ts.toISOString().slice(0,10)!==hoje)return;
-      if(!pos[a]||ts>pos[a].tsObj)pos[a]={etapa:String(row['Etapa']||row['etapa']||'').trim(),tsObj:ts};
+      const tsISO=ts.toISOString().slice(0,10);
+      // CORREÇÃO: aceita registros de hoje E de ontem (antecipações D-1)
+      const ontemISO=new Date(Date.now()-86400000).toISOString().slice(0,10);
+      if(tsISO!==hojeISO&&tsISO!==ontemISO)return;
+      if(!pos[a]||ts>pos[a].tsObj)pos[a]={etapa:String(row['Etapa']||row['etapa']||'').trim(),tsObj:ts,tsISO};
     });
+    // "Disponível pré QT" de ontem (antecipação): só mantém se não houver movimentação hoje
+    // que indique que a medicação já saiu do fluxo (Disponível QT ou entregue)
     farmDisponivel=new Set(
-      Object.entries(pos).filter(([,v])=>v.etapa==='Disponível QT'||v.etapa==='Disponível pré QT').map(([a])=>a)
+      Object.entries(pos)
+        .filter(([,v])=>v.etapa==='Disponível QT'||v.etapa==='Disponível pré QT')
+        .map(([a])=>a)
     );
     farmEtapa=new Map(
       Object.entries(pos).filter(([,v])=>v.etapa).map(([a,v])=>[a,v.etapa])
@@ -368,8 +309,6 @@ async function loadFarmData(){
     console.warn('Farm data unavailable:',e.message);
   }
 }
-
-// ── Parses CSV string → array of rows ────────────────────────────────────────
 function parseCSVrows(txt){
   return txt.trim().split('\n').slice(1).map(l=>{
     const cols=[];let cur='',inQ=false;
@@ -377,10 +316,8 @@ function parseCSVrows(txt){
     cols.push(cur.trim());return cols;
   }).filter(r=>r.length>=3&&r[0]);
 }
-
 async function fetch_data(){
-  // Tenta Apps Script primeiro (baixa latência) — fallback para CSV — fallback para dados locais
-  const usarAPI = QT_API_URL && !QT_API_URL.includes('COLE_AQUI');
+  const usarAPI=QT_API_URL&&!QT_API_URL.includes('COLE_AQUI');
   try{
     let rows;
     if(usarAPI){
@@ -390,37 +327,31 @@ async function fetch_data(){
       if(data.erro)throw new Error('API: '+data.erro);
       rows=data.rows||[];
     } else {
-      // Fallback: CSV publicado
       const r=await fetch(QT_CSV_URL,{cache:'no-store'});
       if(!r.ok)throw new Error('CSV HTTP '+r.status);
       rows=parseCSVrows(await r.text());
     }
     live=true;
     await loadFarmData();
-    render(process(rows), usarAPI ? 'Ao vivo · API' : 'Ao vivo · Sheets');
+    render(process(rows),usarAPI?'Ao vivo · API':'Ao vivo · Sheets');
     document.getElementById('fmsg').textContent=rows.length+' registros · '+new Date().toLocaleTimeString('pt-BR');
   }catch(e){
-    // Se API falhou, tenta CSV antes de usar dados locais
     if(usarAPI){
       try{
         const r=await fetch(QT_CSV_URL,{cache:'no-store'});
         if(!r.ok)throw new Error('CSV '+r.status);
         const rows=parseCSVrows(await r.text());
-        live=true;
-        await loadFarmData();
+        live=true;await loadFarmData();
         render(process(rows),'Ao vivo · Sheets (fallback)');
         document.getElementById('fmsg').textContent=rows.length+' reg (fallback CSV) · '+new Date().toLocaleTimeString('pt-BR');
         return;
-      }catch(e2){ /* cai nos dados locais */ }
+      }catch(e2){}
     }
     live=false;render(process(DADOS),'Dados locais');
     document.getElementById('fmsg').textContent='Sheets indisponível · '+e.message;
   }
 }
-
-build();
-fetch_data();
-// ── CORREÇÃO 3: refresh a cada 10s (era 30s) ─────────────────────────────────
+build();fetch_data();
 setInterval(fetch_data,10000);
 </script>
 </body>
