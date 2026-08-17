@@ -13,9 +13,7 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
   --tx:#e0e0e0;--tx2:#888;--tx3:#444;--tx4:#222;
   --b1:#1a1a1a;--b2:#222;--s1:#111;--s2:#161616;
 }
-
 .layout{display:grid;grid-template-rows:60px 1fr 130px 34px;height:100vh}
-
 /* ── HEADER ── */
 .hdr{
   background:#080808;border-bottom:1px solid #1c1c1c;
@@ -31,22 +29,20 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
 .kpi-lbl{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.07em;margin-top:2px}
 .clock{font-family:monospace;font-size:24px;color:#ccc;letter-spacing:.08em;flex-shrink:0}
 .date{font-size:10px;color:var(--tx3);text-align:right;margin-top:2px}
-
+.btn-cfg{background:none;border:none;color:#242424;font-size:17px;cursor:pointer;padding:4px 6px;border-radius:5px;line-height:1;flex-shrink:0;transition:color .15s}
+.btn-cfg:hover{color:var(--tx3);background:#111}
 /* ── BODY ── */
 .body{display:grid;grid-template-columns:1fr 220px;overflow:hidden}
-
 /* ── FILA ── */
 .fila-area{overflow-y:auto;padding:14px 16px 14px 24px;display:flex;flex-direction:column}
 .fila-area::-webkit-scrollbar{width:3px}
 .fila-area::-webkit-scrollbar-thumb{background:#1e1e1e}
-
 .col-hdr{
   display:grid;grid-template-columns:52px 1fr 120px 110px 140px;
   padding:0 0 8px;border-bottom:1px solid #1c1c1c;margin-bottom:10px;
 }
 .ch{font-size:9px;color:var(--tx4);text-transform:uppercase;letter-spacing:.1em;font-weight:600}
 .ch.c{text-align:center}
-
 /* ITEM */
 .fi{
   display:grid;grid-template-columns:52px 1fr 120px 110px 140px;
@@ -54,13 +50,11 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
 }
 .fi.normal{height:56px}
 .fi.dest{height:78px;animation:entrar .25s ease}
-
 /* NÚMERO */
 .fi-n{display:flex;align-items:center;justify-content:center;font-family:monospace;font-weight:800}
 .fi.normal .fi-n{background:#111;color:var(--tx3);font-size:17px}
 .fi.dest   .fi-n{background:var(--g);color:#fff;font-size:26px}
 .fi.dest.urg .fi-n{background:var(--r)}
-
 /* NOME */
 .fi-info{display:flex;flex-direction:column;justify-content:center;padding:0 16px;border-left:1px solid #1a1a1a}
 .fi.normal .fi-info{background:#131313}
@@ -73,7 +67,6 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
 .fi.normal .fi-sub{font-size:10px;color:var(--tx3)}
 .fi.dest   .fi-sub{font-size:12px;color:var(--gm)}
 .fi.dest.urg .fi-sub{color:var(--rm)}
-
 /* STATUS */
 .fi-st{display:flex;align-items:center;justify-content:center;border-left:1px solid #1a1a1a}
 .fi.normal .fi-st{background:#111}
@@ -83,7 +76,6 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
 .fi.normal .st-pill{background:#1a1a1a;color:var(--tx3)}
 .fi.dest   .st-pill{background:var(--g);color:#fff;animation:pulse 2s infinite}
 .fi.dest.urg .st-pill{background:var(--r);color:#fff;animation:piscaR 1s infinite}
-
 /* TIMER — coluna dedicada, nunca sobreposta */
 .fi-timer{display:flex;flex-direction:column;align-items:center;justify-content:center;border-left:1px solid #1a1a1a;padding:0 8px}
 .fi.normal .fi-timer{background:#0f0f0f}
@@ -97,7 +89,6 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
 /* Urgente nos itens normais */
 .fi.normal.urg .timer-val{color:var(--rm);animation:piscaR 1s infinite}
 .fi.normal.urg .fi-timer{background:#150a0a}
-
 /* AÇÃO — botão de entregar numa coluna própria */
 .fi-acao{display:flex;align-items:center;justify-content:center;border-left:1px solid #1a1a1a}
 .fi.normal .fi-acao{background:#0d0d0d}
@@ -109,12 +100,10 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
 .fi.normal:hover .btn-ok{display:block}
 .fi.dest .btn-ok{background:var(--g);color:#fff}
 .fi.dest.urg .btn-ok{background:var(--r);color:#fff}
-
 /* VAZIA */
 .fila-vazia{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:200px}
 .fila-vazia-ico{font-size:36px;color:var(--tx4)}
 .fila-vazia-txt{font-size:13px;color:var(--tx3)}
-
 /* ── SIDEBAR ── */
 .sidebar{border-left:1px solid #1c1c1c;display:flex;flex-direction:column;background:#0a0a0a;overflow:hidden}
 .sb-hdr{padding:14px 16px 10px;border-bottom:1px solid #1c1c1c}
@@ -131,14 +120,12 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
 .hi-sub{font-size:10px;color:var(--tx3);margin-top:2px;font-family:monospace}
 .hi-hora{font-size:10px;color:var(--tx3);font-family:monospace;flex-shrink:0}
 .hist-empty{font-size:12px;color:var(--tx4);padding:20px 0;text-align:center}
-
 /* ── GRÁFICO ── */
 .chart-panel{border-top:1px solid #1c1c1c;background:#080808;padding:10px 24px 8px;height:130px;flex-shrink:0}
 .chart-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .chart-title{font-size:9px;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;font-weight:600}
 .chart-meta{font-size:9px;color:var(--tx4);font-family:monospace}
 .chart-wrap{position:relative;height:86px}
-
 /* ── FOOTER ── */
 .ftr{background:#080808;border-top:1px solid #1c1c1c;padding:0 24px;display:flex;align-items:center;justify-content:space-between}
 .ftr-txt{font-size:9px;color:var(--tx4);letter-spacing:.05em}
@@ -149,7 +136,44 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
 .fdot{width:6px;height:6px;border-radius:50%;background:var(--tx4)}
 .fdot.live{background:var(--gm);animation:pulse 2s infinite}
 .fdot.erro{background:var(--rm)}
-
+/* ── CONFIGURACAO DE MEDICAMENTOS ── */
+.cfg-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;align-items:center;justify-content:center;padding:24px}
+.cfg-ov.open{display:flex}
+.cfg-box{background:#0f0f0f;border:1px solid #262626;border-radius:12px;width:100%;max-width:460px;max-height:84vh;display:flex;flex-direction:column;animation:aparecer .18s ease}
+.cfg-top{padding:16px 20px 13px;border-bottom:1px solid #1c1c1c;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cfg-tit{font-size:14px;font-weight:700;color:#ddd}
+.cfg-x{background:none;border:none;color:var(--tx3);font-size:17px;cursor:pointer;padding:0 4px;line-height:1}
+.cfg-x:hover{color:#ccc}
+.cfg-in{padding:20px}
+.cfg-hint{font-size:11px;color:var(--tx3);margin-bottom:14px;line-height:1.6}
+.cfg-inp{width:100%;background:#161616;border:1px solid #262626;border-radius:8px;color:#fff;font-size:14px;padding:12px 14px;outline:none}
+.cfg-inp:focus{border-color:var(--g)}
+.cfg-inp::placeholder{color:#2e2e2e}
+.cfg-btn{background:var(--g);color:#fff;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:600;cursor:pointer;width:100%;margin-top:10px}
+.cfg-btn:hover{opacity:.88}
+.cfg-btn:disabled{opacity:.4;cursor:default}
+.cfg-erro{color:var(--rm);font-size:12px;margin-top:10px;display:none}
+.cfg-erro.vis{display:block}
+.cfg-add{display:flex;gap:8px;margin-bottom:14px}
+.cfg-add input{flex:1;background:#161616;border:1px solid #262626;border-radius:8px;color:#fff;font-size:13px;padding:11px 13px;outline:none}
+.cfg-add input:focus{border-color:var(--g)}
+.cfg-add input::placeholder{color:#2e2e2e}
+.cfg-add button{background:var(--g);color:#fff;border:none;border-radius:8px;padding:0 16px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.cfg-add button:hover{opacity:.88}
+.cfg-add button:disabled{opacity:.4;cursor:default}
+.cfg-lista{overflow-y:auto;max-height:42vh;margin:0 -20px;padding:0 20px}
+.cfg-lista::-webkit-scrollbar{width:3px}
+.cfg-lista::-webkit-scrollbar-thumb{background:#1e1e1e}
+.cfg-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #171717}
+.cfg-item:last-child{border-bottom:none}
+.cfg-item-nome{flex:1;font-size:13px;color:#bbb;line-height:1.35}
+.cfg-item-x{background:none;border:1px solid #2e1414;border-radius:6px;color:var(--rm);font-size:11px;cursor:pointer;padding:5px 10px;flex-shrink:0}
+.cfg-item-x:hover{background:#1c0d0d}
+.cfg-vazio{font-size:12px;color:var(--tx4);text-align:center;padding:22px;font-family:monospace}
+.cfg-status{font-size:11px;color:var(--gm);margin-top:10px;display:none}
+.cfg-status.vis{display:block}
+.cfg-count{font-size:10px;color:var(--tx4);font-family:monospace;margin-bottom:10px}
+@keyframes aparecer{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
 @keyframes entrar{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 @keyframes piscaR{0%,100%{opacity:1}50%{opacity:.25}}
@@ -158,7 +182,6 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
 </head>
 <body>
 <div class="layout">
-
 <header class="hdr">
   <img src="https://painel.i-omt.com/logo_iomt_branco.png" class="logo-img" alt="i-OMT">
   <div class="hdr-name">Smart Infusion Manager</div>
@@ -182,8 +205,8 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
     <div class="clock" id="clock">00:00:00</div>
     <div class="date" id="date-lbl"></div>
   </div>
+  <button class="btn-cfg" onclick="abrirCfg()" title="Configurar lista de medicamentos">&#9881;</button>
 </header>
-
 <div class="body">
   <div class="fila-area">
     <div class="col-hdr">
@@ -195,7 +218,6 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
     </div>
     <div id="fila-corpo"></div>
   </div>
-
   <div class="sidebar">
     <div class="sb-hdr"><div class="sb-lbl">Histórico do turno</div></div>
     <div class="hist-list" id="hist-list">
@@ -203,12 +225,10 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
     </div>
   </div>
 </div>
-
 <div class="chart-panel">
   <div class="chart-hdr"><span class="chart-title">Atendimentos por hora</span><span class="chart-meta" id="chart-meta">—</span></div>
   <div class="chart-wrap"><canvas id="chart-hora"></canvas></div>
 </div>
-
 <footer class="ftr">
   <div class="ftr-txt">Hospital Márcio Cunha · FSFX · Ipatinga/MG</div>
   <div class="leg">
@@ -221,26 +241,148 @@ html,body{height:100%;background:#0d0d0d;color:#e0e0e0;font-family:-apple-system
     <span id="fref" style="margin-left:10px;color:var(--tx4)">—</span>
   </div>
 </footer>
-
+</div>
+<!-- CONFIGURACAO DE MEDICAMENTOS -->
+<div class="cfg-ov" id="cfg-ov">
+  <div class="cfg-box">
+    <div class="cfg-top">
+      <span class="cfg-tit" id="cfg-tit">Configuração</span>
+      <button class="cfg-x" onclick="fecharCfg()">&#10005;</button>
+    </div>
+    <div class="cfg-in" id="cfg-senha-step">
+      <div class="cfg-hint">Área restrita. Informe a senha para gerenciar a lista de medicamentos que aparece no app de apontamento.</div>
+      <input type="password" class="cfg-inp" id="cfg-senha" placeholder="Senha" onkeydown="if(event.key==='Enter')validarCfgSenha()">
+      <button class="cfg-btn" onclick="validarCfgSenha()">Entrar</button>
+      <div class="cfg-erro" id="cfg-senha-erro">Senha incorreta.</div>
+    </div>
+    <div class="cfg-in" id="cfg-lista-step" style="display:none">
+      <div class="cfg-add">
+        <input type="text" id="cfg-novo" placeholder="Nome do medicamento" maxlength="80"
+               onkeydown="if(event.key==='Enter')addMed()">
+        <button id="cfg-btn-add" onclick="addMed()">Adicionar</button>
+      </div>
+      <div class="cfg-erro" id="cfg-lista-erro"></div>
+      <div class="cfg-status" id="cfg-status"></div>
+      <div class="cfg-count" id="cfg-count"></div>
+      <div class="cfg-lista" id="cfg-lista"></div>
+    </div>
+  </div>
 </div>
 <script>
 var API='https://script.google.com/macros/s/AKfycbynRJx9tQ13rAtWMo8behDEbdQnOsU7mqKyOB77fcTZMZXsi8rX7PkZNt1q9J7h3fb3VA/exec';
 var META_SEG=5*60;
-
+var CFG_SENHA='iomt2026';
+var MEDS=[];
 function segs(ts){ return Math.floor((Date.now()-new Date(ts).getTime())/1000); }
 function fmt(s){ var m=Math.floor(s/60),r=s%60; return('0'+m).slice(-2)+':'+('0'+r).slice(-2); }
 function hora(ts){ var d=new Date(ts); return('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
 function esc(s){ return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
 function remover(id){
   fetch(API+'?acao=fila_remover&id='+encodeURIComponent(id),{cache:'no-store'})
     .then(r=>r.json()).then(()=>carregar()).catch(()=>{});
 }
-
+// ── CONFIGURACAO DA LISTA DE MEDICAMENTOS ────────────────────────
+// A lista vive na aba "Medicamentos" da planilha. O app de apontamento
+// (Chamada de Medicamentos) so le — o cadastro e feito aqui.
+function abrirCfg(){
+  document.getElementById('cfg-senha').value='';
+  document.getElementById('cfg-senha-erro').classList.remove('vis');
+  document.getElementById('cfg-senha-step').style.display='';
+  document.getElementById('cfg-lista-step').style.display='none';
+  document.getElementById('cfg-tit').textContent='Configuração';
+  document.getElementById('cfg-ov').classList.add('open');
+  setTimeout(function(){ document.getElementById('cfg-senha').focus(); },60);
+}
+function fecharCfg(){ document.getElementById('cfg-ov').classList.remove('open'); }
+document.getElementById('cfg-ov').addEventListener('click',function(e){ if(e.target===this) fecharCfg(); });
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&document.getElementById('cfg-ov').classList.contains('open')) fecharCfg();
+});
+function validarCfgSenha(){
+  if(document.getElementById('cfg-senha').value!==CFG_SENHA){
+    document.getElementById('cfg-senha-erro').classList.add('vis');
+    return;
+  }
+  document.getElementById('cfg-senha-step').style.display='none';
+  document.getElementById('cfg-lista-step').style.display='';
+  document.getElementById('cfg-tit').textContent='Medicamentos';
+  document.getElementById('cfg-novo').value='';
+  document.getElementById('cfg-lista-erro').classList.remove('vis');
+  document.getElementById('cfg-status').classList.remove('vis');
+  document.getElementById('cfg-lista').innerHTML='<div class="cfg-vazio">carregando...</div>';
+  carregarMeds(function(){ setTimeout(function(){ document.getElementById('cfg-novo').focus(); },60); });
+}
+function carregarMeds(cb){
+  fetch(API+'?acao=meds_listar',{cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok&&d.meds) MEDS=d.meds;
+      renderCfgLista();
+      if(cb) cb();
+    })
+    .catch(function(){
+      cfgErro('Não foi possível carregar a lista. Verifique a conexão.');
+      document.getElementById('cfg-lista').innerHTML='<div class="cfg-vazio">falha ao carregar</div>';
+      if(cb) cb();
+    });
+}
+function renderCfgLista(){
+  var w=document.getElementById('cfg-lista');
+  document.getElementById('cfg-count').textContent=MEDS.length+' medicamento'+(MEDS.length!==1?'s':'')+' cadastrado'+(MEDS.length!==1?'s':'');
+  if(!MEDS.length){ w.innerHTML='<div class="cfg-vazio">nenhum medicamento cadastrado</div>'; return; }
+  w.innerHTML='';
+  MEDS.forEach(function(m){
+    var d=document.createElement('div'); d.className='cfg-item';
+    var n=document.createElement('div'); n.className='cfg-item-nome'; n.textContent=m;
+    var b=document.createElement('button'); b.className='cfg-item-x'; b.textContent='Remover';
+    b.onclick=function(){ removeMed(m); };
+    d.appendChild(n); d.appendChild(b); w.appendChild(d);
+  });
+}
+function cfgErro(msg){
+  var e=document.getElementById('cfg-lista-erro');
+  e.textContent=msg; e.classList.add('vis');
+}
+function cfgOk(msg){
+  var s=document.getElementById('cfg-status');
+  s.textContent=msg; s.classList.add('vis');
+  setTimeout(function(){ s.classList.remove('vis'); },2500);
+}
+function addMed(){
+  var inp=document.getElementById('cfg-novo');
+  var nome=inp.value.trim();
+  document.getElementById('cfg-lista-erro').classList.remove('vis');
+  if(!nome) return;
+  var btn=document.getElementById('cfg-btn-add');
+  btn.disabled=true; btn.textContent='...';
+  fetch(API+'?acao=meds_add&med='+encodeURIComponent(nome),{cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok){
+        MEDS=d.meds; inp.value=''; renderCfgLista();
+        cfgOk(d.jaExistia?('Já existia como "'+d.jaExistia+'"'):(nome+' adicionado'));
+      } else {
+        cfgErro('Erro: '+(d.erro||'falha ao adicionar'));
+      }
+    })
+    .catch(function(){ cfgErro('Sem conexão. Tente novamente.'); })
+    .finally(function(){ btn.disabled=false; btn.textContent='Adicionar'; });
+}
+function removeMed(nome){
+  if(!confirm('Remover "'+nome+'" da lista?\n\nEle deixa de aparecer no app de apontamento.\nOs registros já feitos com ele não são afetados.')) return;
+  document.getElementById('cfg-lista-erro').classList.remove('vis');
+  fetch(API+'?acao=meds_remover&med='+encodeURIComponent(nome),{cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok){ MEDS=d.meds; renderCfgLista(); cfgOk(nome+' removido'); }
+      else cfgErro('Erro: '+(d.erro||'falha ao remover'));
+    })
+    .catch(function(){ cfgErro('Sem conexão. Tente novamente.'); });
+}
+// ── FILA ─────────────────────────────────────────────────────────
 function render(fila,hist){
   document.getElementById('stat-fila').textContent=fila.length;
   document.getElementById('stat-hoje').textContent=(hist?hist.length:0)+fila.length;
-
   var c=document.getElementById('fila-corpo');
   if(!fila.length){
     c.innerHTML='<div class="fila-vazia"><div class="fila-vazia-ico">◎</div><div class="fila-vazia-txt">Fila vazia</div></div>';
@@ -269,9 +411,7 @@ function render(fila,hist){
       c.appendChild(div);
     });
   }
-
   renderGrafico(hist);
-
   var w=document.getElementById('hist-list');
   if(!hist||!hist.length){
     w.innerHTML='<div class="hist-empty">Nenhum registro ainda</div>';
@@ -287,7 +427,6 @@ function render(fila,hist){
     });
   }
 }
-
 var _chart = null;
 function renderGrafico(hist){
   // Agrega por hora usando os timestamps do histórico
@@ -296,23 +435,19 @@ function renderGrafico(hist){
     var h = new Date(item.ts).getHours();
     contagem[h] = (contagem[h]||0) + 1;
   });
-
   // Range de horas do turno: 07h–19h
   var horas = [];
   for(var h=7;h<=19;h++) horas.push(h);
-
   var labels = horas.map(function(h){ return ('0'+h).slice(-2)+'h'; });
   var dados  = horas.map(function(h){ return contagem[h]||0; });
   var total  = dados.reduce(function(s,v){ return s+v; },0);
   document.getElementById('chart-meta').textContent = total + ' entregues no turno';
-
   // Cor das barras: verde se dentro da média, âmbar se acima
   var media = total / horas.filter(function(h){ return (contagem[h]||0)>0; }).length || 0;
   var cores = dados.map(function(v){
     if(v===0) return 'rgba(255,255,255,.04)';
     return v >= media*1.3 ? 'rgba(227,179,65,.7)' : 'rgba(61,214,140,.65)';
   });
-
   var canvas = document.getElementById('chart-hora');
   if(_chart) _chart.destroy();
   _chart = new Chart(canvas, {
@@ -339,7 +474,6 @@ function renderGrafico(hist){
     }
   });
 }
-
 function carregar(){
   fetch(API+'?acao=fila_listar',{cache:'no-store'})
     .then(r=>r.json())
@@ -349,12 +483,10 @@ function carregar(){
     })
     .catch(()=>setOk(false,'Sem conexão'));
 }
-
 function setOk(ok,msg){
   document.getElementById('fdot').className='fdot '+(ok?'live':'erro');
   document.getElementById('ftxt').textContent=ok?'Ao vivo · atualizando':(msg||'Erro');
 }
-
 function ticks(){
   document.querySelectorAll('[data-ts]').forEach(function(el){
     var s=segs(el.dataset.ts);
@@ -364,14 +496,12 @@ function ticks(){
     if(fi){ fi.classList.toggle('urg',urg); }
   });
 }
-
 function clock(){
   var d=new Date();
   document.getElementById('clock').textContent=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2);
   var dias=['dom','seg','ter','qua','qui','sex','sáb'],mes=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   document.getElementById('date-lbl').textContent=dias[d.getDay()]+', '+d.getDate()+' '+mes[d.getMonth()]+'. '+d.getFullYear();
 }
-
 carregar(); clock();
 setInterval(ticks,1000);
 setInterval(clock,1000);
