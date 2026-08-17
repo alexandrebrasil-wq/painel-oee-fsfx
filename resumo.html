@@ -446,9 +446,11 @@ function salvarConfig(){
     return;
   }
   btn.disabled=true;btn.textContent='Salvando...';
-  fetch(CFG_APPS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
-    .then(function(r){return r.text();})
-    .then(function(txt){
+  // no-cors: a requisicao e enviada e o script executa, mas a resposta fica
+  // opaca (nao da pra ler). Como so precisamos que grave, serve — e evita o
+  // bloqueio de CORS no redirecionamento que o /exec faz no POST.
+  fetch(CFG_APPS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    .then(function(){
       aplicarCfg(payload);
       try{localStorage.setItem(CFG_KEY,JSON.stringify(payload));}catch(e){}
       updateHsub();
