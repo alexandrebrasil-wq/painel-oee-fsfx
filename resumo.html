@@ -128,6 +128,10 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:20p
 .cfg-cancel:hover{color:#fff;}
 .cfg-save{background:#1b2e6b;color:#fff;}
 .cfg-err{color:#f85149;font-size:11px;margin-top:8px;display:none;}
+.cfg-fer-list{margin-top:8px;max-height:120px;overflow-y:auto;}
+.cfg-fer-item{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:#0d1117;border:1px solid #21262d;border-radius:5px;margin-bottom:4px;font-size:11px;font-family:'DM Mono',monospace;}
+.cfg-fer-item button{background:none;border:none;color:#f85149;cursor:pointer;font-size:12px;padding:0 4px;line-height:1;}
+.cfg-fer-empty{font-size:10px;color:#484f58;text-align:center;padding:8px;font-family:'DM Mono',monospace;}
 .cfg-sync{font-size:9px;color:#3fb950;margin-top:10px;display:none;}
 .pareto-row-click{cursor:pointer;transition:.15s;border-radius:4px;}
 .pareto-row-click:hover{background:#1c2129;}
@@ -226,6 +230,12 @@ footer{background:#111820;border-top:1px solid #21262d;padding:0 20px;height:20p
       <input type="number" id="cfgMetaOcup" min="0" max="100" step="1">
       <label>Meta Atendimento (%)</label>
       <input type="number" id="cfgMetaAtend" min="0" max="100" step="1">
+      <label>Datas excluidas do calendario</label>
+      <div style="display:flex;gap:6px">
+        <input type="date" id="cfgFeriadoData" style="flex:1">
+        <button type="button" class="cfg-save" style="padding:6px 12px" onclick="addFeriado()">Adicionar</button>
+      </div>
+      <div id="cfgFeriadosList" class="cfg-fer-list"></div>
       <div class="cfg-err" id="cfgFormErr">Verifique os valores informados ou a conexao.</div>
       <div class="cfg-sync" id="cfgSyncMsg">Salvo para todos os usuarios.</div>
       <div class="cfg-actions">
@@ -307,6 +317,8 @@ function aplicarCfg(c){
   if(typeof c.metaDisp!=='undefined'&&c.metaDisp!=='')META_DISP=Number(c.metaDisp);
   if(typeof c.metaOcup!=='undefined'&&c.metaOcup!=='')META_OCUP=Number(c.metaOcup);
   if(typeof c.metaAtend!=='undefined'&&c.metaAtend!=='')META_ATEND=Number(c.metaAtend);
+  if(Object.prototype.toString.call(c.feriados)==='[object Array]')FERIADOS=c.feriados.slice();
+  else if(typeof c.feriados==='string')FERIADOS=c.feriados.split(',').map(function(s){return s.trim();}).filter(function(s){return s;});
   TURNO_MIN=(TURNO_FIM-TURNO_INI)*60;
 }
 
@@ -342,7 +354,33 @@ function updateHsub(){
   function pad(n){return String(n).padStart(2,'0');}
   h.textContent='Turno '+pad(TURNO_INI)+':00-'+pad(TURNO_FIM)+':00 · 47 poltronas · TUE = Tempo Atendimento / Tempo Disponível · Meta TUE: '+Math.round(META_OEE*100)+'%';
 }
-
+// ── DATAS EXCLUIDAS DO CALENDARIO ────────────────────────────────
+// FERIADOS alimenta diasEntre(), que ja pula essas datas na analise.
+function renderFeriados(){
+  var w=document.getElementById('cfgFeriadosList');
+  if(!w)return;
+  if(!FERIADOS.length){w.innerHTML='<div class="cfg-fer-empty">nenhuma data excluida</div>';return;}
+  w.innerHTML=FERIADOS.slice().sort(function(a,b){
+    var pa=a.split('/'),pb=b.split('/');
+    return (pa[2]+pa[1]+pa[0])<(pb[2]+pb[1]+pb[0])?1:-1;
+  }).map(function(d){
+    return '<div class="cfg-fer-item"><span>'+d+'</span>'
+      +'<button type="button" title="Remover" onclick="removeFeriado(\''+d+'\')">&#10005;</button></div>';
+  }).join('');
+}
+function addFeriado(){
+  var el=document.getElementById('cfgFeriadoData');
+  if(!el.value)return;
+  var p=el.value.split('-');
+  var d=p[2]+'/'+p[1]+'/'+p[0];
+  if(FERIADOS.indexOf(d)<0)FERIADOS.push(d);
+  el.value='';
+  renderFeriados();
+}
+function removeFeriado(d){
+  FERIADOS=FERIADOS.filter(function(x){return x!==d;});
+  renderFeriados();
+}
 function abrirConfig(){
   document.getElementById('cfgPass').value='';
   document.getElementById('cfgPassErr').style.display='none';
@@ -354,6 +392,9 @@ function abrirConfig(){
 }
 function fecharConfig(){
   document.getElementById('cfgOverlay').classList.remove('open');
+  // Se o usuario mexeu na lista de datas e clicou em Cancelar, volta ao que
+  // estava salvo — senao o painel seguiria usando uma lista nao confirmada.
+  try{var raw=localStorage.getItem(CFG_KEY);if(raw)aplicarCfg(JSON.parse(raw));}catch(e){}
 }
 function validarSenhaConfig(){
   var v=document.getElementById('cfgPass').value;
@@ -367,6 +408,8 @@ function validarSenhaConfig(){
   document.getElementById('cfgMetaDisp').value=Math.round(META_DISP*100);
   document.getElementById('cfgMetaOcup').value=Math.round(META_OCUP*100);
   document.getElementById('cfgMetaAtend').value=Math.round(META_ATEND*100);
+  document.getElementById('cfgFeriadoData').value='';
+  renderFeriados();
   document.getElementById('cfgFormErr').style.display='none';
   document.getElementById('cfgPassStep').style.display='none';
   document.getElementById('cfgFormStep').style.display='block';
@@ -390,7 +433,7 @@ function salvarConfig(){
     err.style.display='block';
     return;
   }
-  var payload={turnoIni:ti,turnoFim:tf,metaOee:mo/100,metaDisp:md/100,metaOcup:mc/100,metaAtend:ma/100};
+  var payload={turnoIni:ti,turnoFim:tf,metaOee:mo/100,metaDisp:md/100,metaOcup:mc/100,metaAtend:ma/100,feriados:FERIADOS.slice()};
   if(!CFG_APPS_URL){
     aplicarCfg(payload);
     try{localStorage.setItem(CFG_KEY,JSON.stringify(payload));}catch(e){}
