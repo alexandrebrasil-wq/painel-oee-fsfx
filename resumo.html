@@ -306,6 +306,7 @@ var META_ATEND=0.70;
 // URL do Apps Script "Config" (Web App) - implantar o .gs correspondente e colar a URL aqui.
 // Enquanto vazio, o painel usa os valores padrao acima e o Salvar guarda so localmente (nao compartilhado).
 var CFG_APPS_URL='https://script.google.com/macros/s/AKfycbzK9zV65QKLqG3bXRAa3uJELLWrABFxqfljfchrzIh-18xLETbGTd0dTHFXSXxT9DBVJg/exec';
+var CFG_CSV_URL='COLE_AQUI_A_URL_CSV_DA_ABA_CONFIG';
 var CFG_SENHA='iomt2026';
 var CFG_KEY='iomt_resumo_cfg_cache';
 
@@ -330,13 +331,34 @@ function aplicarCfg(c){
 })();
 
 function loadCfgRemoto(tentativas){
+ // Le a config pelo CSV publicado da aba Config. O fetch direto no /exec do
+// Apps Script e bloqueado por CORS neste ambiente; o CSV publicado nao e.
+function loadCfgRemoto(tentativas){
   tentativas=tentativas||0;
-  if(!CFG_APPS_URL){updateHsub();return;}
-  fetch(CFG_APPS_URL,{cache:'no-store'})
-    .then(function(r){return r.text();})
+  if(!CFG_CSV_URL||CFG_CSV_URL.indexOf('COLE_AQUI')===0){updateHsub();return;}
+  fetch(CFG_CSV_URL,{cache:'no-store'})
+    .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.text();})
     .then(function(txt){
-      var cfg;
-      try{cfg=JSON.parse(txt);}catch(e){throw new Error('resposta invalida');}
+      var cfg={};
+      txt.trim().split('\n').slice(1).forEach(function(l){
+        var cols=[],cur='',inQ=false;
+        for(var i=0;i<l.length;i++){
+          var ch=l[i];
+          if(ch==='"'){inQ=!inQ;}
+          else if(ch===','&&!inQ){cols.push(cur);cur='';}
+          else cur+=ch;
+        }
+        cols.push(cur);
+        var k=(cols[0]||'').trim(),v=(cols[1]||'').trim();
+        if(!k)return;
+        if(k==='feriados'){
+          cfg[k]=v.replace(/^'/,'').split(',').map(function(s){return s.trim();}).filter(function(s){return s;});
+        }else{
+          // tolera decimal com virgula, caso a planilha esteja em pt-BR
+          if(/^\d+([.,]\d+)?$/.test(v))v=v.replace(',','.');
+          cfg[k]=v;
+        }
+      });
       aplicarCfg(cfg);
       try{localStorage.setItem(CFG_KEY,JSON.stringify(cfg));}catch(e){}
       updateHsub();
