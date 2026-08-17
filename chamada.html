@@ -8,60 +8,53 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:#0a0a0a;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 :root{--green:#1D9E75;--green-light:#0d1f18;--green-mid:#4db896;--border:#222;--card:#141414;--card2:#1a1a1a}
-
 .hdr{background:#111;border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
 .hdr-logo{display:flex;align-items:center;gap:8px}
 .hdr-mark{background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;letter-spacing:.05em}
 .hdr-title{font-size:13px;color:#888}
+.hdr-right{display:flex;align-items:center;gap:12px}
 .hdr-clock{font-family:monospace;font-size:14px;color:#555;letter-spacing:.08em}
-
+.btn-cfg{background:none;border:none;color:#2e2e2e;font-size:17px;cursor:pointer;padding:2px 4px;line-height:1}
+.btn-cfg:active{color:var(--green-mid)}
 .steps{display:flex;border-bottom:1px solid var(--border);background:#0d0d0d}
 .step{flex:1;padding:10px 8px;text-align:center;font-size:11px;color:#444;border-bottom:2px solid transparent}
 .step.done{color:var(--green-mid)}
 .step.active{color:#fff;border-bottom-color:var(--green)}
 .step-num{display:block;font-size:16px;font-weight:700;font-family:monospace;margin-bottom:2px}
 .step.active .step-num{color:var(--green)}
-
 .tela{display:none;flex-direction:column;padding:16px;gap:14px;min-height:calc(100vh - 112px)}
 .tela.ativa{display:flex}
-
 .lbl{font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
-
 .inp-wrap{display:flex;gap:8px}
 .inp-wrap input{flex:1;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;color:#fff;font-size:18px;font-family:monospace;letter-spacing:.08em;padding:14px 16px;outline:none;transition:border-color .15s}
 .inp-wrap input:focus{border-color:var(--green)}
 .inp-wrap input::placeholder{color:#333;font-size:14px;font-family:-apple-system,sans-serif;letter-spacing:0}
 .btn-bipar{background:var(--green);color:#fff;border:none;border-radius:10px;padding:14px 18px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .btn-bipar:active{opacity:.8}
-
 .atend-ok{display:none;align-items:center;gap:8px;background:var(--green-light);border:1px solid var(--green);border-radius:10px;padding:12px 14px}
 .atend-ok.vis{display:flex}
 .atend-ok-ico{width:28px;height:28px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
 .atend-ok-txt{font-size:14px;font-weight:600;color:var(--green-mid)}
 .atend-ok-sub{font-size:11px;color:#4a8a70;margin-top:1px}
 .atend-trocar{background:none;border:none;color:#4a8a70;font-size:11px;cursor:pointer;margin-left:auto;text-decoration:underline;padding:0}
-
 .med-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .med-btn{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 10px;font-size:12px;text-align:left;cursor:pointer;color:#aaa;line-height:1.35;transition:all .12s}
 .med-btn:active{transform:scale(.97)}
 .med-btn.sel{background:var(--green-light);border-color:var(--green);color:var(--green-mid);font-weight:600}
-
+.med-loading{grid-column:1/3;text-align:center;padding:18px;font-size:12px;color:#333;font-family:monospace}
 .btn-avancar{background:var(--green);color:#fff;border:none;border-radius:12px;padding:16px;font-size:15px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s}
 .btn-avancar:disabled{opacity:.3;cursor:not-allowed}
 .btn-avancar:not(:disabled):active{opacity:.85}
-
 .confirm-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px}
 .confirm-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
 .confirm-row:last-child{border-bottom:none}
 .confirm-lbl{font-size:12px;color:#555}
 .confirm-val{font-size:14px;font-weight:600;color:#ddd;text-align:right;max-width:65%}
 .confirm-val.med{color:var(--green-mid)}
-
 .btn-confirmar{background:var(--green);color:#fff;border:none;border-radius:12px;padding:18px;font-size:16px;font-weight:700;cursor:pointer;width:100%}
 .btn-confirmar:disabled{opacity:.4;cursor:not-allowed}
 .btn-confirmar:active{opacity:.85}
 .btn-voltar{background:none;border:1px solid #2a2a2a;border-radius:12px;padding:14px;font-size:14px;cursor:pointer;color:#555;width:100%}
-
 .sucesso{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:32px}
 .sucesso-ico{width:72px;height:72px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;animation:pop .3s ease}
 .sucesso-titulo{font-size:20px;font-weight:700}
@@ -75,31 +68,28 @@ html,body{height:100%;background:#0a0a0a;color:#fff;font-family:-apple-system,Bl
 .alert-entregar-txt{font-size:13px;color:#fdba74;flex:1;line-height:1.4}
 .btn-entregar{background:#f97316;color:#fff;border:none;border-radius:12px;padding:18px;font-size:16px;font-weight:700;cursor:pointer;width:100%}
 .btn-entregar:active{opacity:.85}
-
 .erro-box{background:#1a0a0a;border:1px solid #5a1a1a;border-radius:10px;padding:12px 14px;font-size:13px;color:#f09595;display:none}
 .erro-box.vis{display:block}
-
 .loading{display:inline-block;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
 </style>
 </head>
 <body>
-
 <div class="hdr">
   <div class="hdr-logo">
     <div class="hdr-mark">i-OMT</div>
     <div class="hdr-title">Chamada de Medicamentos</div>
   </div>
-  <div class="hdr-clock" id="hdr-clock">--:--</div>
+  <div class="hdr-right">
+    <div class="hdr-clock" id="hdr-clock">--:--</div>
+  </div>
 </div>
-
 <div class="steps" id="steps-bar">
   <div class="step active" id="step1"><span class="step-num">1</span>Atendimento</div>
   <div class="step" id="step2"><span class="step-num">2</span>Medicamento</div>
   <div class="step" id="step3"><span class="step-num">3</span>Confirmar</div>
 </div>
-
 <!-- TELA 1 -->
 <div class="tela ativa" id="tela-1">
   <div>
@@ -126,7 +116,6 @@ html,body{height:100%;background:#0a0a0a;color:#fff;font-family:-apple-system,Bl
     Selecionar medicamento →
   </button>
 </div>
-
 <!-- TELA 2 -->
 <div class="tela" id="tela-2">
   <div>
@@ -137,7 +126,6 @@ html,body{height:100%;background:#0a0a0a;color:#fff;font-family:-apple-system,Bl
     Confirmar →
   </button>
 </div>
-
 <!-- TELA 3 -->
 <div class="tela" id="tela-3">
   <div class="lbl">Revisão</div>
@@ -159,7 +147,6 @@ html,body{height:100%;background:#0a0a0a;color:#fff;font-family:-apple-system,Bl
   <button class="btn-confirmar" id="btn-confirmar" onclick="enviarFila()">✓ Adicionar à fila</button>
   <button class="btn-voltar" onclick="irParaTela(2)">← Voltar</button>
 </div>
-
 <!-- SUCESSO -->
 <div class="tela" id="tela-ok">
   <div class="sucesso">
@@ -171,15 +158,32 @@ html,body{height:100%;background:#0a0a0a;color:#fff;font-family:-apple-system,Bl
     <button class="btn-novo" onclick="novoApontamento()">+ Novo apontamento</button>
   </div>
 </div>
-
 <script>
 var API = 'https://script.google.com/macros/s/AKfycbynRJx9tQ13rAtWMo8behDEbdQnOsU7mqKyOB77fcTZMZXsi8rX7PkZNt1q9J7h3fb3VA/exec';
-var MEDS = ['Atropina','BEVACIZUMABE','Bomba elastomérica','BRENTUXIMABE VEDOTINA','Ciclofosfamida','Dipirona','Doxorrubicina Lipossomal','Escopolamida c/dipirona','Escopolamina c/ brometo','Folinato de cálcio','Nab Paclitaxel','RITUXIMABE','SACITUZUMABE GOVITECANA','SILTUXIMABE'];
-
+// A lista e gerenciada no Painel de Chamada (engrenagem). Este app so le.
+// Lista de seguranca: se a leitura da planilha falhar, o app continua
+// utilizavel com estes nomes em vez de mostrar a tela vazia.
+var MEDS_FALLBACK = ['Atropina','BEVACIZUMABE','Bomba elastomérica','BRENTUXIMABE VEDOTINA','Ciclofosfamida','Dipirona','Doxorrubicina Lipossomal','Escopolamida c/dipirona','Escopolamina c/ brometo','Folinato de cálcio','Nab Paclitaxel','RITUXIMABE','SACITUZUMABE GOVITECANA','SILTUXIMABE'];
+var MEDS = MEDS_FALLBACK.slice();
 var atend = '', medSel = '';
-
+// ── LISTA DE MEDICAMENTOS ────────────────────────────────────────
+function carregarMeds(){
+  var g = document.getElementById('med-grid');
+  g.innerHTML = '<div class="med-loading">carregando lista...</div>';
+  fetch(API + '?acao=meds_listar', {cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.ok && d.meds && d.meds.length) MEDS = d.meds;
+      buildMedGrid();
+    })
+    .catch(function(){
+      // mantem MEDS_FALLBACK — o app nao pode ficar sem opcoes
+      buildMedGrid();
+    });
+}
 function buildMedGrid(){
   var g = document.getElementById('med-grid');
+  g.innerHTML = '';
   MEDS.forEach(function(m){
     var b = document.createElement('button');
     b.className = 'med-btn'; b.textContent = m;
@@ -187,8 +191,15 @@ function buildMedGrid(){
     b.id = 'mb_' + m.replace(/[^a-zA-Z0-9]/g,'_');
     g.appendChild(b);
   });
+  // se o medicamento selecionado saiu da lista, limpa a selecao
+  if(medSel && MEDS.indexOf(medSel) < 0){
+    medSel = '';
+    document.getElementById('btn-t2').disabled = true;
+  } else if(medSel){
+    var el = document.getElementById('mb_' + medSel.replace(/[^a-zA-Z0-9]/g,'_'));
+    if(el) el.classList.add('sel');
+  }
 }
-
 function selectMed(m){
   medSel = m;
   document.querySelectorAll('.med-btn').forEach(function(b){ b.classList.remove('sel'); });
@@ -196,9 +207,8 @@ function selectMed(m){
   if(el) el.classList.add('sel');
   document.getElementById('btn-t2').disabled = false;
 }
-
+// ── FLUXO DE APONTAMENTO ─────────────────────────────────────────
 var itemNaFila = null;
-
 function confirmarAtend(){
   var v = document.getElementById('inp-atend').value.trim();
   if(!v) return;
@@ -210,7 +220,6 @@ function confirmarAtend(){
   // verificar se já está na fila
   verificarNaFila(v);
 }
-
 function verificarNaFila(atendNum){
   itemNaFila = null;
   document.getElementById('alert-entregar').classList.remove('vis');
@@ -232,7 +241,6 @@ function verificarNaFila(atendNum){
     })
     .catch(function(){});
 }
-
 function entregarDaFila(){
   if(!itemNaFila) return;
   var btn = document.getElementById('btn-entregar');
@@ -258,7 +266,6 @@ function entregarDaFila(){
       btn.textContent = '✓ Tentar novamente';
     });
 }
-
 function trocarAtend(){
   atend = ''; itemNaFila = null;
   document.getElementById('atend-ok').classList.remove('vis');
@@ -269,14 +276,12 @@ function trocarAtend(){
   document.getElementById('inp-atend').value = '';
   document.getElementById('inp-atend').focus();
 }
-
 document.getElementById('inp-atend').addEventListener('keydown', function(e){
   if(e.key === 'Enter') confirmarAtend();
 });
 document.getElementById('inp-atend').addEventListener('input', function(){
   if(atend){ atend=''; document.getElementById('atend-ok').classList.remove('vis'); document.getElementById('btn-t1').disabled=true; }
 });
-
 function irParaTela(n){
   document.querySelectorAll('.tela').forEach(function(t){ t.classList.remove('ativa'); });
   document.getElementById('tela-' + n).classList.add('ativa');
@@ -294,16 +299,13 @@ function irParaTela(n){
     document.getElementById('btn-confirmar').textContent = '✓ Adicionar à fila';
   }
 }
-
 function enviarFila(){
   var btn = document.getElementById('btn-confirmar');
   btn.disabled = true;
   btn.innerHTML = '<span class="loading"></span> Enviando...';
   document.getElementById('erro-box').classList.remove('vis');
-
   var disp = navigator.userAgent.substring(0, 80);
   var url = API + '?acao=fila_gravar&atend=' + encodeURIComponent(atend) + '&med=' + encodeURIComponent(medSel) + '&disp=' + encodeURIComponent(disp);
-
   fetch(url, {cache:'no-store'})
     .then(function(r){ return r.json(); })
     .then(function(d){
@@ -326,7 +328,6 @@ function enviarFila(){
       btn.textContent = '✓ Tentar novamente';
     });
 }
-
 function novoApontamento(){
   atend = ''; medSel = ''; itemNaFila = null;
   document.getElementById('inp-atend').value = '';
@@ -341,14 +342,13 @@ function novoApontamento(){
   document.getElementById('steps-bar').style.display = '';
   irParaTela(1);
 }
-
 function clock(){
   var d = new Date();
   var h = d.getHours(), m = d.getMinutes();
   document.getElementById('hdr-clock').textContent = (h<10?'0'+h:h)+':'+(m<10?'0'+m:m);
 }
 setInterval(clock, 1000); clock();
-buildMedGrid();
+carregarMeds();
 </script>
 </body>
 </html>
