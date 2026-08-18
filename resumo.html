@@ -329,8 +329,6 @@ function aplicarCfg(c){
     if(raw)aplicarCfg(JSON.parse(raw));
   }catch(e){}
 })();
-
-function loadCfgRemoto(tentativas){
  // Le a config pelo CSV publicado da aba Config. O fetch direto no /exec do
 // Apps Script e bloqueado por CORS neste ambiente; o CSV publicado nao e.
 function loadCfgRemoto(tentativas){
